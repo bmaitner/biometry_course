@@ -52,6 +52,7 @@ library(BIEN)
 
     
     # sabal_palmetto_occurrences <- BIEN_occurrence_species(species = "Sabal palmetto")
+
     
 # R data types ------------------------------------------------------------
 
@@ -150,7 +151,43 @@ library(BIEN)
       summary(test_dataframe) #provides a summary
       table(test_dataframe) # provides a table showing counts of combinations
       head(test_dataframe) # shows the first few rows of data
+      
+
+# Converting between types ------------------------------------------------
+
+    test_dataframe$faction <- as.factor(test_dataframe$faction)
+    str(test_dataframe)    
+    
+    str(avonet_v3)
+            
 
 # Dealing with NAs --------------------------------------------------------
 
+      incomplete_dataframe <- data.frame(character = c("Optimus Prime","Megatron","Unicron"),
+                                   faction = c("Autobot","Decepticon",NA))
+      
+  # Toss all rows with missing data with na.omit()
+      
+      na.omit(incomplete_dataframe)
+      
+  # Re-assign NA values (use with caution and document this well!)
+      
+      incomplete_dataframe[is.na(incomplete_dataframe)] <- "Other"
+    
+  # Use a function that handles NA values    
+      
+      #The function cor checks for correlations between variables
+      
+        ?cor 
+      
+        # By default, cor uses all data, so NA's prevent you from calculation correlations
+        
+          cor(x = amniotes_v2$adult_body_mass_g,
+              amniotes_v2$adult_svl_cm)
+        
+        # But, you can set the "use" argument to "complete.obs" to use only observations don't have NAs in them  
+          
+          cor(x = amniotes_v2$adult_body_mass_g,
+              amniotes_v2$adult_svl_cm,use = "complete.obs")
+      
       
