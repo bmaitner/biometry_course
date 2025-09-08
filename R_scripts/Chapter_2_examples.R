@@ -6,6 +6,7 @@
 
 library(readxl)
 library(BIEN)
+library(emdbook)
 
 # Reading in data locally (relative paths) --------------------------------
 
@@ -189,5 +190,15 @@ library(BIEN)
           
           cor(x = amniotes_v2$adult_body_mass_g,
               amniotes_v2$adult_svl_cm,use = "complete.obs")
-      
+          
+
+# example in 2.6 ----------------------------------------------------------
+
+  # The datasets in section 2.6.1 can be found at:
+
+          # https://www.math.mcmaster.ca/~bolker/emdbook/duncan_10m.csv
+          # https://www.math.mcmaster.ca/~bolker/emdbook/duncan_25m.csv
+          
+  # You can either download them and then load the local copy, 
+  # or else you can use the URL to load them directly.        
       
