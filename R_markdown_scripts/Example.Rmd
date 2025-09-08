@@ -1,0 +1,126 @@
+---
+title: "Example"
+author: "Brian Maitner"
+date: "2025-09-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## For this course
+
+For this course, I want to see the code you use, so make sure NOT to set echo=FALSE. By using an .Rmd file, I can see exactly what you did and what it produced.
+
+## Documenting object structure
+
+```{r}
+
+avonet <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
+
+str(avonet)
+
+```
+
+## Example Figure 1
+
+```{r, fig.cap="Figure 1. Range size increases with latitude"}
+
+    
+plot(x = avonet$Centroid.Latitude,
+     y = log10(avonet$Range.Size),
+     xlab = "Centroid Latitude",
+     ylab = "Range Size")
+trend_line <- lm(log10(avonet$Range.Size)~avonet$Centroid.Latitude)
+abline(trend_line,col="blue",lwd=3)
+
+
+```
+
+
+## Example Figure 2: The importance of proper scale
+In biology, some patterns are often more easily seen when transformed in some way.  The log transformation is a common transformation that has strong biological justifications. We'll see why this is so later, but for now just take my word for it.
+
+```{r, fig.cap="Figure 2(version i). Body mass is correlated with wing mass"}
+
+plot(x = avonet$Mass,
+     y = avonet$Wing.Length,
+     xlab = "Mass",
+     ylab = "Wing Length")
+
+```
+The pattern doesn't appear very obvious here.  There might be a relationship, but it's a bit hard to tell. Let's do a log10 transformation instead.
+
+```{r, fig.cap="Figure 2(version ii). Body mass is correlated with wing mass"}
+
+plot(x = log10(avonet$Mass),
+     y = log10(avonet$Wing.Length),
+     xlab = "log10(Mass)",
+     ylab = "log10(Wing Length)")
+
+```
+Much more clear now!
+
+## Example Figure 3
+
+```{r,fig.cap= "Figure 3. Body size varies across families in the Pelecaniformes",fig.width=10}
+
+Pelecaniformes <- subset(x = avonet,
+       subset = Order1 == "Pelecaniformes")
+
+names(Pelecaniformes)[4] <- "Order" #Rename Order1 to Order
+names(Pelecaniformes)[3] <- "Family" #Rename Order1 to Order
+
+boxplot(data=Pelecaniformes,log10(Mass) ~ Family)
+
+
+```
+
+
+## Example table
+
+```{r}
+
+avonet_continuous_traits <-
+avonet[c("Beak.Length_Culmen",
+         "Beak.Length_Nares",
+         "Beak.Width",
+         "Beak.Depth",
+         "Tarsus.Length",
+         "Wing.Length",
+         "Kipps.Distance",
+         "Secondary1",
+         "Hand.Wing.Index",
+         "Tail.Length",
+         "Mass")]
+
+avonet_beak <- avonet[c("Beak.Length_Culmen",
+                        "Beak.Length_Nares",
+                        "Beak.Width",
+                        "Beak.Depth")]
+
+round(cor(avonet_beak),2)
+
+
+```
