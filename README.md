@@ -27,11 +27,14 @@ Coral Populations, Biodiversity
 Deep Sea Species
 
   * OBIS Deep Sea <https://obis.org/node/6f3223e3-50a6-4ba5-b02c-0037ae3863ce>
+
   * WORDSS <https://marinespecies.org/deepsea/>
   
 Landcover Data
 
-  * 
+  * US: NLCD <https://www.mrlc.gov/>
+
+  * Global: MODIS Landcover <https://doi.org/10.5067/MODIS/MCD12Q1.061>
 
 Mangrove Biodiversity
 
@@ -40,6 +43,7 @@ Mangrove Biodiversity
 
 Marine Microorganisms
 
+  *
 
 Movement Data
 
