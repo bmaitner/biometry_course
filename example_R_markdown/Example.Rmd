@@ -3,9 +3,9 @@ title: "Example"
 author: "Brian Maitner"
 date: "2025-09-08"
 output:
-  word_document: default
-  html_document: default
-  pdf_document: default
+  #word_document: default #remove the comment (#) in front of word_ or pdf_ if you want to generate those outputs
+  html_document: default #add a comment (#) in front of html_ if you DON'T want to generate html output
+  #pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -46,6 +46,10 @@ str(avonet)
 
 ```
 
+
+\newpage <!-- #the \newpage tell markdown toadd a new page -->
+
+
 ## Example Figure 1
 
 ```{r, fig.cap="Figure 1. Range size increases with latitude"}
@@ -61,8 +65,11 @@ abline(trend_line,col="blue",lwd=3)
 
 ```
 
+\newpage <!-- #the \newpage tell markdown toadd a new page -->
+
 
 ## Example Figure 2: The importance of proper scale
+
 In biology, some patterns are often more easily seen when transformed in some way.  The log transformation is a common transformation that has strong biological justifications. We'll see why this is so later, but for now just take my word for it.
 
 ```{r, fig.cap="Figure 2(version i). Body mass is correlated with wing mass"}
@@ -85,6 +92,8 @@ plot(x = log10(avonet$Mass),
 ```
 Much more clear now!
 
+\newpage <!-- #the \newpage tell markdown toadd a new page -->
+
 ## Example Figure 3
 
 ```{r,fig.cap= "Figure 3. Body size varies across families in the Pelecaniformes",fig.width=10}
@@ -99,6 +108,9 @@ boxplot(data=Pelecaniformes,log10(Mass) ~ Family)
 
 
 ```
+
+
+\newpage <!-- #the \newpage tell markdown toadd a new page -->
 
 
 ## Example table
