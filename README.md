@@ -12,7 +12,7 @@ RStudio Keyboard Shortcuts
 
 Bird Population data
 
-  * Breeding Bird Survey <https://doi.org/10.5066/P97WAZE5>, see also the bbs Assistant R package at <https://github.com/trashbirdecology/bbsAssistant>
+  * Breeding Bird Survey <https://doi.org/10.5066/P97WAZE5>, see also the BBS Assistant R package at <https://github.com/trashbirdecology/bbsAssistant>
   
   * Christmas Bird Count <https://www.audubon.org/community-science/christmas-bird-count/access-christmas-bird-count-results>
 
@@ -38,7 +38,7 @@ Landcover Data
 
 Mangrove Biodiversity
 
-  *
+  * Data available from the study <https://doi.org/10.1073/pnas.2016913118>, data available in the folder "data/Mangroves" here.
   
 
 Marine Microorganisms
