@@ -40,15 +40,13 @@ Mangrove Biodiversity
 
   * Data available from the study <https://doi.org/10.1073/pnas.2016913118>, data available in the folder "data/Mangroves" here.
   
-
 Marine Microorganisms
 
-  *
+  * The Tara data may be useful <https://doi.org/10.1038/sdata.2015.23>, data available in the folder "data/Marine_microorganisms" here.
 
 Movement Data
 
   * Movebank <https://datarepository.movebank.org/home>, see also the move2 R package <https://cran.r-project.org/package=move2>.
-
 
 Plant Datasets (include species, abundances, traits, environment, etc.)
 
@@ -60,8 +58,6 @@ Plant Datasets (include species, abundances, traits, environment, etc.)
   
   * Plant traits and vegetation data from climate warming experiments along an 1100 m elevation gradient in China <https://www.nature.com/articles/s41597-020-0529-0>
 
-
 Trait data
 
   * Open Traits <https://opentraits.org/>
-

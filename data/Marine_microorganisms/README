@@ -1,0 +1,18 @@
+Data source:
+
+Pesant, S., Not, F., Picheral, M. et al. Open science resources for the discovery and analysis of Tara Oceans data. Sci Data 2, 150023 (2015). https://doi.org/10.1038/sdata.2015.23
+
+Data license:
+
+CC-BY 3.0
+
+Note: column names are cut off, see full names on Pangea:
+
+* Tara Oceans Consortium, Coordinators; Tara Oceans Expedition, Participants (2015): Biodiversity context of all samples from the Tara Oceans Expedition (2009-2013) [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.853809
+* Tara Oceans Consortium, Coordinators; Tara Oceans Expedition, Participants (2015): Registry of all events from the Tara Oceans Expedition (2009-2013) [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.842227
+* Tara Oceans Consortium, Coordinators; Tara Oceans Expedition, Participants (2017): Registry of all samples from the Tara Oceans Expedition (2009-2013) [dataset publication series]. PANGAEA, https://doi.org/10.1594/PANGAEA.875582
+
+File:
+
+The file "Tara_data_combined.csv" contains the contents of the Tara Biodiversity, events, and samples datasets.  Files were loaded and combined using the code in "Format_TARA.R".
+
