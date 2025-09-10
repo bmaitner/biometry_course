@@ -12,13 +12,14 @@ RStudio Keyboard Shortcuts
 
 Bird Population data
 
-  * Breeding Bird Survey <https://doi.org/10.5066/P97WAZE5>, see also the BBS Assistant R package at <https://github.com/trashbirdecology/bbsAssistant>
+  * Breeding Bird Survey <https://doi.org/10.5066/P97WAZE5>, see also the BBS Assistant R package at <https://github.com/trashbirdecology/bbsAssistant>, subset of data available in the "data/BBS" folder here.
   
   * Christmas Bird Count <https://www.audubon.org/community-science/christmas-bird-count/access-christmas-bird-count-results>
 
 Climate Data
   
   * CHELSA <https://chelsa-climate.org/>, see also the R package ClimDatDownloadR <https://github.com/HelgeJentsch/ClimDatDownloadR>
+  * BIOCLIM/Worldclim <https://www.worldclim.org/data/bioclim.html>, see also the R package geodata <https://cran.r-project.org/package=geodata>
   
 Coral Populations, Biodiversity
 
