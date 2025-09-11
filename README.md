@@ -50,6 +50,8 @@ Marine Microorganisms
 Movement Data
 
   * Movebank <https://datarepository.movebank.org/home>, see also the move2 R package <https://cran.r-project.org/package=move2>.
+  
+  * Data available from the study <https://doi.org/10.5061/dryad.51c59zwkg>, data available in the folder "data/Deer_movement" here.
 
 Plant Datasets (include species, abundances, traits, environment, etc.)
 
