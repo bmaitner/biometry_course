@@ -1,0 +1,10 @@
+Data source: 
+  
+https://doi.org/10.5061/dryad.51c59zwkg
+
+Data license:
+  
+CC0
+
+Note:
+File is a .RDS file, so use readRDS() to load it.
