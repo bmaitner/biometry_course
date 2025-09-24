@@ -40,6 +40,8 @@
 
 # Save combined dataset
 
-  write.csv(x = combined_data,file = "data/Marine_microorganisms/TARA_data_combined.csv",
+  write.csv(x = combined_data, file = "data/Marine_microorganisms/TARA_data_combined.csv",
             row.names = FALSE)
 
+  saveRDS(combined_data, file = "data/Marine_microorganisms/TARA_data_combined.RDS")
+  
