@@ -86,3 +86,36 @@ var(avonet$Mass) == (sd(avonet$Mass)^2)
 sqrt(var(avonet$Mass)) == sd(avonet$Mass)
 
 var(avonet$Mass)^.5 == sd(avonet$Mass) #raising to the 0.5 power is identical to taking the square root.
+
+# playing with distributions ----------------------------------------------
+
+  # Normal
+  
+    x_vector <- seq(from=-10,to=10,by=0.1)
+
+    norm_density_vector <- dnorm(x = x_vector,mean = 0,sd = 1)
+  
+    plot(norm_density_vector ~ x_vector)
+    
+    plot(dnorm(x = x_vector,mean = 0,sd = 1) ~ x_vector)
+    
+    plot(dnorm(x = x_vector,mean = 1,sd = 1) ~ x_vector)
+    
+    plot(dnorm(x = x_vector,mean = 2,sd = 1) ~ x_vector)
+
+  # Binomial
+    
+    discrete_x_vector <- seq(from=0,to=20,by=1) #have to make a discrete version, since the binomial only applies to integers
+    
+    binom_density_vector <- dbinom(x = discrete_x_vector,
+                                   size = 0,prob = .1)
+    
+    plot(dbinom(x = discrete_x_vector,size = 10,prob = .1) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+    plot(dbinom(x = discrete_x_vector,size = 50,prob = .1) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+    plot(dbinom(x = discrete_x_vector,size = 100,prob = .1) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+    
+    plot(dbinom(x = discrete_x_vector,size = 20,prob = .1) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+    plot(dbinom(x = discrete_x_vector,size = 20,prob = .5) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+    plot(dbinom(x = discrete_x_vector,size = 20,prob = .9) ~ discrete_x_vector,col="blue",ylim=c(0,1))
+
+
