@@ -94,3 +94,70 @@ ggplot(mapping = aes(x=x,y=y,colour = g))+
   geom_point()+
   geom_line(mapping = aes(x=x,y=y_det,colour = g))
 
+
+# alternative approach to categorical groups ------------------------------
+
+# Alterantively, it may be easier to keep all of the information in a single data frame
+
+library(tidyverse)
+library(ggplot2)
+
+# Make a data.frame containing the chosen parameters
+
+  species_parms <- 
+    data.frame(species = c(1,2),
+             a = c(20,10),
+             b = c(1,2),
+             k = 5)
+
+# Make a data.frame containing random x draws for each species
+
+  x_values_per_species <- 
+    data.frame(species = rep(c(1,2),25),
+               x = runif(50,min=0,max=5))
+
+# Combine the two
+
+  combined_data <-  x_values_per_species %>%
+    left_join(species_parms)
+  
+# Make species a factor
+  
+  combined_data <- 
+  combined_data %>%
+    mutate(species = as.factor(species))
+
+# Use mutate to calculate y_det
+  
+  combined_data <-
+    combined_data %>%
+      mutate(y_det = a/(b+x))
+  
+# Plot determinate bit
+  
+  ggplot(data = combined_data,
+         mapping = aes(x=x,y=y_det,colour = species))+
+    geom_point()
+  
+  
+# Add stochastic bit:
+  
+  combined_data <-
+  combined_data %>%
+    rowwise() %>% # note this bit!
+    mutate(y = rnbinom(n = 1,size = k,mu = y_det))
+
+  
+# Plot 
+
+  ggplot(data = combined_data ,
+         mapping = aes(x=x,y=y,colour = species))+
+    geom_point()+ #these first three lines plot the points for the elements with stochasticity
+    geom_line(mapping = aes(x=x,y=y_det,color=species)) #this adds a line for the determinate estimates
+  
+
+
+
+
+
+
