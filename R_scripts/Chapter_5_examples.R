@@ -1,5 +1,7 @@
 # Chapter 5: Simulations and Power Analysis
 
+library(tidyverse)      
+
 
 # Basic example -----------------------------------------------------------
 
@@ -154,10 +156,121 @@ library(ggplot2)
          mapping = aes(x=x,y=y,colour = species))+
     geom_point()+ #these first three lines plot the points for the elements with stochasticity
     geom_line(mapping = aes(x=x,y=y_det,color=species)) #this adds a line for the determinate estimates
+
+
+# for loop examples -------------------------------------------------------
+
+  for(i in 1:100){
+    
+    print(i)
+    
+    
+  }
+  
+  
+  x_unif<- runif(n = 50,min = 0,max = 100)
+  
+  for(x in length(x_unif)){
+    
+    x_unif[x] <- rnorm(n = 1,mean = x_unif[x],sd = 2)
+    
+  }
+  
+  # Nested loop
+  
+  for(i in 1:10){
+    for(j in 1:20){
+
+      print(paste("i = ",i," j = ",j))
+      
+    }}
+  
+    
+
+# power analysis: linear regression ---------------------------------------
+
+  x <- 1:20
+  a <- 2
+  b <- 1
+  sd <- 8
+  N = 20
+  set.seed(1)
+
+  y_det <- a + b*x
+  
+  y <- rnorm(n = length(y_det),
+             mean = y_det,
+             sd = sd)
+  
+  # fit a linear model
+  
+    m <- lm(y ~ x)
+  
+  # get the model coefficients
+    
+    coef(summary(m))
+
+  # get the pvalue
+    
+    coef(summary(m))["x","Pr(>|t|)"]
+    
+    # or use tidyverse
+    
+      coefs <- as.data.frame(coef(summary(m))) %>%
+        rownames_to_column(var = "parameter")
+    
+      coefs %>%
+        filter(parameter == "x")%>%
+        pull(`Pr(>|t|)`)
+
+  # Wrap this in a for() loop
+    
+  nsim <- 400
+  pval <- numeric(nsim)
+  
+  for(i in 1:nsim){
+    
+    y_det <- a + b*x
+    y <- rnorm(n = length(y_det),
+               mean = y_det,
+               sd = sd)
+    
+    m <- lm(y ~ x)
+    
+    #get p-value
+    
+    pval[i] <- coef(summary(m))["x","Pr(>|t|)"]
+    
+  }
+
+  sum(pval < 0.05)/nsim
   
 
+  # how does slope impact power?  
+  
+  bvec <- seq(-2, 2, by = 0.1)
+  power.b <- numeric(length(bvec))
 
-
-
-
-
+  for(j in 1:length(bvec)){
+  for(i in 1:nsim){
+    
+    b <- bvec[j]
+    y_det <- a + b*x
+    y <- rnorm(n = length(y_det),
+               mean = y_det,
+               sd = sd)
+    
+    m <- lm(y ~ x)
+    
+    #get p-value
+    
+    pval[i] <- coef(summary(m))["x","Pr(>|t|)"]
+    
+    }#end i lloop
+    power.b[j] <- sum(pval< 0.05)/nsim
+    
+  }#end j loop
+  
+  plot(power.b ~ bvec)
+  
+  
