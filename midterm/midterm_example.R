@@ -1,6 +1,21 @@
-# how does slope impact power?  
+
+# Part 2 code to load data ------------------------------------------------
+
+library(readr)
+
+twoa <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2a.RDS")
+
+twob <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2b.RDS")
+
+twoc <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2c.RDS")
+
+
+# Part 3 example code -----------------------------------------------------
+
+
 
 # how does slope impact power?  
+
 
 sample_size <- 20
 a <- 2
