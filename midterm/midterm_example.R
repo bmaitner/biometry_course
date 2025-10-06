@@ -1,4 +1,14 @@
 
+# Part 1 useful code ------------------------------------------------------
+
+  # Citing R
+
+    citation()
+
+  # Citing an R package
+    
+    citation("bbmle")
+
 # Part 2 code to load data ------------------------------------------------
 
 library(readr)
@@ -52,4 +62,5 @@ for(j in 1:length(bvec)){
 }#end j loop
 
 plot(power.b ~ bvec,main = sample_size)
+
 
