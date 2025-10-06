@@ -4,7 +4,6 @@
 
 sample_size <- 20
 a <- 2
-b <- 1
 sd <- 8
 
 nsim <- 400
