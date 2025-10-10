@@ -173,3 +173,125 @@ p_vector <- seq(from=.05,to=1,by=0.05)
   
   exp(-opt1$value)
 
+
+# visualizing pred vs density ---------------------------------------------
+
+data("ReedfrogFuncresp")
+  
+plot(ReedfrogFuncresp$Killed ~ ReedfrogFuncresp$Initial)
+plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initial)
+    
+
+# estimating complex functions --------------------------------------------
+
+  
+  # plot of a type two functional response
+  
+  
+  # p = a/ (1+a*h*N)
+  # p = per capita predation rate
+  # a = attack rate
+  # h = handling time
+  # N = prey density
+  
+  a <- .5
+  h <- .8
+  N_vec <- 0:20
+
+  plot(x = N_vec,y= a/(1+a*h*N_vec),
+       ylab = "Per capita pred. rate",
+       xlab = "Number total")
+  
+  
+
+# tadpole predation -------------------------------------------------------
+
+  # Need a new equation to optimize
+  
+    binomNLL2 <- function(params, N, k){
+      a = params[1]
+      h = params[2]
+      pred_prob = a/ (1+a*h*N)
+      
+      -sum(dbinom(x = k,size = N, prob = pred_prob,log = TRUE))
+
+    }  
+  
+  # load data and optimize
+  
+    data("ReedfrogFuncresp")
+    
+    opt2 <- optim(fn = binomNLL2,
+          par = c(a=.5,h=.2),
+          N = ReedfrogFuncresp$Initial,
+          k = ReedfrogFuncresp$Killed
+          ) 
+  
+  # optimize with mle2
+  
+    parnames(binomNLL2) <- c("a","h") # quirk of mle2: need to set the parm names
+    
+    m2 <- mle2(minuslogl = binomNLL2,
+         start = c(a=.5,h=2),
+         data = list(k = ReedfrogFuncresp$Killed,
+                     N = ReedfrogFuncresp$Initial))
+    
+    
+
+# plotting our estimates --------------------------------------------------
+
+  plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initial,
+       xlab = "Initial Density",
+       ylab = "Per capita predation rate")
+  
+          
+  x_vec <- min(ReedfrogFuncresp$Initial):max(ReedfrogFuncresp)
+  
+  y_vec_optim <-  opt2$par["a"]/ (1 + opt2$par["a"] * opt2$par["h"] * x_vec)
+  
+  y_vec_mle2 <-  m2@coef["a"]/ (1 + m2@coef["a"] * m2@coef["h"] * x_vec)
+  
+  
+  
+  lines(x = x_vec,y=y_vec_optim,col="orange")
+  lines(x = x_vec,y=y_vec_mle2,col="maroon")
+
+
+# linear example
+
+    
+  normNLL1 <- function(params, x, y){
+    
+    a = params[1]
+    b = params[2]
+    c = exp(params[3])
+    
+    mu= a + b*x
+    
+    -sum(dnorm(x = y, mean = mu, sd = c, log = TRUE))
+    
+
+  }  
+  
+  linear_optim <- optim(fn = normNLL1,
+                        par = c(a=.5,b=.2,c=.2),
+                        x = ReedfrogFuncresp$Initial,
+                        y = (ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial)
+                        )  
+  
+  plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initial,
+       xlab = "Initial Density",
+       ylab = "Per capita predation rate")
+  
+  y_vec_linear <-  linear_optim$par["a"] + linear_optim$par["b"]*x_vec
+  
+  lines(x = x_vec,y=y_vec_linear)
+  
+  # Check out the different likelihoods
+  
+    exp(-linear_optim$value)
+    exp(m2@min)
+    exp(-opt2$value)
+  
+  
+    
