@@ -176,6 +176,9 @@ p_vector <- seq(from=.05,to=1,by=0.05)
 
 # visualizing pred vs density ---------------------------------------------
 
+library(emdbook)
+  library(bbmle)
+  
 data("ReedfrogFuncresp")
   
 plot(ReedfrogFuncresp$Killed ~ ReedfrogFuncresp$Initial)
@@ -293,5 +296,172 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
     exp(m2@min)
     exp(-opt2$value)
   
-  
+
+
+# likelihood surface ------------------------------------------------------
+
+    library(tidyverse)
+    binomNLL1 <- function(p,k,N){
+      
+      -sum(dbinom(x = k,
+                  prob = p,
+                  size = N,
+                  log = TRUE)
+      )
+    } #end fx
     
+    
+
+    for(i in 1:length(p_vector)){
+      
+      p_likelihood_vec[i] <- binomNLL1(p = p_vector[i],k = x$surv,N = x$density)
+      
+    }
+    
+    
+    a_vec = seq(from=0.1,to=0.9,by=.01)
+    h_vec = seq(from=0.005,to=.04,by=.001)
+
+    likelihood_surface <- expand.grid(a_vec,h_vec) %>% as.data.frame()
+    colnames(likelihood_surface) <- c("a","h")
+    likelihood_surface$nll <- NA
+    
+    
+    binomNLL2 <- function(params, N, k){
+      a = params[1]
+      h = params[2]
+      pred_prob = a/ (1+a*h*N)
+      
+      -sum(dbinom(x = k,size = N, prob = pred_prob,log = TRUE))
+      
+    }  
+    
+    
+    for(i in 1:nrow(likelihood_surface)){
+      
+      likelihood_surface$nll[i] <- binomNLL2(params = c(a=likelihood_surface$a[i],
+                                                    h=likelihood_surface$h[i]),
+                                         N = ReedfrogFuncresp$Initial,
+                                         k = ReedfrogFuncresp$Killed)
+      
+
+    }
+    
+    
+    likelihood_surface %>%
+    ggplot(mapping = aes(x=a,y=h,fill=nll))+
+      geom_raster()+
+      geom_contour(mapping = aes(x=a,y=h,z=nll),bins = 5,color="white",inherit.aes = FALSE)+
+      scale_fill_viridis_c()
+    
+    
+
+# slices ------------------------------------------------------------------
+
+    
+    # load data and optimize
+    
+    data("ReedfrogFuncresp")
+
+    # Need a new equation to optimize
+    
+    binomNLL2 <- function(params, N, k){
+      a = params[1]
+      h = params[2]
+      pred_prob = a/ (1+a*h*N)
+      
+      -sum(dbinom(x = k,size = N, prob = pred_prob,log = TRUE))
+      
+    }  
+    
+    parnames(binomNLL2) <- c("a","h") # quirk of mle2: need to set the parm names
+    
+    m2 <- mle2(minuslogl = binomNLL2,
+               start = c(a=.5,h=2),
+               data = list(k = ReedfrogFuncresp$Killed,
+                           N = ReedfrogFuncresp$Initial))
+    
+    # get the optimal parameter value for a then do a slice for h
+    
+    opt_a <- opt2$par["a"]
+    
+    # pick a sequence to optimize over
+    
+    h_vec <- seq(from = 0.001,to=0.04,by=0.005)
+    
+    # we're going to use mle2 because it makes it easy to fix certain parameters
+    
+    h_nll <- numeric(length(h_vec)) # this will hold our output
+    
+    for(i in 1:length(h_vec)){
+      
+      m2 <- mle2(minuslogl = binomNLL2,
+                 start = c(a=.5,h=2),
+                 data = list(k = ReedfrogFuncresp$Killed,
+                             N = ReedfrogFuncresp$Initial),
+                 fixed = list(a = as.numeric(opt_a),
+                              h = h_vec[i]))
+      
+      h_nll[i] <- m2@min
+
+      
+    }
+
+    
+    plot(x=h_vec,y=h_nll)
+        
+    
+
+# profiles ----------------------------------------------------------------
+
+    h_vec <- seq(from = 0.001,to=0.04,by=0.005)
+    
+    # we're going to use mle2 because it makes it easy to fix certain parameters
+    
+    h_nll2 <- numeric(length(h_vec)) # this will hold our output
+    a_value_picked <- numeric(length(h_vec)) #we'll use this to track the selected a values
+    
+    
+    for(i in 1:length(h_vec)){
+      
+      m2 <- mle2(minuslogl = binomNLL2,
+                 start = c(a=.5,h=2),
+                 data = list(k = ReedfrogFuncresp$Killed,
+                             N = ReedfrogFuncresp$Initial),
+                 fixed = list(h = h_vec[i]))
+      
+      h_nll2[i] <- m2@min
+      a_value_picked[i] <- m2@coef["a"]
+      
+      
+    }
+    
+    
+    plot(x=h_vec,y=h_nll2,ylab= "NLL",xlab="h")
+    points(x=h_vec,y=h_nll,col="blue")
+    
+    plot(h_vec,a_value_picked)
+
+
+# confidence intervals ----------------------------------------------------
+
+    m5 <- mle2(minuslogl = binomNLL2,
+               start = c(a=.5,h=2),
+               data = list(k = ReedfrogFuncresp$Killed,
+                           N = ReedfrogFuncresp$Initial))
+    
+  profile(m5)
+  
+  confint(m5,level = 0.95)   
+  confint(profile(m5),level = 0.95)
+    
+  plot(profile(m5))
+
+  # plotting on the profile
+  
+  ci_m5 <-   confint(m5,level = 0.95)
+    
+  plot(x=h_vec,y=h_nll2,ylab= "NLL",xlab="h")
+  abline(v = ci_m5["h",]["2.5 %"])
+  abline(v = ci_m5["h",]["97.5 %"])
+  
