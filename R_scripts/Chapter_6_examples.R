@@ -468,6 +468,11 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
 
 # 6.6 Model comparison ----------------------------------------------------
 
+
+# lecture 16 fir data overview --------------------------------------------
+
+  
+  
   # load needed package
   
     library(emdbook)
@@ -497,8 +502,6 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
   
 
 # lecture 16 modelling fir data -------------------------------------------
-
-
 
 
   library(emdbook)
