@@ -465,3 +465,121 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
   abline(v = ci_m5["h",]["2.5 %"])
   abline(v = ci_m5["h",]["97.5 %"])
   
+
+# 6.6 Model comparison ----------------------------------------------------
+
+  # load needed package
+  
+    library(emdbook)
+    library(bbmle)
+    library(ggplot2)
+
+  # load data
+  
+    ?Fir
+    
+    data("FirDBHFec_sum")
+    
+    plot(x = FirDBHFec_sum$DBH,
+         y = FirDBHFec_sum$fecundity,
+         col=FirDBHFec_sum$pop,
+         xlab="Diameter at breast-height",
+         ylab="Fecundity (total cones)")
+  
+    ggplot(data = FirDBHFec_sum,
+           mapping = aes(x = DBH,
+                         y=fecundity,
+                         colour = pop))+
+      geom_point()+
+      theme_bw()
+  
+  
+  
+
+# lecture 16 modelling fir data -------------------------------------------
+
+
+
+
+  library(emdbook)
+  data("FirDBHFec_sum")
+  
+    FirDBHFec_sum$fecundity <- as.integer(FirDBHFec_sum$fecundity) #convert to integer to prevent errors
+    FirDBHFec_sum  <- na.omit(FirDBHFec_sum) #toss NA values (which cause errors)
+
+  # fit reduced model (no population variation)
+
+    nbfit.0 <- mle2(fecundity ~ dnbinom(mu = a * DBH^b,
+                                                      size = k),
+                    start = list(a = 1, b = 1, k =1),
+                    data = FirDBHFec_sum)
+    
+  # fit model with a terms
+    
+    nbfit.a <- mle2(fecundity ~ dnbinom(mu = a * DBH^b,
+                                        size = k),
+                    start = list(a = 1, b = 1, k =1),
+                    data = FirDBHFec_sum,
+                    parameters = list(a ~ pop))
+    
+  # fit model with ab terms
+    
+    nbfit.ab <- mle2(fecundity ~ dnbinom(mu = a * DBH^b,
+                                        size = k),
+                    start = list(a = 1, b = 1, k =1),
+                    data = FirDBHFec_sum,
+                    parameters = list(a ~ pop, b ~ pop))
+    
+
+  # Do LRT
+    
+    anova(nbfit.0,nbfit.a,nbfit.ab)
+
+  # AIC comparison
+    
+    AIC(nbfit.0)
+    
+    AICtab(nbfit.0, nbfit.a, nbfit.ab)
+
+
+
+# lecture 16 model overfitting example ------------------------------------
+
+    
+    # make a function to generate linear data with a normal distribution  
+    
+    test_function <- function(x,a,b,sd){
+      
+      mu <- a+b*x
+      out <- rnorm(n = length(x),mean = mu,sd = sd)
+      
+    }
+    
+    x_vec <-  runif(n = 1000,min = 0,max = 100) 
+    y_vec <- test_function(x = x_vec,a = 1,b = 2,sd = 100)    
+    
+    plot(x = x_vec,y = y_vec)    
+    
+    nonsense_predictor1 <- rnorm(n = length(x_vec),mean = 1000,sd = 2)
+    nonsense_predictor2 <- rbinom(n = length(x_vec),size = 1000,prob = .3)
+    nonsense_predictor3 <- rlnorm(n = length(x_vec),meanlog = .1,sdlog = .24)
+    
+    # check out lack of correlations
+    
+    plot(x = nonsense_predictor1,y = y_vec)
+    plot(x = nonsense_predictor2,y = y_vec)
+    plot(x = nonsense_predictor3,y = y_vec)
+    
+    # Now let's add them to the model
+    
+    v0 <- lm(y_vec ~ x_vec) |> summary()
+    v1 <- lm(y_vec ~ x_vec+nonsense_predictor1) |> summary()
+    v2 <- lm(y_vec ~ x_vec+nonsense_predictor1 + nonsense_predictor2) |> summary()
+    v3 <- lm(y_vec ~ x_vec+nonsense_predictor1 + nonsense_predictor2 + nonsense_predictor3) |> summary()
+    
+    v0$r.squared
+    v1$r.squared
+    v2$r.squared
+    v3$r.squared
+    
+    
