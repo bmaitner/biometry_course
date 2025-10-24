@@ -102,7 +102,13 @@ library(tidyverse)
     # Range.size is the area of the geographic range of each species
     # Order1 is a categorical variable that lists the taxonomic Order each species fall into.
   
-  avonet  <- read.csv("data/Avonet/AVONET1_BirdLife.csv") %>%
+  # Note that I provide two ways to load the avonet dataset in case the csv file won't load for some of you.
+  
+  avonet <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") %>%
+    select(Order1, Wing.Length, Mass, Range.Size) %>%
+    na.omit()
+  
+  avonet  <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv") %>%
     select(Order1, Wing.Length, Mass, Range.Size) %>%
     na.omit()
   
