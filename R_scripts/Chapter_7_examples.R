@@ -219,31 +219,148 @@ time_per_nll <- brute_force_time["elapsed"]/nrow(likelihood_surface)
        ylab = "Killed")
   
   
-  binomNLL2 <- function(params, N, k){
-    a = params[1]
-    h = params[2]
-    pred_prob = a/ (1+a*h*N)
+  m2.bad_start <- mle2(
+    Killed ~ dbinom(size = Initial,
+                    prob = a / (1 + a * h * Initial)),
+    start = list(a = 0.01, h = 10),
+    data = ReedfrogFuncresp
+  )
+
+
+  # Plot predictions on top of actual
+  
+  plot(x = ReedfrogFuncresp$Initial,
+       y = ReedfrogFuncresp$Killed,
+       ylab = "Killed",
+       xlab = "Initial")
+  
+  points(x = ReedfrogFuncresp$Initial,
+         y = predict(m2.bad_start),
+         col = "red")
+
+  
+  # Plot killed vs predicted killed
+  
+  
+  plot(x = predict(m2.bad_start),
+       y = ReedfrogFuncresp$Killed,
+       xlab = "Predicted Killed",
+       ylab = "Actually Killed")
+  
+
+  m2.bad_start
+
+# trying a likelihood profile ---------------------------------------------
+
+    a_profile_seq <- seq(from = 0.1,to = 40,by=0.1)  
+    a_profile_nll <- numeric(length(a_profile_seq))
     
-    -sum(dbinom(x = k,size = N, prob = pred_prob,log = TRUE))
     
-  }  
-  
-  parnames(binomNLL2) <- c("a","h") # quirk of mle2: need to set the parm names
-  
-  
-  m1.bfgs.bad_start <- mle2(minuslogl = binomNLL2,
-                            start = c(a=.01,h=10),
-                            data = list(k = ReedfrogFuncresp$Killed,
-                                        N = ReedfrogFuncresp$Initial),
-                            method = "BFGS")
-  
-  
-  
-  
-  
-  m1.bfgs <- mle2(minuslogl = binomNLL2,
-                  start = c(a=.5,h=2),
-                  data = list(k = ReedfrogFuncresp$Killed,
-                              N = ReedfrogFuncresp$Initial),
-                  method = "BFGS")
+    for(i in 1:length(a_profile_seq)){
+      
+        out_i <- mle2(
+          Killed ~ dbinom(size = Initial,
+                          prob = a / (1 + a * h * Initial)),
+          start = list(a = 0.01, h = 10),
+          data = ReedfrogFuncresp,
+          fixed =  c(a = a_profile_seq[i])
+        )
+      
+
+        a_profile_nll[i]  <- out_i@min
+        
+    } #end for loop   
+    
+      
+    for(i in 1:length(a_profile_seq)){
+      
+    
+      out_i<- tryCatch(
+        
+      mle2(
+        Killed ~ dbinom(size = Initial,
+                        prob = a / (1 + a * h * Initial)),
+        start = list(a = 0.01, h = 10),
+        data = ReedfrogFuncresp,
+        fixed =  c(a = a_profile_seq[i])
+      ),error=function(e){e})
+      
+      
+      if(inherits(x = out_i,
+                  what = "error")){
+        
+        a_profile_nll[i]  <- NA
+        
+      }else{
+        
+        a_profile_nll[i]  <- out_i@min
+        
+      }
+      
+    }    
+      
+
+
+plot(x = a_profile_seq,
+     y = a_profile_nll,
+     xlab = "a",
+     ylab = "NLL")
+
+abline(v = m2.bad_start@coef["a"]) # add a line for our model fit estimate
+
+
+# trying a better model ---------------------------------------------------
+
+# get the best NLL from our profile
+
+best_guess_a<- a_profile_seq[which.min(a_profile_nll)]
+
+
+m2.good_start <- mle2(
+  Killed ~ dbinom(size = Initial,
+                  prob = a / (1 + a * h * Initial)),
+  start = list(a = best_guess_a, h = 10),
+  data = ReedfrogFuncresp
+)
+
+
+# check out the parameters
+m2.bad_start
+m2.good_start
+
+# compare using aic
+AICtab(m2.bad_start,m2.good_start)
+
+# Plot predictions
+
+
+# Plot predictions on top of actual
+
+plot(x = ReedfrogFuncresp$Initial,
+     y = ReedfrogFuncresp$Killed,
+     ylab = "Killed",
+     xlab = "Initial")
+
+points(x = ReedfrogFuncresp$Initial,
+       y = predict(m2.good_start),
+       col = "red")
+
+
+# Plot killed vs predicted killed
+
+
+plot(x = predict(m2.good_start),
+     y = ReedfrogFuncresp$Killed,
+     xlab = "Predicted Killed",
+     ylab = "Actually Killed")
+
+
+# trycatch example --------------------------------------------------------
+
+
+tryCatch(expr = 1/"a",
+         error = function(e){e})
+
+
+
   
