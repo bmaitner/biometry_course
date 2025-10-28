@@ -313,7 +313,7 @@ abline(v = m2.bad_start@coef["a"]) # add a line for our model fit estimate
 
 # get the best NLL from our profile
 
-best_guess_a<- a_profile_seq[which.min(a_profile_nll)]
+best_guess_a <- a_profile_seq[which.min(a_profile_nll)]
 
 
 m2.good_start <- mle2(
@@ -362,5 +362,229 @@ tryCatch(expr = 1/"a",
          error = function(e){e})
 
 
+# 7.5 confidence limits ---------------------------------------------------
+
+library(emdbook)
+library(bbmle)
+data(GobySurvival)
+?GobySurvival
+
+#subset data to a single density treatment and single experiment
+
+  dat <- subset(GobySurvival,
+               exper == 1 &
+                 density == 9 &
+                 qual > median(qual))
+
+#estimate survival time based on the last time it was observed and the last time it wasn't observed
+  
+  time <- (dat$d1 + dat$d2)/2
+  
+# Set up nll function
+  
+  weiblikfun <- function(shape, scale) {
+    -sum(dweibull(time,
+                  shape = shape,
+                  scale = scale,
+                  log = TRUE)
+         )
+  }
+  
+# Fit mle2
+  
+  w1 <- mle2(weiblikfun, start = list(shape = 1, scale = mean(time)))
+
+# How do we get confidence intervals for the parameters?
+  
+  summary(w1)
+  confint(w1)
+  plot(profile(w1))
+  
+
+  w1@vcov
 
   
+
+# confidence interval for function ----------------------------------------
+
+  library(MASS)
+  
+  # Draw from the parameter distribution
+  
+  vmat <- mvrnorm(1000,
+                  mu = coef(w1),
+                  Sigma = vcov(w1))
+  
+  survival_time_estimates <- numeric(nrow(vmat))
+
+  # Function to calculate the mean
+  
+    meanfun <- function(shape, scale) { scale * gamma(1 + 1/shape)}
+
+
+    
+  for (i in 1:length(survival_time_estimates)) {
+    survival_time_estimates[i] <- meanfun(vmat[i, 1], vmat[i, 2])
+  }
+  
+  
+  survival_CI  <- quantile(survival_time_estimates, c(0.025, 0.975))
+
+  
+
+# confidence interval alternative methods ---------------------------------
+
+  library(readr)
+  library(tidyverse)
+  
+  avo <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") %>%
+    filter(Family1 == "Momotidae") %>%
+    arrange(Beak.Length_Nares)
+  
+  avo <- read_rds("https://tinyurl.com/avonetdata") %>%
+    filter(Family1 == "Momotidae") %>%
+    arrange(Beak.Length_Nares)
+  
+  avo_model <- mle2(Beak.Length_Culmen ~ dnorm(mean = int + Beak.Length_Nares*b,
+                                               sd = sd),
+                    start = list(int=1,b=1,sd=2),data=avo)
+  
+  
+  # as above
+  
+
+    avo_vmat <- mvrnorm(1000,
+                        mu = coef(avo_model),
+                        Sigma = vcov(avo_model))
+    
+  
+  #need a matrix since we'll have multiple estimates here
+  
+    avo_estimates <- matrix(nrow = 1000,
+                            ncol = nrow(avo))
+  
+  for(i in 1:nrow(avo_estimates)){
+    
+    parms_i <- avo_vmat[i,]    
+    
+    estimates_i <- parms_i[1] + parms_i[2]*avo$Beak.Length_Nares  
+    
+    avo_estimates[i,] <- estimates_i
+    
+  }
+    
+  avo_estimates_ci <- NULL  
+  for(i in 1:ncol(avo_estimates)){
+    
+    out_i <- data.frame(mean = mean(avo_estimates[,i]),
+               low = quantile(avo_estimates[,i], 0.025),
+               high = quantile(avo_estimates[,i], 0.975))
+    
+    avo_estimates_ci <- rbind(avo_estimates_ci,out_i)
+    
+  }  
+    
+  
+  
+plot(x = avo$Beak.Length_Nares,
+     y=avo$Beak.Length_Culmen)  
+
+lines(x = avo$Beak.Length_Nares,
+       y = avo_estimates_ci$mean,col="blue")  
+
+
+lines(x = avo$Beak.Length_Nares,
+      y = avo_estimates_ci$low,
+      col="blue",lty=2)
+
+lines(x = avo$Beak.Length_Nares,
+      y = avo_estimates_ci$high,
+      col="blue",lty=2)
+
+
+
+# the easy way to CIs -----------------------------------------------------
+
+  avo_lm <- lm(formula = Beak.Length_Culmen ~ Beak.Length_Nares,
+               data = avo)
+
+
+  summary(avo_lm)
+  summary(avo_model)
+
+# compare intercepts
+  avo_model@coef["int"]
+  avo_lm$coefficients["(Intercept)"]
+  
+# compare slopes
+  avo_model@coef["b"]
+  avo_lm$coefficients["Beak.Length_Nares"]
+
+# compare sd
+  sigma(avo_lm)
+  avo_model@coef["sd"]
+  
+# model coefficients are all pretty similar  
+
+  
+# get the ci  
+  
+  avo_ci <- predict(avo_lm,
+                    interval = "confidence",
+                    level = 0.95)
+
+plot(x = avo$Beak.Length_Nares,
+     y=avo$Beak.Length_Culmen)  
+
+lines(x = avo$Beak.Length_Nares,
+       y = avo_ci[,1],col="red")  
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_ci[,2],
+      col="red",lty=2)
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_ci[,3],
+      col="red",lty=2)
+
+
+# ci vs pi ----------------------------------------------------------------
+
+
+# Using the fitting data
+
+avo_ci <- predict(avo_lm,
+                  interval = "confidence",
+                  level = 0.95)
+
+
+avo_pi <- predict(avo_lm,
+                  interval = "prediction",
+                  level = 0.95)
+
+
+plot(x = avo$Beak.Length_Nares,
+     y=avo$Beak.Length_Culmen)  
+
+lines(x = avo$Beak.Length_Nares,
+      y = avo_pi[,1],col="purple")  
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_pi[,2],
+      col="purple",lty=2)
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_pi[,3],
+      col="purple",lty=2)
+
+lines(x = avo$Beak.Length_Nares,
+      y = avo_ci[,1],col="red")  
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_ci[,2],
+      col="red",lty=2)
+
+lines(x = avo$Beak.Length_Nares,
+      y =avo_ci[,3],
+      col="red",lty=2)
+
