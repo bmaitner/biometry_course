@@ -4,6 +4,10 @@ This repo contains materials related to a statistical ecology course I'm teachin
 
 ## Useful Links
 
+R for Data Science
+
+* https://r4ds.hadley.nz/ 
+
 RStudio Keyboard Shortcuts
 
 * https://support.posit.co/hc/en-us/articles/200711853-Keyboard-Shortcuts-in-the-RStudio-IDE
