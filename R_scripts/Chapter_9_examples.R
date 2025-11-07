@@ -259,5 +259,171 @@ library(bbmle)
 
 # End: lecture 21 ---------------------------------------------------------
 
+
+# Begin lecture 22 --------------------------------------------------------
+
+      
+      library(readr)
+      library(bbmle)
+      library(tidyverse)
       
       
+
+# NLS ---------------------------------------------------------------------
+
+
+      
+      library(emdbook)
+      
+      # Frogs
+      
+        data(ReedfrogFuncresp)      
+        
+        plot(ReedfrogFuncresp$Killed~ReedfrogFuncresp$Initial)
+        
+        frog.lm <- lm(Initial ~ Killed,
+                      data = ReedfrogFuncresp)
+        
+        frog.nls.0 <- nls(Initial ~ int+ a*Killed,
+                          data = ReedfrogFuncresp)
+        
+        frog.nls.1 <- nls(Initial ~ int+ a*Killed^b,
+                          data = ReedfrogFuncresp)
+        
+  
+        summary(frog.lm)
+        summary(frog.nls.0)
+        summary(frog.nls.2)
+        
+        AICtab(frog.nls.1,frog.nls.2,frog.lm,frog.nls.0)
+      
+      # Fir
+        
+        data(FirDBHFec_sum)
+        
+        FirDBHFec_sum <- na.omit(FirDBHFec_sum)
+        
+        plot(FirDBHFec_sum$fecundity ~ FirDBHFec_sum$DBH)
+        
+        lm(fecundity ~ DBH, data=FirDBHFec_sum)
+        
+        fir.nls.0 <- nls(fecundity ~ int+ a*DBH,
+                          data = FirDBHFec_sum)
+        
+        fir.nls.1 <- nls(fecundity ~ int+ a*DBH^b,
+                          data = FirDBHFec_sum)
+        
+        AICtab(fir.nls.0,fir.nls.1)        
+        
+        
+
+# gnls and nlsList --------------------------------------------------------
+
+  library(nlme)
+        
+        
+        fir.nlslist <- nlsList(model = fecundity ~ int + a*DBH^b | pop,
+                data = FirDBHFec_sum,
+                start = coef(fir.nls.1))
+        
+        summary(fir.nlslist)
+        
+        #AIC(fir.nlslist[) # doesn't work
+        AICtab(fir.nlslist,base=TRUE)
+        
+        fir.gnls.0 <- gnls(fecundity ~ int+a*DBH^b,
+                         data = FirDBHFec_sum,
+                         params = list(int ~ 1, a ~ 1, b ~ 1),
+                         start= list(int = 0.58, a = 0.5, b = 2),
+                         control=list(tolerance=10)) #tolerance needed for fitting
+        
+        fir.gnls.1 <- gnls(fecundity ~ int+a*DBH^b,
+             data = FirDBHFec_sum %>% na.omit(),
+             params = list(int ~ 1, a ~ 1, b ~ pop),
+             start= list(int = 0.58, a = 0.5, b = c(2,2)),
+             control=list(tolerance=10))
+        
+        fir.gnls.2 <- gnls(fecundity ~ int+a*DBH^b,
+                         data = FirDBHFec_sum %>% na.omit(),
+                         params = list(int ~ pop, a ~ pop, b ~ pop),
+                         start= list(int = c(0.58,0.58), a = c(0.5,0.5), b = c(2,2)),
+                         control=list(tolerance=10))
+
+        
+        AICtab(fir.nls.1,fir.gnls.0,fir.gnls.1,fir.gnls.2)        
+        
+        summary(fir.gnls.1)
+        summary(fir.nls.1)
+
+
+# glms --------------------------------------------------------------------
+
+        # Load data
+        
+        library(readr)
+        
+        code_data <- readr::read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Code_sharing/code_data.RDS")
+        
+        code_data <- readr::read_rds("https://tinyurl.com/codesharingdata")
+
+        
+        
+        
+    # Binomial data ( code included or not?)    
+                
+      code.glm  <- glm(formula = cbind(r_scripts_available, 1-r_scripts_available) ~ year + data_available + open_access,
+            family = binomial(link = "log"),
+            data = code_data)
+      
+      code.lm  <- lm(formula = r_scripts_available ~ year + data_available + open_access,
+                        data = code_data)
+      
+      code.glm1  <- glm(formula = r_scripts_available ~ year + data_available + open_access,
+                                 family = binomial,
+                                 data = code_data)
+      
+      AICtab(code.lm,code.glm, code.glm1)
+
+      summary(code.lm)
+      summary(code.glm)
+      summary(code.glm1)
+      
+    # Plot predictions
+      
+      plot(predict(code.lm) ~ code_data$year)
+      abline(h = 0)
+
+      plot(plogis(predict(code.glm)) ~ code_data$year)
+      abline(h = 0)
+
+      
+    # Plot confidence intervals
+      
+      predict(code.lm,interval = "confidence")
+      
+      predict(code.lm,interval = "prediction")
+      
+
+      
+
+    # Poisson data (number of citations over time)
+      
+      citations.glm0 <- glm(data = code_data,
+                            family = "poisson",
+                            formula = citations ~ 
+                              age_y)
+      
+      
+      citations.glm1 <- glm(data = code_data,
+                family = "poisson",
+                formula = citations ~ 
+                  r_scripts_available*age_y+
+                  open_access*age_y +
+                  data_available*age_y +
+                  data_available*r_scripts_available+
+                  r_scripts_available*open_access+
+                  open_access*data_available)
+      
+    AICtab(citations.glm0,
+           citations.glm1)
+        
