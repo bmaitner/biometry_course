@@ -12,6 +12,10 @@ RStudio Keyboard Shortcuts
 
 * https://support.posit.co/hc/en-us/articles/200711853-Keyboard-Shortcuts-in-the-RStudio-IDE
 
+ggplot2 cheat sheet
+
+* https://rstudio.github.io/cheatsheets/html/data-visualization.html 
+
 ## Places to look for data
 
 Bird Population data
