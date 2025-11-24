@@ -16,6 +16,12 @@ ggplot2 cheat sheet
 
 * https://rstudio.github.io/cheatsheets/html/data-visualization.html 
 
+## General Science Resources
+
+BES Better Science Guides
+
+* https://www.britishecologicalsociety.org/content/better-science-guides
+
 ## Places to look for data
 
 Bird Population data
