@@ -113,7 +113,7 @@ In addition to this text and these software applications, students will select r
 
 ## In-class Participation
 
-Students will be awarded for attending class and actively participating. Participation includes actively working on in-class exercises, helping others debug their code, participating in discussions, and generally engaging with the class and with your peers. Up to 4 classes can be missed without impacting your participation grade.
+Students will be rewarded for attending class and actively participating. Participation includes actively working on in-class exercises, helping others debug their code, participating in discussions, and generally engaging with the class and with your peers. Up to 2 classes can be missed without impacting your participation grade.
 
 ## In-class Quizzes
 
@@ -121,7 +121,7 @@ Short (only a few questions) in-class quizzes will sometimes be given at the sta
 
 ## Assignments
 
-There will be four total assignments, each accounting for 5% of your total grade. These assignments will focus on key elements of data analysis and will make use of both your own data (or data relevant to your interests) and publicly available data. Assignments can be submitted as either an R, R markdown, or Quarto file format. Assignments can be submitted via Canvas or alternatively can be posted to Github for extra credit.
+There will be four total assignments, each accounting for 5% of your total grade. These assignments will focus on key elements of data analysis and will make use of both your own data (or data relevant to your interests) and publicly available data. Assignments can be submitted as either an R, R markdown, or Quarto file format. Assignments can be submitted via Canvas or alternatively can be posted to Github (required for grads, extra credit for undergrads).
 
 ## Midterm
 
@@ -138,7 +138,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 # Course Schedule
 
 | Lecture | Date | Subject | Due |
-|-----------|-----------|--------------------------|----------------|
+|----------------|----------------|--------------------------|----------------|
 | 1 | Aug 25 T | Syllabus; Why we need statistics; Reproducibility and Openness |  |
 | 2 | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
 | 3 | Sep 1 T | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
