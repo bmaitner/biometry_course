@@ -14,5 +14,12 @@ Note: column names are cut off, see full names on Pangea:
 
 File:
 
-The file "Tara_data_combined.csv" contains the contents of the Tara Biodiversity, events, and samples datasets.  Files were loaded and combined using the code in "Format_TARA.R".
+The file "TARA_data_combined.RDS" contains the contents of the Tara Biodiversity, events, and samples datasets.  Files were loaded and combined using the code in "Format_TARA.R".
 
+Read it in with:
+
+  tara <- readRDS("data/Marine_microorganisms/TARA_data_combined.RDS")
+
+Note on the raw files:
+
+The raw .tab downloads that "Format_TARA.R" reads are not stored in this repository -- together they came to roughly 145 MB, against 0.7 MB for the combined result. They can be downloaded again from the PANGAEA links above if the combined file ever needs rebuilding. A .csv version of the combined data was also dropped; it held the same contents as the .RDS at about 110 times the size.

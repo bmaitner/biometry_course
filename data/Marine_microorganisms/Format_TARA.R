@@ -1,3 +1,8 @@
+# Note: this script will not run as-is. The raw .tab files it reads are not
+# stored in the repo (~145 MB, vs 0.7 MB for the combined result). Download them
+# again from the PANGAEA links below if you need to rebuild TARA_data_combined.RDS.
+# See the README in this folder.
+
 # Note: column names are cut off, see full names on Pangea
 
 # Tara Oceans Consortium, Coordinators; Tara Oceans Expedition, Participants (2015): Biodiversity context of all samples from the Tara Oceans Expedition (2009-2013) [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.853809
