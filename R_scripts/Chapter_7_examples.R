@@ -191,7 +191,7 @@ time_per_nll <- brute_force_time["elapsed"]/nrow(likelihood_surface)
   AICtab(m1.sa,m1.bfgs,m1.nm,m1.bfgs.bad_start,m1.nm.bad_start,m1.sa.bad_start,m1.sa.1,m1.sa.2005)
   
 
-# lecture 18 --------------------------------------------------------------
+# lecture 20 --------------------------------------------------------------
 
   
   #pairwise combo scaling with n parameters

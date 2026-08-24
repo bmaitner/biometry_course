@@ -469,7 +469,7 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
 # 6.6 Model comparison ----------------------------------------------------
 
 
-# lecture 16 fir data overview --------------------------------------------
+# lecture 18 fir data overview --------------------------------------------
 
   
   
@@ -501,7 +501,7 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
   
   
 
-# lecture 16 modelling fir data -------------------------------------------
+# lecture 18 modelling fir data -------------------------------------------
 
 
   library(emdbook)
@@ -546,7 +546,7 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
 
 
 
-# lecture 16 model overfitting example ------------------------------------
+# lecture 18 model overfitting example ------------------------------------
 
     
     # make a function to generate linear data with a normal distribution  

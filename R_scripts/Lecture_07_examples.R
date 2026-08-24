@@ -1,4 +1,4 @@
-# Code for lecture 23
+# Code for lecture 7 (tidyverse)
 
   library(tidyverse)
 

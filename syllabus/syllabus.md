@@ -145,26 +145,26 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | 4 | Sep 3 Th | Intro to Data in R; Work on loading and viewing data | Read 2.1 – 2.3; Think about data of interest |
 | 5 | Sep 8 T | Exploratory analyses and graphics; Work on exploratory analyses (2.6) | Read 2.4 – 2.5 |
 | 6 | Sep 10 Th | **Assignment 1: Data exploration.** Exploratory analyses and graphics; Work on exploratory analyses | Review 2.5 – 2.6 |
-| 7 | Sep 15 T | Deterministic functions | Read 3.1 – 3.3 |
-| 8 | Sep 17 Th | Deterministic functions; Working with functions | Read 3.4 – 3.5; Complete 3.6; **Assignment 1 Due** |
-| 9 | Sep 22 T | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
-| 10 | Sep 24 Th | **Assignment 2: Distributions.** Probability and Stochastic distributions; Working with the bestiary of distributions | Skim 4.5 – 4.6 |
-| 11 | Sep 29 T | Stochastic simulation | Read 5.1 – 5.2 |
-| 12 | Oct 1 Th | Power analysis | Read 5.3; **Assignment 2 Due** |
-| 13 | Oct 6 T | Likelihood: Parameter estimation; Midterm explained | Read 6.1 – 6.2 (6.2.2 is optional) |
-| 14 | Oct 8 Th | Estimating complex functions | 6.3 (6.3.2 optional) |
-| 15 | Oct 13 T | Confidence intervals; Mid-semester check-in | 6.4 (6.4.2 optional); Skim 6.5; **Midterm due** |
-| 16 | Oct 15 Th | **Assignment 3: Model selection.** Model comparisons | 6.6 (6.6.3 optional) |
-| 17 | Oct 20 T | Model fitting | 7.1 – 7.2 |
-| 18 | Oct 22 Th | Issues with model fitting | 7.4 |
-| 19 | Oct 27 T | Confidence limits | 7.5 |
-| 20 | Oct 29 Th | Likelihood Examples; Work through examples in class | Skim chapter 8; **Assignment 3 Due** |
-| 21 | Nov 3 T | General Linear Models | 9.1 – 9.2 |
-| 22 | Nov 5 Th | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
-| 23 | Nov 10 T | Tidyverse | *R for Data Science*: Chapter 3 |
-| 24 | Nov 12 Th | Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5 |
-| 25 | Nov 17 T | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 4 Due** |
-| 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3> |
+| 7 | Sep 15 T | Tidyverse: rearranging data to ask questions (filter, mutate, group_by, summarise) | *R for Data Science*: Chapter 3 |
+| 8 | Sep 17 Th | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 1 Due** |
+| 9 | Sep 22 T | Deterministic functions | Read 3.1 – 3.3 |
+| 10 | Sep 24 Th | Deterministic functions; Working with functions | Read 3.4 – 3.5; Complete 3.6 |
+| 11 | Sep 29 T | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
+| 12 | Oct 1 Th | **Assignment 2: Distributions.** Probability and Stochastic distributions; Working with the bestiary of distributions | Skim 4.5 – 4.6 |
+| 13 | Oct 6 T | Stochastic simulation; Midterm explained | Read 5.1 – 5.2 |
+| 14 | Oct 8 Th | Power analysis | Read 5.3; **Assignment 2 Due** |
+| 15 | Oct 13 T | Likelihood: Parameter estimation | Read 6.1 – 6.2 (6.2.2 is optional); **Midterm due** |
+| 16 | Oct 15 Th | Estimating complex functions | 6.3 (6.3.2 optional) |
+| 17 | Oct 20 T | Confidence intervals; Mid-semester check-in | 6.4 (6.4.2 optional); Skim 6.5 |
+| 18 | Oct 22 Th | **Assignment 3: Model selection.** Model comparisons | 6.6 (6.6.3 optional) |
+| 19 | Oct 27 T | Model fitting | 7.1 – 7.2 |
+| 20 | Oct 29 Th | Issues with model fitting | 7.4 |
+| 21 | Nov 3 T | Confidence limits | 7.5 |
+| 22 | Nov 5 Th | Likelihood Examples; Work through examples in class | Skim chapter 8; **Assignment 3 Due** |
+| 23 | Nov 10 T | General Linear Models | 9.1 – 9.2 |
+| 24 | Nov 12 Th | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
+| 25 | Nov 17 T | Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5 |
+| 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3>; **Assignment 4 Due** |
 | 27 | Nov 24 T | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6 |
 | — | Nov 26 Th | *Thanksgiving — No classes* |  |
 | 28 | Dec 1 T | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
