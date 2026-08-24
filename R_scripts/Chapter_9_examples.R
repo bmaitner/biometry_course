@@ -12,7 +12,7 @@ library(tidyverse)
 
 # Load data
 
-  avo <- read_rds("https://tinyurl.com/avonetdata") |>
+  avo <- read_rds("https://tinyurl.com/avonetbirddata") |>
     filter(Family1 == "Psittacidae")
 
 
@@ -365,7 +365,7 @@ library(tidyverse)
         
         code_data <- readr::read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Code_sharing/code_data.RDS")
         
-        code_data <- readr::read_rds("https://tinyurl.com/codesharingdata")
+        code_data <- readr::read_rds("https://tinyurl.com/codesharingdataset")
 
         
         

@@ -3,7 +3,7 @@
 library(tidyverse)
 library(reprex)
 
-  traits <- read_rds("https://tinyurl.com/amniotes")
+  traits <- read_rds("https://tinyurl.com/amniotetraits")
 
 # basic issues ------------------------------------------------------------
 
@@ -100,7 +100,7 @@ library(reprex)
     
 reprex({
   
-  traits <- read_rds("https://tinyurl.com/amniotes")
+  traits <- read_rds("https://tinyurl.com/amniotetraits")
   
   traits |>
   ggplot(mapping = aes(x=adult_body_mass_g,
@@ -117,7 +117,7 @@ reprex({
 
 reprex({
   
-  traits <- read_rds("https://tinyurl.com/amniotes")
+  traits <- read_rds("https://tinyurl.com/amniotetraits")
   
   traits |>
     ggplot(mapping = aes(x=adult_body_mass_g,
@@ -139,7 +139,7 @@ reprex({
   library(ggplot2)
   
   # Load the dataset correctly from URL
-  traits <- readRDS(url("https://tinyurl.com/amniotes"))
+  traits <- readRDS(url("https://tinyurl.com/amniotetraits"))
   
   # Quick look
   dplyr::glimpse(traits)

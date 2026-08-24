@@ -9,7 +9,7 @@
 
 #let's get some data
 
-  avo <- read_rds("https://tinyurl.com/avonetdata")
+  avo <- read_rds("https://tinyurl.com/avonetbirddata")
 
 
 # distributions -----------------------------------------------------------

@@ -442,7 +442,7 @@ data(GobySurvival)
     filter(Family1 == "Momotidae") |>
     arrange(Beak.Length_Nares)
   
-  avo <- read_rds("https://tinyurl.com/avonetdata") |>
+  avo <- read_rds("https://tinyurl.com/avonetbirddata") |>
     filter(Family1 == "Momotidae") |>
     arrange(Beak.Length_Nares)
   
