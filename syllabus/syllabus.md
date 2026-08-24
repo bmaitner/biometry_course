@@ -15,22 +15,22 @@ output:
     toc: true
 ---
 
-![](images/usf_signature.png){width=2.5in}
+![](images/usf_signature.png){width="2.5in"}
 
 **PCB 6455 / BSC 4933: Biometry**
 
 CRN 92379/89986, Section #601, Credit Hours: 4
 
-|                        |                                      |
-|------------------------|--------------------------------------|
-| Semester               | Fall 2026                            |
-| Class Meeting Days     | T, Th                                |
-| Class Meeting Time     | 2:00 – 3:15 pm                       |
-| Class Meeting Location | DAV 266                              |
-| Instructor             | Dr. Brian Maitner                    |
-| Office Location        | DAV 226                              |
-| Office Hours           | Tues 3:15 – 4:15 (or by appointment) |
-| Email                  | bmaitner@usf.edu                     |
+|  |  |
+|----|----|
+| Semester | Fall 2026 |
+| Class Meeting Days | T, Th |
+| Class Meeting Time | 2:00 – 3:15 pm |
+| Class Meeting Location | DAV 266 |
+| Instructor | Dr. Brian Maitner |
+| Office Location | DAV 226 |
+| Office Hours | Tues 3:15 – 4:15 (or by appointment) |
+| Email | [bmaitner\@usf.edu](mailto:bmaitner@usf.edu){.email} |
 
 # University Course Description
 
@@ -52,11 +52,11 @@ The course will be taught in a "flipped" format: students will be expected to do
 
 Upon completing this course, students will:
 
-1. develop an understanding of the fundamental concepts underlying statistical analyses
-2. identify proper approaches in collecting and analyzing data, and interpreting and presenting the results of biological investigations using R scripts
-3. become familiar with how to design successful biological experiments
-4. learn to think critically about the world, in general, and science specifically
-5. lay the foundation for future statistical development and learning
+1.  develop an understanding of the fundamental concepts underlying statistical analyses
+2.  identify proper approaches in collecting and analyzing data, and interpreting and presenting the results of biological investigations using R scripts
+3.  become familiar with how to design successful biological experiments
+4.  learn to think critically about the world, in general, and science specifically
+5.  lay the foundation for future statistical development and learning
 
 # Course Objectives
 
@@ -137,39 +137,39 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 
 # Course Schedule
 
-| Lecture | Date      | Subject | Due |
-|---------|-----------|---------|-----|
-| 1  | Aug 25 T  | Syllabus; Why we need statistics; Reproducibility and Openness | |
-| 2  | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
-| 3  | Sep 1 T   | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
-| 4  | Sep 3 Th  | Intro to Data in R; Work on loading and viewing data | Read 2.1 – 2.3; Think about data of interest |
-| 5  | Sep 8 T   | Exploratory analyses and graphics; Work on exploratory analyses (2.6) | Read 2.4 – 2.5 |
-| 6  | Sep 10 Th | **Assignment 1: Data exploration.** Exploratory analyses and graphics; Work on exploratory analyses | Review 2.5 – 2.6 |
-| 7  | Sep 15 T  | Brian out of town (no lecture). Deterministic functions | Read 3.1 – 3.3 |
-| 8  | Sep 17 Th | Brian out of town (no lecture). Deterministic functions; Working with functions | Read 3.4 – 3.5; Complete 3.6; **Assignment 1 Due** |
-| 9  | Sep 22 T  | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
+| Lecture | Date | Subject | Due |
+|-----------|-----------|--------------------------|----------------|
+| 1 | Aug 25 T | Syllabus; Why we need statistics; Reproducibility and Openness |  |
+| 2 | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
+| 3 | Sep 1 T | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
+| 4 | Sep 3 Th | Intro to Data in R; Work on loading and viewing data | Read 2.1 – 2.3; Think about data of interest |
+| 5 | Sep 8 T | Exploratory analyses and graphics; Work on exploratory analyses (2.6) | Read 2.4 – 2.5 |
+| 6 | Sep 10 Th | **Assignment 1: Data exploration.** Exploratory analyses and graphics; Work on exploratory analyses | Review 2.5 – 2.6 |
+| 7 | Sep 15 T | Deterministic functions | Read 3.1 – 3.3 |
+| 8 | Sep 17 Th | Deterministic functions; Working with functions | Read 3.4 – 3.5; Complete 3.6; **Assignment 1 Due** |
+| 9 | Sep 22 T | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
 | 10 | Sep 24 Th | **Assignment 2: Distributions.** Probability and Stochastic distributions; Working with the bestiary of distributions | Skim 4.5 – 4.6 |
-| 11 | Sep 29 T  | Stochastic simulation | Read 5.1 – 5.2 |
-| 12 | Oct 1 Th  | Power analysis | Read 5.3; **Assignment 2 Due** |
-| 13 | Oct 6 T   | Likelihood: Parameter estimation; Midterm explained | Read 6.1 – 6.2 (6.2.2 is optional) |
-| 14 | Oct 8 Th  | Estimating complex functions | 6.3 (6.3.2 optional) |
-| 15 | Oct 13 T  | Confidence intervals; Mid-semester check-in | 6.4 (6.4.2 optional); Skim 6.5; **Midterm due** |
+| 11 | Sep 29 T | Stochastic simulation | Read 5.1 – 5.2 |
+| 12 | Oct 1 Th | Power analysis | Read 5.3; **Assignment 2 Due** |
+| 13 | Oct 6 T | Likelihood: Parameter estimation; Midterm explained | Read 6.1 – 6.2 (6.2.2 is optional) |
+| 14 | Oct 8 Th | Estimating complex functions | 6.3 (6.3.2 optional) |
+| 15 | Oct 13 T | Confidence intervals; Mid-semester check-in | 6.4 (6.4.2 optional); Skim 6.5; **Midterm due** |
 | 16 | Oct 15 Th | **Assignment 3: Model selection.** Model comparisons | 6.6 (6.6.3 optional) |
-| 17 | Oct 20 T  | Model fitting | 7.1 – 7.2 |
+| 17 | Oct 20 T | Model fitting | 7.1 – 7.2 |
 | 18 | Oct 22 Th | Issues with model fitting | 7.4 |
-| 19 | Oct 27 T  | Confidence limits | 7.5 |
+| 19 | Oct 27 T | Confidence limits | 7.5 |
 | 20 | Oct 29 Th | Likelihood Examples; Work through examples in class | Skim chapter 8; **Assignment 3 Due** |
-| 21 | Nov 3 T   | General Linear Models | 9.1 – 9.2 |
-| 22 | Nov 5 Th  | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
-| 23 | Nov 10 T  | Tidyverse | *R for Data Science*: Chapter 3 |
+| 21 | Nov 3 T | General Linear Models | 9.1 – 9.2 |
+| 22 | Nov 5 Th | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
+| 23 | Nov 10 T | Tidyverse | *R for Data Science*: Chapter 3 |
 | 24 | Nov 12 Th | Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5 |
-| 25 | Nov 17 T  | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 4 Due** |
+| 25 | Nov 17 T | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 4 Due** |
 | 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3> |
-| 27 | Nov 24 T  | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6 |
-| —  | Nov 26 Th | *Thanksgiving — No classes* | |
-| 28 | Dec 1 T   | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
-| 29 | Dec 3 Th  | Catch-up; Work on final projects in class | Test free week; last T/Th class meeting |
-| —  | Dec 8 T   | **Presentations of Final Project** (final exam block, 12:30 – 2:30 pm) | **Final Project Due** |
+| 27 | Nov 24 T | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6 |
+| — | Nov 26 Th | *Thanksgiving — No classes* |  |
+| 28 | Dec 1 T | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
+| 29 | Dec 3 Th | Catch-up; Work on final projects in class | Test free week; last T/Th class meeting |
+| — | Dec 8 T | **Presentations of Final Project** (final exam block, 12:30 – 2:30 pm) | **Final Project Due** |
 
 \* Note: The Schedule is subject to revision.
 
@@ -209,7 +209,7 @@ The current university policy concerning incomplete grades will be followed in t
 
 **Title IX Policy:**
 
-Title IX provides federal protections for discrimination based on sex, which includes discrimination based on pregnancy, sexual harassment, and interpersonal violence. In an effort to provide support and equal access, **USF has designated all faculty (TA, Adjunct, etc.) as Responsible Employees, who are required to report any disclosures of sexual harassment, sexual violence, relationship violence or stalking.** The Title IX Office makes every effort, when safe to do so, to reach out and provide resources and accommodations, and to discuss possible options for resolution. Anyone wishing to make a Title IX report or seeking accommodations may do so online, in person, via phone, or email to the Title IX Office. For information about Title IX or for a full list of resources please visit: <https://www.usf.edu/title-ix/gethelp/resources.aspx>. If you are unsure what to do, please contact Victim Advocacy — a confidential resource that can review all your options — at 813-974-5756 or <va@admin.usf.edu>.
+Title IX provides federal protections for discrimination based on sex, which includes discrimination based on pregnancy, sexual harassment, and interpersonal violence. In an effort to provide support and equal access, **USF has designated all faculty (TA, Adjunct, etc.) as Responsible Employees, who are required to report any disclosures of sexual harassment, sexual violence, relationship violence or stalking.** The Title IX Office makes every effort, when safe to do so, to reach out and provide resources and accommodations, and to discuss possible options for resolution. Anyone wishing to make a Title IX report or seeking accommodations may do so online, in person, via phone, or email to the Title IX Office. For information about Title IX or for a full list of resources please visit: <https://www.usf.edu/title-ix/gethelp/resources.aspx>. If you are unsure what to do, please contact Victim Advocacy — a confidential resource that can review all your options — at 813-974-5756 or [va\@admin.usf.edu](mailto:va@admin.usf.edu){.email}.
 
 **Generative AI:**
 
