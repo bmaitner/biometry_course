@@ -5,3 +5,11 @@
 *.Rproj
 temp
 *_solution.R
+
+# Rendered syllabus outputs (regenerate with syllabus/render_syllabus.R)
+syllabus/syllabus.html
+syllabus/syllabus.docx
+syllabus/syllabus.pdf
+
+# Word lock files
+~$*
