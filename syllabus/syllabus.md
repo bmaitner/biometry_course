@@ -138,7 +138,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 # Course Schedule
 
 | Lecture | Date | Subject | Due |
-|----------------|----------------|--------------------------|----------------|
+|----|----|----|----|
 | 1 | Aug 25 T | Syllabus; Why we need statistics; Reproducibility and Openness |  |
 | 2 | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
 | 3 | Sep 1 T | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
