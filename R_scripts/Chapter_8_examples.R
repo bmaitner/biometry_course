@@ -4,6 +4,7 @@
 
 library(emdbook)
 library(bbmle)
+library(tidyverse)
 
 # load data
 
@@ -303,10 +304,10 @@ library(bbmle)
   library(tidyverse)
   library(ggplot2)
           
-  SeedPred %>%
-    mutate(prop_taken = taken/available)%>%
-    group_by(date)%>%
-    summarise(mean_taken = mean(prop_taken))%>%
+  SeedPred |>
+    mutate(prop_taken = taken/available)|>
+    group_by(date)|>
+    summarise(mean_taken = mean(prop_taken))|>
     ggplot(mapping = aes(x=date,y=mean_taken))+
     geom_point()
     

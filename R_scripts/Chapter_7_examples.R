@@ -5,6 +5,7 @@
 
 library(emdbook)
 library(bbmle)
+library(tidyverse)
 
 data("ReedfrogFuncresp")
 
@@ -52,7 +53,7 @@ m1.a <- mle2(
   a_vec = seq(from=0.1, to=0.9, by=.01)
   h_vec = seq(from=0.005, to=0.9, by=.001)
   
-  likelihood_surface <- expand.grid(a_vec,h_vec) %>% as.data.frame()
+  likelihood_surface <- expand.grid(a_vec,h_vec) |> as.data.frame()
   colnames(likelihood_surface) <- c("a","h")
   likelihood_surface$nll <- NA
 
@@ -118,9 +119,9 @@ time_per_nll <- brute_force_time["elapsed"]/nrow(likelihood_surface)
   
   time_table <- 
   data.frame(n_parms = n_parameters,
-             time_s = time_for_brute_force)%>%
-    mutate(time_h = time_s/3600) %>%
-    mutate(time_d = time_h/24) %>%
+             time_s = time_for_brute_force)|>
+    mutate(time_h = time_s/3600) |>
+    mutate(time_d = time_h/24) |>
     mutate(time_y = time_d/365.25)
   
   time_table
@@ -437,12 +438,12 @@ data(GobySurvival)
   library(readr)
   library(tidyverse)
   
-  avo <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") %>%
-    filter(Family1 == "Momotidae") %>%
+  avo <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") |>
+    filter(Family1 == "Momotidae") |>
     arrange(Beak.Length_Nares)
   
-  avo <- read_rds("https://tinyurl.com/avonetdata") %>%
-    filter(Family1 == "Momotidae") %>%
+  avo <- read_rds("https://tinyurl.com/avonetdata") |>
+    filter(Family1 == "Momotidae") |>
     arrange(Beak.Length_Nares)
   
   avo_model <- mle2(Beak.Length_Culmen ~ dnorm(mean = int + Beak.Length_Nares*b,

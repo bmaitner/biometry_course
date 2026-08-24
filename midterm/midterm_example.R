@@ -13,11 +13,11 @@
 
 library(readr)
 
-twoa <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2a.RDS")
+twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/2a.RDS")
 
-twob <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2b.RDS")
+twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/2b.RDS")
 
-twoc <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/midterm/2c.RDS")
+twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/2c.RDS")
 
 
 # Part 3 example code -----------------------------------------------------

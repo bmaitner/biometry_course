@@ -46,7 +46,7 @@ library(emdbook)
 # Reading in remotely -----------------------------------------------------
 
     
-    avonet_v3 <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
+    avonet_v3 <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
 
     
 # Getting data from an API online -----------------------------------------

@@ -322,7 +322,7 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
     a_vec = seq(from=0.1,to=0.9,by=.01)
     h_vec = seq(from=0.005,to=.04,by=.001)
 
-    likelihood_surface <- expand.grid(a_vec,h_vec) %>% as.data.frame()
+    likelihood_surface <- expand.grid(a_vec,h_vec) |> as.data.frame()
     colnames(likelihood_surface) <- c("a","h")
     likelihood_surface$nll <- NA
     
@@ -348,7 +348,7 @@ plot((ReedfrogFuncresp$Killed/ReedfrogFuncresp$Initial) ~ ReedfrogFuncresp$Initi
     }
     
     
-    likelihood_surface %>%
+    likelihood_surface |>
     ggplot(mapping = aes(x=a,y=h,fill=nll))+
       geom_raster()+
       geom_contour(mapping = aes(x=a,y=h,z=nll),bins = 5,color="white",inherit.aes = FALSE)+

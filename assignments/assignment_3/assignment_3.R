@@ -15,19 +15,19 @@ library(tidyverse)
 
   #load and reformat the data
   
-  citation_data <- readr::read_rds("https://github.com/bmaitner/R_citations/raw/refs/heads/main/data/cite_data.RDS") %>%
-    mutate(age_y = 2022-year) %>%
+  citation_data <- readr::read_rds("https://github.com/bmaitner/R_citations/raw/refs/heads/main/data/cite_data.RDS") |>
+    mutate(age_y = 2022-year) |>
     mutate(r_scripts_available = case_when(r_scripts_available == "yes" ~ 1,
-                                           r_scripts_available == "no" ~ 0)) %>%
+                                           r_scripts_available == "no" ~ 0)) |>
     mutate(citations = as.numeric(citations),
-           open_access = as.numeric(open_access)) %>%
-    ungroup()%>%
-    select(r_scripts_available,citations,open_access,age_y) %>%
+           open_access = as.numeric(open_access)) |>
+    ungroup()|>
+    select(r_scripts_available,citations,open_access,age_y) |>
     na.omit()
   
   # plot if you like 
   
-  citation_data %>%
+  citation_data |>
     ggplot(mapping = aes(x = age_y,y = citations))+
     geom_point()
 
@@ -59,14 +59,14 @@ library(tidyverse)
     # data_available is a binary variable that tells whether the data are publicly available (1) or not (0)
     
     
-  code_data <- readr::read_rds("https://github.com/bmaitner/R_citations/raw/refs/heads/main/data/cite_data.RDS") %>%
+  code_data <- readr::read_rds("https://github.com/bmaitner/R_citations/raw/refs/heads/main/data/cite_data.RDS") |>
     mutate(r_scripts_available = case_when(r_scripts_available == "yes" ~ 1,
-                                           r_scripts_available == "no" ~ 0)) %>%
+                                           r_scripts_available == "no" ~ 0)) |>
     mutate(data_available = case_when(data_available == "yes" ~ 1,
-                                      data_available == "no" ~ 0)) %>%
+                                      data_available == "no" ~ 0)) |>
     
     mutate(citations = as.numeric(citations),
-           open_access = as.numeric(open_access)) %>%
+           open_access = as.numeric(open_access)) |>
     mutate(year = year-2010)
   
 
@@ -104,15 +104,15 @@ library(tidyverse)
   
   # Note that I provide two ways to load the avonet dataset in case the csv file won't load for some of you.
   
-  avonet <- read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") %>%
-    select(Order1, Wing.Length, Mass, Range.Size) %>%
+  avonet <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds") |>
+    select(Order1, Wing.Length, Mass, Range.Size) |>
     na.omit()
   
-  avonet  <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv") %>%
-    select(Order1, Wing.Length, Mass, Range.Size) %>%
+  avonet  <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv") |>
+    select(Order1, Wing.Length, Mass, Range.Size) |>
     na.omit()
   
-  avonet %>%
+  avonet |>
     ggplot(mapping = aes(y=Wing.Length,x=Mass))+
     geom_point()
 

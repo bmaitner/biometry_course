@@ -8,10 +8,11 @@
 
 library(readr)
 library(bbmle)
+library(tidyverse)
 
 # Load data
 
-  avo <- read_rds("https://tinyurl.com/avonetdata") %>%
+  avo <- read_rds("https://tinyurl.com/avonetdata") |>
     filter(Family1 == "Psittacidae")
 
 
@@ -338,13 +339,13 @@ library(bbmle)
                          control=list(tolerance=10)) #tolerance needed for fitting
         
         fir.gnls.1 <- gnls(fecundity ~ int+a*DBH^b,
-             data = FirDBHFec_sum %>% na.omit(),
+             data = FirDBHFec_sum |> na.omit(),
              params = list(int ~ 1, a ~ 1, b ~ pop),
              start= list(int = 0.58, a = 0.5, b = c(2,2)),
              control=list(tolerance=10))
         
         fir.gnls.2 <- gnls(fecundity ~ int+a*DBH^b,
-                         data = FirDBHFec_sum %>% na.omit(),
+                         data = FirDBHFec_sum |> na.omit(),
                          params = list(int ~ pop, a ~ pop, b ~ pop),
                          start= list(int = c(0.58,0.58), a = c(0.5,0.5), b = c(2,2)),
                          control=list(tolerance=10))
@@ -362,7 +363,7 @@ library(bbmle)
         
         library(readr)
         
-        code_data <- readr::read_rds("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Code_sharing/code_data.RDS")
+        code_data <- readr::read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Code_sharing/code_data.RDS")
         
         code_data <- readr::read_rds("https://tinyurl.com/codesharingdata")
 

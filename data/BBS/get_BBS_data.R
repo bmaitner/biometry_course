@@ -25,13 +25,13 @@ devtools::install_github("https://github.com/trashbirdecology/bbsAssistant")
 
 # Join the parts into one file
   
-  bbs_observation <- bbs_observation %>%
+  bbs_observation <- bbs_observation |>
     left_join(bbs_species)
 
-  bbs_observation <- bbs_observation %>%
+  bbs_observation <- bbs_observation |>
     left_join(bbs_routes)
   
-  bbs_observation <- bbs_observation %>%
+  bbs_observation <- bbs_observation |>
     left_join(bbs_weather)
   
 # Cleanup
@@ -41,13 +41,13 @@ devtools::install_github("https://github.com/trashbirdecology/bbsAssistant")
 # Subset to Florida (state 25)  
 
   fl_bbs_obs <- 
-  bbs_observation %>%
+  bbs_observation |>
     filter(StateNum == 25)
 
 # Convert to sf
   
 
-  fl_bbs_obs <- fl_bbs_obs %>%
+  fl_bbs_obs <- fl_bbs_obs |>
     st_as_sf(coords = c("Longitude","Latitude"),
              remove=FALSE)
   
@@ -97,30 +97,30 @@ devtools::install_github("https://github.com/trashbirdecology/bbsAssistant")
   
   #plot(footprint)
 
-  fl_bbs_obs$mean_annual_temp <- extract(x = mean_tavg,y = fl_bbs_obs,ID=FALSE) %>%
+  fl_bbs_obs$mean_annual_temp <- extract(x = mean_tavg,y = fl_bbs_obs,ID=FALSE) |>
     pull(mean_annual_temp)
   
-  fl_bbs_obs$mean_annual_precip <- extract(x = total_prec,y = fl_bbs_obs,ID=FALSE) %>%
+  fl_bbs_obs$mean_annual_precip <- extract(x = total_prec,y = fl_bbs_obs,ID=FALSE) |>
     pull(mean_annual_precip)
   
-  fl_bbs_obs$frac_built <- extract(x = built,y = fl_bbs_obs,ID=FALSE) %>%
+  fl_bbs_obs$frac_built <- extract(x = built,y = fl_bbs_obs,ID=FALSE) |>
     pull(built)
   
-  fl_bbs_obs$footprint <- extract(x = footprint,y = fl_bbs_obs,ID=FALSE) %>%
+  fl_bbs_obs$footprint <- extract(x = footprint,y = fl_bbs_obs,ID=FALSE) |>
     pull('wildareas-v3-2009-human-footprint')
 
   # add total sightings and subset to key fields
   
     fl_bbs_obs <- 
-    fl_bbs_obs %>%
-      mutate(total_sightings = rowSums(pick(matches("^Stop"))))%>%
+    fl_bbs_obs |>
+      mutate(total_sightings = rowSums(pick(matches("^Stop"))))|>
       select(RouteDataID,Route,
              Year,Month,Day,
              ORDER,Family,Genus,Scientific_Name,
              total_sightings,TotalSpp,
              StartTemp,EndTemp,TempScale,StartTime,EndTime,StartWind,EndWind,
              mean_annual_temp,mean_annual_precip,frac_built,footprint,
-             Latitude,Longitude) %>%
+             Latitude,Longitude) |>
       st_drop_geometry()
 
     # save data subset
@@ -134,8 +134,8 @@ devtools::install_github("https://github.com/trashbirdecology/bbsAssistant")
     bbs_files <- list.files(path = "data/BBS/",full.names = TRUE,recursive = TRUE)
     
     bbs_files <-
-    data.frame(files = bbs_files) %>%
-      mutate(basename = basename(files)) %>%
+    data.frame(files = bbs_files) |>
+      mutate(basename = basename(files)) |>
       filter(!basename %in% c("README","FL_BBS.csv","get_BBS_data.R")) 
 
     unlink(x = bbs_files$files,recursive = TRUE,force = TRUE)    

@@ -41,11 +41,11 @@
       
   # Subset to parrots or cockatoos
       
-      parrots_or_cockatoos <- avo %>%
+      parrots_or_cockatoos <- avo |>
         filter(Family1 == "Psittacidae" |
                  Family1 == "Cacatuidae")
       
-      parrots_or_cockatoos2 <- avo %>%
+      parrots_or_cockatoos2 <- avo |>
         filter(Family1 %in% c("Psittacidae","Cacatuidae")
                )
 
@@ -76,16 +76,16 @@
       
       #Arrange by size
       
-      avo_by_mass <- avo %>%
+      avo_by_mass <- avo |>
         arrange(Mass)
       
       # base R
         avo_by_mass2 <- avo[order(avo$Mass),]
       
-      avo_by_mass_dec <- avo %>%
+      avo_by_mass_dec <- avo |>
         arrange(-Mass)
       
-      avo_by_mass_dec2 <- avo %>%
+      avo_by_mass_dec2 <- avo |>
         arrange(desc(Mass))
       
       # base R
@@ -98,22 +98,22 @@
 
     # Remove duplicates
         
-        avo_no_dupes <- avo %>%
+        avo_no_dupes <- avo |>
           distinct()
         
     # How many families are there?
         
-      avo_famy <- avo %>%
+      avo_famy <- avo |>
         distinct(Family1)
       
     # Which trophic levels occur in each family?
       
-      family_trohich_levels <- avo %>%
+      family_trohich_levels <- avo |>
         distinct(Family1,Trophic.Level)
         
     # How many species in each family?
       
-      avo %>%
+      avo |>
         count(Family1,sort = TRUE)
 
 
@@ -122,17 +122,17 @@
 
       # Let's say we wanted to know how similar the two beak length measurements are
       
-      avo_w_beak_diff <- avo %>%
+      avo_w_beak_diff <- avo |>
         mutate(beak_length_difference = Beak.Length_Culmen - Beak.Length_Nares)
       
       hist(avo_w_beak_diff$beak_length_difference)
       
-      avo_w_beak_diff %>%
+      avo_w_beak_diff |>
         arrange(-beak_length_difference)
                     
     # What if we wanted to scale that by body size?  
       
-      avo_w_beak_diff2 <- avo %>%
+      avo_w_beak_diff2 <- avo |>
         mutate(relative_beak_length_difference = (Beak.Length_Culmen - Beak.Length_Nares)/Mass)
 
       avo_w_beak_diff2 |>
@@ -177,7 +177,7 @@
 
   #Let's say we wanted to rename some of the fields
         
-        avo %>%
+        avo |>
           rename(Species = Species1,
                  Family = Family1,
                  Order = Order1)

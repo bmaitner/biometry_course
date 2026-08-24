@@ -79,7 +79,7 @@ abline(v = as.numeric(names(which.max(table(med_vec)))),
 
 # examples of working with distributions ----------------------------------
 
-avonet <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
+avonet <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
 
 var(avonet$Mass) == (sd(avonet$Mass)^2)
 

@@ -40,7 +40,7 @@ For this course, I want to see the code you use, so make sure NOT to set echo=FA
 
 ```{r}
 
-avonet <- read.csv("https://github.com/bmaitner/Statistical_ecology_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
+avonet <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.csv")
 
 str(avonet)
 

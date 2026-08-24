@@ -120,19 +120,19 @@ library(ggplot2)
 
 # Combine the two
 
-  combined_data <-  x_values_per_species %>%
+  combined_data <-  x_values_per_species |>
     left_join(species_parms)
   
 # Make species a factor
   
   combined_data <- 
-  combined_data %>%
+  combined_data |>
     mutate(species = as.factor(species))
 
 # Use mutate to calculate y_det
   
   combined_data <-
-    combined_data %>%
+    combined_data |>
       mutate(y_det = a/(b+x))
   
 # Plot determinate bit
@@ -145,8 +145,8 @@ library(ggplot2)
 # Add stochastic bit:
   
   combined_data <-
-  combined_data %>%
-    rowwise() %>% # note this bit!
+  combined_data |>
+    rowwise() |> # note this bit!
     mutate(y = rnbinom(n = 1,size = k,mu = y_det))
 
   
@@ -216,11 +216,11 @@ library(ggplot2)
     
     # or use tidyverse
     
-      coefs <- as.data.frame(coef(summary(m))) %>%
+      coefs <- as.data.frame(coef(summary(m))) |>
         rownames_to_column(var = "parameter")
     
-      coefs %>%
-        filter(parameter == "x")%>%
+      coefs |>
+        filter(parameter == "x")|>
         pull(`Pr(>|t|)`)
 
   # Wrap this in a for() loop

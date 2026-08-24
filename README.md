@@ -4,6 +4,8 @@ This repo contains materials related to a statistical ecology course I'm teachin
 
 [![DOI](https://zenodo.org/badge/1038173254.svg)](https://doi.org/10.5281/zenodo.17923198)
 
+Several scripts load data over the network, some of them through `tinyurl.com` short links. Those links and what they point to are documented in [data/short_links.md](data/short_links.md).
+
 ## Useful Links
 
 R for Data Science
