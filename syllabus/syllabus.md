@@ -25,8 +25,8 @@ CRN 92379/89986, Section #601, Credit Hours: 4
 |----|----|
 | Semester | Fall 2026 |
 | Class Meeting Days | T, Th |
-| Class Meeting Time | 2:00 – 3:15 pm |
-| Class Meeting Location | DAV 266 |
+| Class Meeting Time | 2:00 – 3:50 pm |
+| Class Meeting Location | DAV 265 |
 | Instructor | Dr. Brian Maitner |
 | Office Location | DAV 226 |
 | Office Hours | Tues 3:15 – 4:15 (or by appointment) |
@@ -138,7 +138,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 # Course Schedule
 
 | Lecture | Date | Subject | Due |
-|----|----|----|----|
+|----------------|----------------|-----------------------|----------------|
 | 1 | Aug 25 T | Syllabus; Why we need statistics; Reproducibility and Openness |  |
 | 2 | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
 | 3 | Sep 1 T | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
