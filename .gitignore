@@ -14,3 +14,6 @@ syllabus/syllabus.pdf
 
 # Word lock files
 ~$*
+
+# Draft slide content -- working notes, not for publication
+*_draft_additions.md
