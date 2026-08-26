@@ -1,6 +1,6 @@
 # Overview
 
-This repo contains materials related to a statistical ecology course I'm teaching. The course is based on Ben Bolker's Ecological Models and Data in R textbook (ISBN: 978-0691125220), and so the organization and topics covered are largely taken from that source. Any content here (aside from images and datasets that may be licensed otherwise) should be considered CC-BY, while code is licensed under an MIT license.
+This repo contains materials related to a statistical ecology course I'm teaching. The course is based on Ben Bolker's Ecological Models and Data in R textbook (ISBN: 978-0691125220), and so the organization and topics covered are largely taken from that source. Code here is licensed under an MIT license and content I've written is CC-BY, but some material isn't mine to license — see [Licensing and reuse](#licensing-and-reuse) below.
 
 [![DOI](https://zenodo.org/badge/1038173254.svg)](https://doi.org/10.5281/zenodo.17923198)
 
@@ -87,3 +87,15 @@ Plant Datasets (include species, abundances, traits, environment, etc.)
 Trait data
 
   * Open Traits <https://opentraits.org/>
+
+## Licensing and reuse
+
+Code in this repo is licensed under an MIT license (see [LICENSE](LICENSE)). Other content I've written — slides, syllabus, notes — should be considered CC-BY.
+
+Some of what's here isn't mine to license, and the CC-BY grant does not extend to it:
+
+* **Datasets and images** may carry their own licenses. Each folder in `data/` has a README recording where that data came from and how it's licensed.
+
+* **Material adapted from the course textbook.** The lectures follow the organization of Bolker's *Ecological Models and Data in R*, and some slides adapt tables, examples, and figures from it in order to teach from it. That material remains the copyright of the author and publisher. It is reproduced here for nonprofit educational use, and is not covered by the CC-BY grant above.
+
+If you'd like to reuse something and it isn't clear which of these it falls under, ask me.
