@@ -138,7 +138,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 # Course Schedule
 
 | Lecture | Date | Subject | Due |
-|----------------|----------------|-----------------------|----------------|
+|----|----|----|----|
 | 1 | Aug 25 T | Syllabus; Why we need statistics; Reproducibility and Openness |  |
 | 2 | Aug 27 Th | Frameworks for modelling; Installing R and RStudio (and Github) | Read 1.1 – 1.3 |
 | 3 | Sep 1 T | Statistical Frameworks; Work through 1.7 | Read 1.4 – 1.6 |
@@ -169,11 +169,11 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | — | Nov 26 Th | *Thanksgiving — No classes* |  |
 | 28 | Dec 1 T | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
 | 29 | Dec 3 Th | Catch-up; Work on final projects in class | Test free week; last T/Th class meeting |
-| — | Dec 8 T | **Presentations of Final Project** (final exam block, 12:30 – 2:30 pm) | **Final Project Due** |
+| — | TBD | **Presentations of Final Project** (during the scheduled final exam block, Dec 5 – 10 — exact day and time TBD) | **Final Project Due** |
 
 \* Note: The Schedule is subject to revision.
 
-**Fall 2026 University dates used above** (USF Office of the Registrar): classes begin Aug 24; Labor Day Sep 7 (a Monday, so it does not affect this course); Veterans Day Nov 11 (a Wednesday, so it does not affect this course); Thanksgiving Nov 26–27; Test Free Week Nov 28 – Dec 4; classes end Dec 4; final exams Dec 5–10. Per the USF Standard Final Exam Matrix, a TR 2:00 – 3:15 pm course takes its final exam block on Tuesday, Dec 8, 12:30 – 2:30 pm.
+**Fall 2026 University dates used above** (USF Office of the Registrar): classes begin Aug 24; Labor Day Sep 7 (a Monday, so it does not affect this course); Veterans Day Nov 11 (a Wednesday, so it does not affect this course); Thanksgiving Nov 26–27; Test Free Week Nov 28 – Dec 4; classes end Dec 4; final exams Dec 5–10. This course meets T/Th 2:00 – 3:50 pm, which is not one of the meeting patterns listed on the USF Standard Final Exam Matrix, so its exam slot is assigned by the Academic Scheduling Team rather than read off the matrix. The final exam day and time will be confirmed and posted here.
 
 # USF Core Syllabus Policies
 
