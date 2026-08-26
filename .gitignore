@@ -5,6 +5,7 @@
 *.Rproj
 temp
 *_solution.R
+misc
 
 # Rendered syllabus outputs (regenerate with syllabus/render_syllabus.R)
 syllabus/syllabus.html
