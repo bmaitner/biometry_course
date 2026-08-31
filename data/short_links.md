@@ -40,8 +40,8 @@ Scripts — **updated**, all 10 call sites now use the new links:
 | `tinyurl.com/codesharingdataset` | `R_scripts/Chapter_9_examples.R:368` |
 
 Slides — **still to do**. Because new links were created rather than the old ones
-repointed, the decks need editing too. See
-[../lectures/README.md](../lectures/README.md) for the affected slides.
+repointed, the decks need editing too. The affected slides are listed in the
+local checklist at `lectures/README.md` (not published).
 
 Lecture 07 (tidyverse) opens by loading the Avonet data, so that deck matters first.
 

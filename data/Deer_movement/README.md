@@ -1,6 +1,6 @@
 # Dynamic riskscapes for prey: Disentangling the impact of human and cougar presence on deer behavior using GPS smartphone locations
 
-Dataset DOI: [10.5061/dryad.51c59zwkg](10.5061/dryad.51c59zwkg)
+Dataset DOI: [10.5061/dryad.51c59zwkg](https://doi.org/10.5061/dryad.51c59zwkg)
 
 ## Description of the data and file structure
 

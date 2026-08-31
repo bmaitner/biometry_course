@@ -198,6 +198,145 @@
 
   # Which parts of the scatter are "real" and which are the rnorm() we added?
 
+  # Note what we just did:
+  #   mean = 2 * frogs   is the deterministic model (the signal)
+  #   sd   = 0.5         is the stochastic model (the noise)
+  # Those are the two branches of the flowchart, written as one line of code.
+
+
+# Turning the noise up ----------------------------------------------------
+
+  # Same signal, same true slope of 2, but much more variable.
+
+    tadpoles_noisy <- rnorm(n = 20, mean = 2 * frogs, sd = 3)
+
+    plot(x = frogs, y = tadpoles_noisy)
+
+    abline(a = 0, b = 2)
+
+  # Would you have guessed the line was there, if we hadn't drawn it?
+
+  # Try a few values of sd and see where the relationship stops being obvious.
+
+    plot(x = frogs, y = rnorm(n = 20, mean = 2 * frogs, sd = 1))
+    abline(a = 0, b = 2)
+
+    plot(x = frogs, y = rnorm(n = 20, mean = 2 * frogs, sd = 10))
+    abline(a = 0, b = 2)
+
+  # This is why the stochastic half of a model matters as much as the
+  # deterministic half.  We'll come back to it properly in the power
+  # analysis lecture.
+
+
+# Can we recover the truth? -----------------------------------------------
+
+  # With real data we never know the right answer.  Here we do: the slope is 2.
+  # So we can check whether our estimate is any good.
+
+  # Note carefully what lm() is doing.  We simulated the data, but lm() doesn't
+  # know that.  It fits its own model, with its own two halves:
+  #
+  #   deterministic: a straight line, y = intercept + slope * x
+  #   stochastic:    normally distributed errors, constant variance
+  #
+  # Those are the two branches of the flowchart.  Our simulation happened to use
+  # the same shapes, which is why the estimate lands near the truth.  With real
+  # data you never get to check that.
+
+    frog_lm <- lm(tadpoles ~ frogs)
+
+    frog_lm
+
+    coef(frog_lm)  # how close is the slope to 2?
+
+  # The flowchart's next box is "estimate confidence regions":
+
+    confint(frog_lm)
+
+  # Does the interval for "frogs" contain the true slope of 2?
+
+  # With set.seed(101) it does NOT: the interval runs from about 1.69 to 1.98.
+  # Our 95% confidence interval missed the true value.
+
+  # This is not a mistake.  A 95% interval is built to miss one time in twenty.
+  # We just happened to draw one of those.  Since we can simulate as many
+  # datasets as we like, we can check that directly:
+
+    covered <- replicate(n = 1000, {
+
+      sim_tadpoles <- rnorm(n = 20, mean = 2 * frogs, sd = 0.5)
+
+      ci <- confint(lm(sim_tadpoles ~ frogs))["frogs", ]
+
+      ci[1] < 2 & 2 < ci[2]   # did this interval contain the truth?
+
+    })
+
+    mean(covered)   # should be close to 0.95
+
+  # That is what "95% confidence" actually means: not "95% sure the truth is in
+  # this interval", but "intervals built this way contain the truth 95% of the
+  # time".  Ours was one of the 5%.
+
+  # Now the noisy version
+
+    frog_lm_noisy <- lm(tadpoles_noisy ~ frogs)
+
+    coef(frog_lm_noisy)
+
+  # Which one is closer to 2?  Careful -- the answer may surprise you, and it
+  # will change depending on the seed.  A single draw can't tell us much.
+
+  # This is the "estimate parameters" box of the flowchart.
+
+
+# What does the noise actually do to our estimates? -----------------------
+
+  # Instead of one dataset each, let's build a thousand of each and look at
+  # the whole set of slope estimates we get.
+
+    slopes_clean <- replicate(n = 1000,
+                              coef(lm(rnorm(n = 20,
+                                            mean = 2 * frogs,
+                                            sd = 0.5) ~ frogs))[2])
+
+    slopes_noisy <- replicate(n = 1000,
+                              coef(lm(rnorm(n = 20,
+                                            mean = 2 * frogs,
+                                            sd = 3) ~ frogs))[2])
+
+  # On average, are either of them wrong?
+
+    mean(slopes_clean)
+    mean(slopes_noisy)
+
+  # How spread out are they?
+
+    sd(slopes_clean)
+    sd(slopes_noisy)
+
+    hist(slopes_noisy,
+         breaks = 40,
+         xlim = range(c(slopes_clean, slopes_noisy)),
+         main = "",
+         xlab = "Estimated slope (true value = 2)")
+
+    hist(slopes_clean,
+         breaks = 40,
+         add = TRUE,
+         col = "blue")
+
+    abline(v = 2, col = "orange", lwd = 3)
+
+  # Both are centred on the truth -- noise doesn't bias the estimate.
+  # What noise does is make any single estimate less reliable.
+
+  # So on one draw, the noisy estimate can easily land closer by luck.
+  # Over many draws, it rarely does.
+
+  # This is the idea behind power analysis, which we'll cover later on.
+
 
 # Transforming and summarizing --------------------------------------------
 
@@ -227,6 +366,33 @@
 
     cor.test(frogs, tadpoles)
 
+  # Is that p-value impressive?  We built the data ourselves with very little
+  # noise, so a tiny p-value here says more about our simulation than about
+  # frogs.  Bolker suggests reporting anything this small as p < 0.001.
+
   # Compare this with the Sandin & Pacala example from lecture 2.
   # cor.test() tells you whether there's an association.
   # It doesn't tell you the slope, the units, or the mechanism.
+
+
+# A different draw --------------------------------------------------------
+
+  # Same frogs, same true relationship, different random numbers.
+
+    set.seed(202)
+
+    tadpoles2 <- rnorm(n = 20, mean = 2 * frogs, sd = 0.5)
+
+    cor(frogs, tadpoles)
+
+    cor(frogs, tadpoles2)
+
+    coef(lm(tadpoles2 ~ frogs))
+
+  # Nothing about the frogs changed.  The estimate moved anyway.
+
+  # This is the demographic stochasticity idea from lecture 2: identical
+  # setups, different outcomes.  Every real dataset is one draw like this,
+  # and we only ever get to see the one.
+
+  # Try it without setting a seed, several times over, to see the spread.
