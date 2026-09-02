@@ -88,6 +88,44 @@ version, adding the Sandin & Pacala opener, Table 1.1 in three groups, the
 Holling curve activity, and the variability block — filled the session without
 running over or short. No need to trim or pad it next time.
 
+**Lecture 3 timing was right too, and the restructure worked.** Fall 2025 ran
+about 25 minutes of lecture and then sent students to work through §1.7 on their
+own, which wasn't very useful. Fall 2026 replaced that with alternating blocks —
+three frameworks, code, the modelling process, code, wrap — and filled the
+session. Keep the alternating structure; it is what the later lectures already
+do well.
+
+Two things that made it work and are worth preserving:
+
+- The frogs/tadpoles session doubles as a walk through Figure 1.5. Students build
+  a deterministic and a stochastic part by hand, then fit and test them.
+- The confidence-interval demo. With `set.seed(101)` the 95% interval for the
+  slope is (1.69, 1.98) and misses the true value of 2. Simulating 1000 datasets
+  shows 95% coverage, so the miss is the lesson rather than a mistake.
+
+- [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
+  Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
+  prose and code with very few figures.
+
+  Generate figures in R rather than reusing the book's. It sidesteps the
+  copyright question on a public repo, and the code becomes teaching material in
+  its own right. Candidates that are cheap to make:
+
+  - **Likelihood curve** for the seed predation data — `dbinom(51, 941, p)`
+    across a range of `p`, with the maximum marked at 0.054. Would make the
+    likelihood slide concrete instead of abstract.
+  - **Posterior density** for the same data, for the Bayesian slide.
+  - **Frogs vs tadpoles**, clean and noisy side by side. The script already draws
+    these; they just aren't on the slides.
+  - **Histogram of slope estimates**, clean vs noisy, with the true value marked.
+    Already in `Chapter_1_examples.R`.
+  - **Coverage** — a sample of confidence intervals as horizontal lines, with the
+    ones that miss the true value picked out in a different colour.
+
+  Worth noting that the Markdown/Quarto conversion below makes this much cheaper:
+  figures would be generated at render time from the code already in the chapter
+  scripts, rather than pasted in as images that then go stale.
+
 - [ ] **Lecture 2's GitHub authentication slides are out of date.** Found this
   while teaching the lecture: in current versions of RStudio, clicking "push"
   handles authentication for you — it opens a browser sign-in rather than failing
