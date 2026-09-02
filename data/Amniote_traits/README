@@ -1,1 +1,12 @@
 Amniote trait data are from https://esajournals.onlinelibrary.wiley.com/doi/10.1890/15-0846R.1 and are licensed under a CC-BY 4.0 license.
+
+Missing values:
+
+All 30 numeric columns code missing data as -999, not as NA or a blank. R will read those as real numbers unless you tell it otherwise, which silently corrupts anything you calculate -- a naive mean of litter_or_clutch_size_n comes out as -384, and a naive mean of adult_body_mass_g comes out plausible but wrong.
+
+Read the csv with:
+
+  amniotes <- read.csv("data/Amniote_traits/Amniote_Database_Aug_2015.csv",
+                       na.strings = -999)
+
+The .rds version in this folder was produced by Amniote_csv_to_rds.R and already has the -999 values converted to NA.
