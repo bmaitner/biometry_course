@@ -103,6 +103,13 @@ Two things that made it work and are worth preserving:
   slope is (1.69, 1.98) and misses the true value of 2. Simulating 1000 datasets
   shows 95% coverage, so the miss is the lesson rather than a mistake.
 
+**Lecture 4 timing was good, but has less slack than 2 and 3.** The expanded deck
+(plain text, metadata, long/wide, the readxl block, and the −999 demo) fit the
+session. The margin is thinner though: it depends on debugging going quickly, and
+a larger class or a slower room could push it over. If it needs trimming, the
+long/wide pair is the most cuttable — it previews Lecture 25 rather than covering
+assigned reading.
+
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
   prose and code with very few figures.
