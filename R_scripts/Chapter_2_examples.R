@@ -192,13 +192,150 @@ library(emdbook)
               amniotes_v2$adult_svl_cm,use = "complete.obs")
           
 
-# example in 2.6 ----------------------------------------------------------
+# Exploratory graphics --------------------------------------------------
 
-  # The datasets in section 2.6.1 can be found at:
+  # Everything below uses avonet, which we read in at the top of this script.
+  # These are the figures from the Lecture 5 slides; the code that produces
+  # the slide versions is in R_scripts/Lecture_05_figures.R.
+
+
+  # One variable, continuous: histogram
+
+    hist(avonet$Mass)
+
+      # That is one bar. It isn't broken -- it's telling you the truth badly.
+      # The range runs from a 1.9 g hummingbird to a 111,000 g ostrich, so
+      # 99.9% of the 11,009 species land in the first bin:
+
+        range(avonet$Mass)
+        max(avonet$Mass) / min(avonet$Mass)
+
+      # Take logs and the shape appears
+
+        hist(log10(avonet$Mass), breaks = 40)
+
+
+  # Two variables, both continuous: scatterplot
+
+    plot(x = avonet$Mass,
+         y = avonet$Wing.Length)
+
+      # Same problem: everything is crushed against the y axis.
+      # log = "xy" puts both axes on a log scale.
+
+        plot(x = avonet$Mass,
+             y = avonet$Wing.Length,
+             log = "xy")
+
+      # This matters for more than looks. The correlation is weak on the raw
+      # scale and strong on the log scale -- same data, same species:
+
+        cor(avonet$Mass, avonet$Wing.Length, use = "complete.obs")
+        cor(log10(avonet$Mass), log10(avonet$Wing.Length), use = "complete.obs")
+
+
+  # The log-log plot also shows two odd things at once.
+
+    # A row of points along the bottom, at exactly 0.1 mm:
+
+      avonet[which(avonet$Wing.Length < 1),
+             c("Species1", "Family1", "Mass", "Wing.Length")]
+
+      # All five are kiwi (Apterygidae), which are flightless and have tiny
+      # vestigial wings. A 2 kg bird does not have a 0.1 mm wing; 0.1 is a
+      # placeholder standing in for "too small to measure", the same idea as
+      # the -999 in the amniote data. Nothing errored. The plot found it.
+
+    # And a handful of very heavy birds at the top right:
+
+      avonet[which(avonet$Mass > 20000),
+             c("Species1", "Mass", "Wing.Length")]
+
+      # Ostrich, emu, cassowary, rhea. Extreme, but real measurements.
+      # Outlier and error are not the same thing, and only you can tell
+      # which is which -- that takes knowing the organisms.
+
+
+  # Overplotting: 11,009 points is a lot of ink
+
+    # Smaller points and partial transparency let you see where the density is
+
+      plot(x = avonet$Mass,
+           y = avonet$Wing.Length,
+           log = "xy",
+           pch = 16,
+           cex = 0.4,
+           col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3))
+
+
+  # One continuous variable split by a categorical one: boxplot
+
+    boxplot(log10(Mass) ~ Trophic.Level, data = avonet)
+
+      # The ~ means "as a function of". You'll see this formula notation
+      # again for the rest of the course, in lm() and everywhere else.
+
+
+  # One categorical variable: table, then barplot
+
+    table(avonet$Habitat)
+
+    barplot(sort(table(avonet$Habitat), decreasing = TRUE), las = 2)
+
+      # las = 2 turns the labels sideways so they fit.
+
+
+  # Two categorical variables: a table of counts
+
+    table(avonet$Trophic.Level, avonet$Migration)
+
+
+  # A caution about that last one -----------------------------------------
+
+    # Migration is coded 1, 2, 3 (sedentary / partially migratory / migratory).
+    # R stored it as an integer, so R will happily average it:
+
+      class(avonet$Migration)
+
+      mean(avonet$Migration)              # NA -- there are 23 missing values
+
+      mean(avonet$Migration, na.rm = TRUE) # 1.288
+
+    # 1.288 is a perfectly good number and a completely meaningless one.
+    # There is no bird that is 1.288 migratory. The class was right, the
+    # calculation ran, and the answer is nonsense. Plot it instead:
+
+      barplot(table(avonet$Migration))
+
+
+# example in 2.6 (the R supplement) ---------------------------------------
+
+  # The R supplement rebuilds Bolker's seed predation dataset from the two
+  # raw Excel exports, which live at:
 
           # https://www.math.mcmaster.ca/~bolker/emdbook/duncan_10m.csv
           # https://www.math.mcmaster.ca/~bolker/emdbook/duncan_25m.csv
-          
-  # You can either download them and then load the local copy, 
-  # or else you can use the URL to load them directly.        
-      
+
+  # You do not need to do that reconstruction to do the plotting sections.
+  # The finished dataset ships with the emdbook package:
+
+    library(emdbook)
+
+    data(SeedPred)
+
+      str(SeedPred)      # 11803 observations of 9 variables
+
+    # Every plotting section of the supplement assumes SeedPred already
+    # exists, so this one line gets you to the part that matches the reading.
+
+  # The other datasets used in chapter 2 are in there too:
+
+    data(ReedfrogPred)      # tadpole predation, factorial experiment
+    data(ReedfrogFuncresp)  # functional response
+    data(DamselRecruitment)
+    data(GobySurvival)
+
+  # If you do want to read section 2.6.1: it uses melt() from the reshape
+  # package, which is retired and is not in this project's renv.lock. Read it
+  # for the ideas, not to run it. We will do exactly this reshaping in
+  # Lecture 7 with pivot_longer(), which is the current way to do it.

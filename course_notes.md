@@ -133,6 +133,17 @@ assigned reading.
   figures would be generated at render time from the code already in the chapter
   scripts, rather than pasted in as images that then go stale.
 
+- [ ] **Lecture 6's closing slide is stale.** It reads "Next week: I'll be out of
+  town / Do chapter 3 / Complete Assignment 1." Those travel slots were removed
+  from the Fall 2026 schedule and Lectures 9 and 10 are now taught, so the slide
+  should describe chapter 3 as a lecture rather than as self-study.
+
+- [ ] **Consider moving `data/Deer_movement/MD_dataset.RDS` out of the repo.**
+  At 92 MB it is more than half the 167 MB clone. Students now clone the repo in
+  Lecture 5, so every one of them pays for it, on classroom wifi, simultaneously.
+  The dataset library is deliberate and worth keeping, but this one file could
+  live behind a download link in its README like the Bolker seed data does.
+
 - [ ] **Lecture 2's GitHub authentication slides are out of date.** Found this
   while teaching the lecture: in current versions of RStudio, clicking "push"
   handles authentication for you — it opens a browser sign-in rather than failing
