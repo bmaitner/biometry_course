@@ -29,6 +29,11 @@ From midterm feedback, Fall 2025:
 - [ ] Add additional examples to course R scripts. Add more documentation, comments, and links to book or slides.
 - [ ] Include additional R coding resources
 - [ ] Link assignments explicitly to Pages/Chapters in the text book or to specific lectures/slides.
+- [ ] Strip the em-dashes out of the course materials. They are in the syllabus
+  (7), `data/short_links.md` (3), the Lecture 3 to 5 slide decks, and this file.
+  Deliberately left alone during Fall 2026 because the materials had already gone
+  out to students; fix them before the next offering. Restructure the sentences
+  rather than swapping in a hyphen.
 
 ## Content gaps
 
