@@ -1,20 +1,20 @@
-# Quiz 2
+# Quiz 6
 
 Name: ______________________________
 
-1.  What is a tibble?\
+1.  What is a reprex?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-2.  What does the pipe operator do ( |> or %>% )?\
+2.  What is one task where Merow et al. found that ChatGPT performed well?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-3.  Name one dplyr function and say what it does.\
+3.  What is one task where Merow et al. found ChatGPT performed poorly?\
     &nbsp;\
     &nbsp;\
     &nbsp;\

@@ -1,20 +1,20 @@
-# Quiz 5
+# Quiz 3
 
 Name: ______________________________
 
-1.  What is a reprex?\
+1.  What is a tibble?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-2.  What is one task where Merow et al. found that ChatGPT performed well?\
+2.  What does the pipe operator do ( |> or %>% )?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-3.  What is one task where Merow et al. found ChatGPT performed poorly?\
+3.  Name one dplyr function and say what it does.\
     &nbsp;\
     &nbsp;\
     &nbsp;\
