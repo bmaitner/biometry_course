@@ -115,6 +115,21 @@ a larger class or a slower room could push it over. If it needs trimming, the
 long/wide pair is the most cuttable — it previews Lecture 25 rather than covering
 assigned reading.
 
+**Lecture 5 ran tight but held.** The rebuilt deck (the git block, the moved-up
+data go-around, and the 14-slide exploratory graphics block) got through all of
+its content, but left only 10 to 15 minutes for students to start on 2.6 rather
+than the 25 that was planned. So the front of the lecture runs about 10 to 15
+minutes longer than estimated.
+
+Nothing to cut: the content was worth the time and the session did not overrun.
+The thing to change is the expectation, not the deck. 2.6 is effectively a
+Lecture 6 activity, so plan it that way rather than treating it as carry-over,
+and drop the "(if needed)" from the Lecture 6 agenda.
+
+If a future offering does need the room, the cut list in the Lecture 5 draft
+still holds: the overplotting slide first, then the boxplot and barplot slides,
+demonstrated live from the script instead.
+
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
   prose and code with very few figures.
