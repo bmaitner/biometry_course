@@ -54,6 +54,11 @@ Deep Sea Species
   
   * Deep Sea Megabenthos samples <https://doi.org/10.1594/PANGAEA.946727>, data available in the folder "data/Deep_sea_megabenthos" here.
   
+Reef Fish Data
+
+  * NOAA National Coral Reef Monitoring Program reef fish surveys of the Florida Reef Tract <https://doi.org/10.7289/v52n50ks>, curated subset available in the folder "data/Reef_fish" here. Licensed CC0.
+  * Reef Life Survey, global reef fish transects <https://reeflifesurvey.com/survey-data/>, also served through GBIF and the AODN portal.
+
 Landcover Data
 
   * US: NLCD <https://www.mrlc.gov/>
