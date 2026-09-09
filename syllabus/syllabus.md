@@ -146,7 +146,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | 5 | Sep 8 T | Exploratory analyses and graphics; Work on exploratory analyses (2.6) | Read 2.4 – 2.5 |
 | 6 | Sep 10 Th | **Assignment 1: Data exploration.** Exploratory analyses and graphics; Work on exploratory analyses | Review 2.5 – 2.6 |
 | 7 | Sep 15 T | Tidyverse: rearranging data to ask questions (filter, mutate, group_by, summarise) | *R for Data Science*: Chapter 3 |
-| 8 | Sep 17 Th | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 1 Due** |
+| 8 | Sep 17 Th | ggplot2 | *R for Data Science*: Chapter 1; **Assignment 1 Due Fri Sep 18, 11:59 pm** |
 | 9 | Sep 22 T | Deterministic functions | Read 3.1 – 3.3 |
 | 10 | Sep 24 Th | Deterministic functions; Working with functions | Read 3.4 – 3.5; Complete 3.6 |
 | 11 | Sep 29 T | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
