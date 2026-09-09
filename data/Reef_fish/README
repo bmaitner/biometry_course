@@ -1,0 +1,116 @@
+Coral reef fish surveys, Florida Reef Tract
+===========================================
+
+Citation:
+
+NOAA Southeast Fisheries Science Center; NOAA National Centers for Coastal Ocean
+Science (2018). National Coral Reef Monitoring Program: Assessment of coral reef
+fish communities in the Florida Reef Tract. NOAA National Centers for
+Environmental Information. Dataset. https://doi.org/10.7289/v52n50ks
+
+Rights:
+
+Creative Commons Zero v1.0 Universal (CC0-1.0). Public domain dedication, so
+these files can be redistributed freely. Cite it anyway.
+
+Source:
+
+https://www.ncei.noaa.gov/erddap/info/CRCP_Reef_Fish_Surveys_Florida/index.html
+
+Note:
+
+The files here are a curated subset. The full dataset on the ERDDAP server is
+roughly 770 MB and 3.8 million rows, because it records every species at every
+survey in every length bin, including absences. About 86% of those rows are
+zeros. get_reef_fish_data.R documents exactly how these files were produced from
+it.
+
+Surveys ran in 2014, 2016, 2018, 2021, 2022 and 2024, across three regions of the
+Florida Reef Tract: the Dry Tortugas, the Keys from Key West to Miami, and Miami
+north to Martin County. Divers count and size fish inside a 7.5 m radius cylinder.
+
+
+Files
+-----
+
+NCRMP_reef_fish_surveys.csv       8,560 rows, one per survey
+NCRMP_reef_fish_species.csv     171,200 rows, one per survey per species
+NCRMP_reef_fish_species_list.csv     20 rows, species codes and names
+
+
+NCRMP_reef_fish_surveys.csv
+---------------------------
+
+One row per survey. A survey is a station within a primary sample unit in a given
+year, so survey_id is what makes a row unique. Note that a sample unit usually
+contains two stations, which are separate surveys a few metres apart.
+
+  survey_id              PRIMARY_SAMPLE_UNIT, STATION_NR and YEAR joined by "_"
+  PRIMARY_SAMPLE_UNIT    sampling location code
+  STATION_NR             station within the sample unit
+  YEAR                   2014, 2016, 2018, 2021, 2022 or 2024
+  latitude, longitude    decimal degrees
+  DEPTH                  metres, 0.76 to 31.9
+  UNDERWATER_VISIBILITY  metres, 3 to 50.5
+  HABITAT_TYPE           reef structure and vertical relief, 12 categories
+  ZONE_NAME              Inshore, Forereef, and so on
+  SUB_REGION_NAME        Biscayne, Upper Keys, Tortugas--Tortugas Bank, etc.
+  REGION_DESCRIPTION     one of the three regions above
+  PROT                   protection code, 0, 1 or 2. See the warning below
+  MPA_NAME               marine protected area, or "Unprotected"
+  total_abundance        all fish counted, summed over species and length bins
+  species_richness       number of species recorded, 0 to 68
+
+There are no missing values in this file.
+
+
+NCRMP_reef_fish_species.csv
+---------------------------
+
+The 20 most frequently recorded species, one row per survey per species, with
+zeros kept so that absences are visible.
+
+  survey_id    joins to NCRMP_reef_fish_surveys.csv
+  SPECIES_CD   species code, joins to NCRMP_reef_fish_species_list.csv
+  abundance    fish counted, summed over length bins
+
+Deliberately narrow. Join it to the surveys file to get depth, habitat and the
+rest:
+
+  surveys <- read.csv("data/Reef_fish/NCRMP_reef_fish_surveys.csv")
+  species <- read.csv("data/Reef_fish/NCRMP_reef_fish_species.csv")
+
+  both <- merge(species, surveys, by = "survey_id")
+
+
+Two things to know before you use it
+------------------------------------
+
+1. PROT is a code, not a quantity.
+
+   It takes values 0, 1 and 2, and R will store it as an integer and happily
+   average it for you. The mean is meaningless. It also does not line up neatly
+   with MPA_NAME: some rows with PROT = 2 are labelled "Unprotected". If
+   protection status matters to your question, work from MPA_NAME, or check the
+   NCRMP protocol documentation before trusting PROT.
+
+2. abundance is not a whole number.
+
+   Values like 0.12 and 0.5 appear because these are density estimates rather
+   than raw head counts. Do not assume you can treat them as integer counts
+   without thinking about it.
+
+
+Some questions you could ask
+----------------------------
+
+  Does species richness differ among the three regions, or among habitat types?
+  Has richness changed between 2014 and 2024?
+  Is there more fish inside marine protected areas than outside?
+  How does depth relate to what lives there?
+  Which of the 20 common species are found together?
+
+One result worth chasing: underwater visibility is a strong positive predictor of
+species richness. Before concluding anything ecological, ask whether that is
+about the reef or about how far the diver could see. Distinguishing the thing you
+are measuring from the way you measured it is the whole of chapter 1.
