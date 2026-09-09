@@ -52,7 +52,7 @@ Deep Sea Species
 
   * WORDSS <https://marinespecies.org/deepsea/>
   
-  * Deep Sea Megabenthos samples <https://doi.org/10.1594/PANGAEA.946727>, data available in the folder "data/Deep_see_megabenthos" here.
+  * Deep Sea Megabenthos samples <https://doi.org/10.1594/PANGAEA.946727>, data available in the folder "data/Deep_sea_megabenthos" here.
   
 Landcover Data
 
