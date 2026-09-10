@@ -308,6 +308,207 @@ library(emdbook)
       barplot(table(avonet$Migration))
 
 
+# Applying it to your own data (Lecture 6) --------------------------------
+
+  # Lecture 5 looked at one or two variables at a time. Real datasets have
+  # dozens of columns, so the next question is how to look at many at once,
+  # how to compare groups, and how to make a figure someone else can read.
+
+
+  # Many variables at once: the correlation matrix
+
+    beak <- avonet[c("Beak.Length_Culmen", "Beak.Length_Nares",
+                     "Beak.Width", "Beak.Depth")]
+
+    round(cor(beak), 2)
+
+      # Culmen length and Nares length correlate at 0.97. They are two ways of
+      # measuring the same beak: from the feathers, and from the nostril. If
+      # you put both in an analysis you are counting the same measurement
+      # twice. This is the "identify variables to drop" bullet, made concrete.
+
+      # cor() needs complete data. If your columns have NAs:
+
+        round(cor(beak, use = "complete.obs"), 2)
+
+
+  # The same thing as a picture
+
+    pairs(beak, pch = 16, cex = 0.3, col = rgb(0, 0, 0, 0.15))
+
+      # Every pair of columns, plotted against every other. The Culmen/Nares
+      # panel is nearly a straight line. A number tells you there is a problem;
+      # the picture tells you what kind.
+
+    # Worth doing on a handful of columns, not fifty: the panels get too small
+    # to read. Pick the variables you actually care about.
+
+      traits <- avonet[c("Beak.Length_Culmen", "Tarsus.Length",
+                         "Wing.Length", "Tail.Length", "Mass")]
+
+      pairs(log10(traits), pch = 16, cex = 0.3, col = rgb(0, 0, 0, 0.15))
+
+
+  # Comparing groups: pull out a subset
+
+    pelicans <- avonet[which(avonet$Order1 == "Pelecaniformes"), ]
+
+      nrow(pelicans)
+
+      boxplot(log10(Mass) ~ Family1, data = pelicans)
+
+    # We will do this far more comfortably with filter() next lecture.
+
+
+  # Two plots side by side
+
+    # par(mfrow) splits the plotting window into a grid: c(rows, columns).
+    # Filled row by row.
+
+      carnivores <- avonet[which(avonet$Trophic.Level == "Carnivore"), ]
+      scavengers <- avonet[which(avonet$Trophic.Level == "Scavenger"), ]
+
+      par(mfrow = c(1, 2))
+
+        hist(log10(carnivores$Mass),
+             main   = "Carnivore",
+             xlab   = "log10 mass (g)",
+             breaks = seq(0, 5.2, 0.2),
+             xlim   = c(0, 5.2))
+
+        hist(log10(scavengers$Mass),
+             main   = "Scavenger",
+             xlab   = "log10 mass (g)",
+             breaks = seq(0, 5.2, 0.2),
+             xlim   = c(0, 5.2))
+
+      par(mfrow = c(1, 1))   # put it back, or every later plot stays in a grid
+
+
+    # Look carefully before believing it. Each panel picked its own y axis, so
+    # 20 scavengers look as numerous as 6115 carnivores. Read the axes.
+
+      nrow(carnivores)
+      nrow(scavengers)
+
+    # Fixing ylim makes the panels comparable, and putting n in the title means
+    # nobody has to guess.
+
+      par(mfrow = c(1, 2))
+
+        hist(log10(carnivores$Mass),
+             main   = paste0("Carnivore (n = ", nrow(carnivores), ")"),
+             xlab   = "log10 mass (g)",
+             breaks = seq(0, 5.2, 0.2),
+             xlim   = c(0, 5.2),
+             ylim   = c(0, 1000))
+
+        hist(log10(scavengers$Mass),
+             main   = paste0("Scavenger (n = ", nrow(scavengers), ")"),
+             xlab   = "log10 mass (g)",
+             breaks = seq(0, 5.2, 0.2),
+             xlim   = c(0, 5.2),
+             ylim   = c(0, 1000))
+
+      par(mfrow = c(1, 1))
+
+
+  # Four groups means four blocks of nearly identical code
+
+    # You could keep going by hand:
+
+      herbivores <- avonet[which(avonet$Trophic.Level == "Herbivore"), ]
+      omnivores  <- avonet[which(avonet$Trophic.Level == "Omnivore"), ]
+
+      # ...and then four hist() calls, differing by one word each, with ylim
+      # written out four times. Tedious, easy to mistype, and if you change your
+      # mind about the axis you have to change it in four places.
+
+
+  # A for loop does the same thing once
+
+    # for (name in vector) { commands } runs the commands once for each element
+    # of the vector, setting name to that element each time. Bolker introduces
+    # these in section 2.6.1, in the paragraph beginning "for loops are a
+    # general way of executing similar commands many times".
+
+    # Start by watching what the loop variable does:
+
+      for (level in c("Carnivore", "Herbivore", "Omnivore", "Scavenger")) {
+
+        print(level)
+
+      }
+
+    # Now put the plotting code inside it:
+
+      par(mfrow = c(2, 2))
+
+        for (level in c("Carnivore", "Herbivore", "Omnivore", "Scavenger")) {
+
+          group <- avonet[which(avonet$Trophic.Level == level), ]
+
+          hist(log10(group$Mass),
+               main   = paste0(level, " (n = ", nrow(group), ")"),
+               xlab   = "log10 mass (g)",
+               breaks = seq(0, 5.2, 0.2),
+               xlim   = c(0, 5.2),
+               ylim   = c(0, 1000))
+
+        }
+
+      par(mfrow = c(1, 1))
+
+    # Four panels, one copy of the code, and ylim appears once. That last part
+    # matters more than the typing you saved.
+
+    # You will meet a loop again today: section 2.6.2.3 of the R supplement uses
+    # one to make small multiples of the seed data. It also shows a one-line
+    # lattice alternative, histogram(~ x | species).
+
+    # Lecture 8 does the same job in ggplot2 with facet_wrap(~ Trophic.Level).
+
+
+  # Making a figure someone else can read
+
+    # Default labels are variable names. Yours should be words, with units.
+
+      plot(x    = log10(avonet$Mass),
+           y    = log10(avonet$Wing.Length),
+           xlab = "Body mass (log10 g)",
+           ylab = "Wing length (log10 mm)",
+           main = "Wing length scales with body mass in 11,009 bird species",
+           pch  = 16,
+           cex  = 0.3,
+           col  = rgb(0, 0, 0, 0.2))
+
+    # A trend line, using lm() from Lecture 3
+
+      fit <- lm(log10(Wing.Length) ~ log10(Mass), data = avonet)
+
+      abline(fit, col = "red", lwd = 3)
+
+      coef(fit)   # slope is 0.339
+
+
+  # Saving a figure
+
+    # If you submit a .R script, the grader runs your code and the plots appear.
+    # If you want the image file itself, wrap the plot in png() and dev.off():
+
+      png("my_figure.png", width = 900, height = 650)
+
+        plot(log10(avonet$Mass), log10(avonet$Wing.Length),
+             xlab = "Body mass (log10 g)",
+             ylab = "Wing length (log10 mm)")
+
+      dev.off()   # nothing is written to the file until you run this
+
+    # Everything between png() and dev.off() goes into the file instead of the
+    # plot pane, so you will not see it appear on screen. That is normal.
+    # RStudio's Export button in the Plots pane does the same thing by hand.
+
+
 # example in 2.6 (the R supplement) ---------------------------------------
 
   # The R supplement rebuilds Bolker's seed predation dataset from the two
