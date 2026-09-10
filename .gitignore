@@ -12,6 +12,12 @@ syllabus/syllabus.html
 syllabus/syllabus.docx
 syllabus/syllabus.pdf
 
+# Rendered assignment HTML (regenerate with assignments/render_assignments.R).
+# The .docx are kept because students download them; GitHub shows HTML as source
+# rather than rendering it, so committing 2.6 MB of it buys nothing.
+assignments/*.html
+assignments/assignment_3/*.html
+
 # Word lock files
 ~$*
 
