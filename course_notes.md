@@ -22,6 +22,59 @@ This course might be more effective if split into multiple courses. For example:
 2. **Stats in R** — essentially the *Ecological Models and Data in R* book
 3. **Advanced R** — building packages, using docker, etc. Essentially things that aren't covered in 1 or 2.
 
+### Move the assignment and the data search earlier, and add at-home problems
+
+Proposed after teaching Lecture 6 in Fall 2026. The problem it solves: students
+arrive at the in-class exercises without enough independent R practice, so the
+exercises run slowly, so the work block gets squeezed, so they get even less
+practice. Adding more in-class time does not break that loop because there is no
+more time to add.
+
+The proposal is to shift practice out of class:
+
+1. **Introduce Assignment 1 earlier**, at Lecture 4 rather than Lecture 6.
+   Lecture 4's reading row already says "think about data of interest", so the
+   nudge exists; this makes it a real deadline instead of a suggestion.
+2. **Move the data go-around earlier too**, to Lecture 4. In Fall 2026 it was in
+   Lecture 5, which left one class day to find datasets for the students who
+   needed help. Lecture 4 gives a full week.
+3. **Add a short problem set after each lecture from 4 onward**, worked on the
+   student's own dataset rather than on AVONET.
+
+The third is the substantive change. The natural content already exists: it is
+the "Your turn" prompts from the Lecture 5 and 6 decks, moved out of class.
+Roughly:
+
+- After Lecture 4: read your dataset in, report its class, list the variables and
+  their classes, find and fix one formatting problem.
+- After Lecture 5: a histogram raw and logged, a scatterplot, a boxplot, a
+  barplot, all on your own data.
+- After Lecture 6: a correlation matrix, a pairs plot, two groups side by side
+  with fixed axes, labelled and saved.
+
+Worth noticing what that list is: it is Assignment 1, broken into three weekly
+pieces. That may be the better structure outright. Smaller and more frequent
+means problems surface while there is still time to fix them, students cannot
+leave the whole thing to the last night, and the in-class time turns into
+troubleshooting what they already attempted rather than first attempts.
+
+The cost is more grading events, though not more work per event, and Canvas
+setup for three submissions instead of one. If that is too much, the problem sets
+could be participation-graded or self-checked, with Assignment 1 unchanged as the
+graded deliverable.
+
+Two things to keep if this happens:
+
+- **The go-around still has to produce Brian's dataset-hunting list.** Whatever
+  lecture it lands in, he needs lead time before the assignment to find data for
+  students who do not have any.
+- **Keep some guided work in class.** Lecture 6's four work pauses were the part
+  that worked; the point is to have students arrive already having tried, not to
+  remove the trying from the room.
+
+Related: this overlaps with "Add additional examples to course R scripts" below,
+and with the "Intro to R" strand of the course-splitting idea above.
+
 ## Course materials
 
 From midterm feedback, Fall 2025:
@@ -130,6 +183,18 @@ If a future offering does need the room, the cut list in the Lecture 5 draft
 still holds: the overplotting slide first, then the boxplot and barplot slides,
 demonstrated live from the script instead.
 
+**Lecture 6 ran tight, and the work time lost again.** The rebuilt deck (the four
+assignment-support slides, the moved-up data-source block, and the ten-slide
+guided block on students' own data) fit, but left only a few minutes for 2.6.
+That is the second lecture running where the planned work block got squeezed to
+almost nothing: Lecture 5 planned 25 minutes and got 10 to 15, Lecture 6 planned
+10 and got less.
+
+The pattern is now clear enough to act on. The front of every rebuilt deck runs
+10 to 15 minutes longer than estimated, and the in-class work is always what
+absorbs it, because it sits at the end. See "Move the assignment and the data
+search earlier" under Course structure for the fix Brian proposed.
+
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
   prose and code with very few figures.
@@ -152,11 +217,6 @@ demonstrated live from the script instead.
   Worth noting that the Markdown/Quarto conversion below makes this much cheaper:
   figures would be generated at render time from the code already in the chapter
   scripts, rather than pasted in as images that then go stale.
-
-- [ ] **Lecture 6's closing slide is stale.** It reads "Next week: I'll be out of
-  town / Do chapter 3 / Complete Assignment 1." Those travel slots were removed
-  from the Fall 2026 schedule and Lectures 9 and 10 are now taught, so the slide
-  should describe chapter 3 as a lecture rather than as self-study.
 
 - [ ] **Consider moving `data/Deer_movement/MD_dataset.RDS` out of the repo.**
   At 92 MB it is more than half the 167 MB clone. Students now clone the repo in
