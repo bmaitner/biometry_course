@@ -50,7 +50,7 @@ Roughly:
 - After Lecture 5: a histogram raw and logged, a scatterplot, a boxplot, a
   barplot, all on your own data.
 - After Lecture 6: a correlation matrix, a pairs plot, two groups side by side
-  with fixed axes, labelled and saved.
+  with fixed axes, labeled and saved.
 
 Worth noticing what that list is: it is Assignment 1, broken into three weekly
 pieces. That may be the better structure outright. Smaller and more frequent
@@ -87,6 +87,29 @@ From midterm feedback, Fall 2025:
   Deliberately left alone during Fall 2026 because the materials had already gone
   out to students; fix them before the next offering. Restructure the sentences
   rather than swapping in a hyphen.
+
+- [ ] Switch the course materials to US spelling. The course is taught in the US,
+  and some materials use British forms. Left alone during Fall 2026 for the same
+  reason as the em-dashes: they had already gone out to students. Fix both in the
+  same pass.
+
+  Where they are, as of September 2026:
+
+  - **Decks:** "modelling" in Lectures 02 (3, plus "modelled"), 03 (12), 18 (4),
+    22, 23 and 26; "analyse" and "optimisation" in Lecture 03; "labelled" in
+    Lecture 06. Counts are from the PDF exports in `lectures/`.
+  - **Syllabus:** the Lecture 2 row, "Frameworks for modelling".
+  - **Quiz and assignments:** `Quiz_01_Chapter1.md` question 3, and the opening
+    paragraphs of `Assignment_3.md` and `Assignment_4.md`. Re-render after editing.
+  - **Scripts:** the section header "lecture 18 modelling fir data" in
+    `R_scripts/Chapter_6_examples.R`.
+  - **File name:** `Lecture_02_modelling_frameworks`. Renaming it means updating
+    the Drive deck title too, and any links to it.
+
+  Do not change code. `summarise()` is a dplyr function and `colour =` is a valid
+  ggplot argument, so every `summarise` in the scripts and decks, and the `colour`
+  arguments in `Chapter_5_examples.R` and `Chapter_6_examples.R`, stay as they
+  are. "Analyses" as a plural noun is standard US English and is not on this list.
 
 ## Content gaps
 
@@ -128,10 +151,26 @@ From midterm feedback, Fall 2025:
     supports them), so that work isn't lost.
   - Quarto isn't in `renv.lock` yet.
 
-  Sensible first step: pilot one code-heavy deck rather than converting
-  everything. Lecture 07 (tidyverse) or 08 (ggplot) would benefit most, since
-  they're almost entirely code and would gain the most from executable chunks. If
-  the pilot feels good, the rest can follow a deck at a time.
+  **Piloted in Lecture 9 (Fall 2026).** Lecture 9 turned out to be the right
+  first candidate rather than 07 or 08: it was being built from scratch, so
+  there was no conversion cost at all. `lectures/lecture_09_deterministic_functions.qmd`
+  renders to a self-contained revealjs deck with Quarto 1.9.37, which is already
+  installed. Speaker notes live in `::: {.notes}` blocks and open with the `s`
+  key. Every figure and every printed result is computed at render time, so the
+  separate `Lecture_09_figures.R` became optional.
+
+  If the pilot holds up in class, the rest can follow a deck at a time, and
+  Lectures 07 and 08 remain the best conversion candidates because they are
+  almost entirely code.
+
+  Two things to sort out before converting more:
+
+  - **`quarto` and `revealjs` are not in `renv.lock`.** Quarto's revealjs does
+    not need the R package, but the lockfile should record the dependency.
+  - **Rendering needs `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE` on this machine**,
+    because the project renv library is not restored, so Quarto finds an empty
+    library and reports knitr and rmarkdown missing. Running `renv::restore()`
+    once would fix it properly.
 
   This also serves the "add more examples, link slides to scripts" item above —
   with Quarto, a deck and its example script could share source rather than being
@@ -149,7 +188,7 @@ running over or short. No need to trim or pad it next time.
 **Lecture 3 timing was right too, and the restructure worked.** Fall 2025 ran
 about 25 minutes of lecture and then sent students to work through §1.7 on their
 own, which wasn't very useful. Fall 2026 replaced that with alternating blocks —
-three frameworks, code, the modelling process, code, wrap — and filled the
+three frameworks, code, the modeling process, code, wrap — and filled the
 session. Keep the alternating structure; it is what the later lectures already
 do well.
 
@@ -195,6 +234,26 @@ The pattern is now clear enough to act on. The front of every rebuilt deck runs
 absorbs it, because it sits at the end. See "Move the assignment and the data
 search earlier" under Course structure for the fix Brian proposed.
 
+**Lecture 7 ran out of time at slide 27 of 34.** Class ended on "What went
+wrong?", the NA-in-summarise slide. Brian showed the closing slide (the R4DS
+chapter 1 reading and the Assignment 1 reminder) and told the class Lecture 8
+would pick up at slide 28 before moving on to ggplot2. So Lecture 8 starts with
+six carried-over slides: the three-slide ungroup block, the grouping Your turn,
+and both slice-function slides. That makes three lectures in a row where the deck
+outran the class.
+
+Knock-on effects:
+
+- Lecture 8 was already the longest deck of the semester (41 slides), and now has
+  those six slides in front of it.
+- Quiz 4 had a question on ungroup(). The quiz is given before the carried-over
+  slides, so that question was dropped, which also shortens the quiz.
+
+Options for next offering, not yet decided: cut or consolidate examples in the
+filter block (seven slides), move the ungroup block and grouping exercise into
+at-home practice (see the at-home problems proposal under Course structure), or
+shorten the opening quiz.
+
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
   prose and code with very few figures.
@@ -212,7 +271,7 @@ search earlier" under Course structure for the fix Brian proposed.
   - **Histogram of slope estimates**, clean vs noisy, with the true value marked.
     Already in `Chapter_1_examples.R`.
   - **Coverage** — a sample of confidence intervals as horizontal lines, with the
-    ones that miss the true value picked out in a different colour.
+    ones that miss the true value picked out in a different color.
 
   Worth noting that the Markdown/Quarto conversion below makes this much cheaper:
   figures would be generated at render time from the code already in the chapter
@@ -223,6 +282,47 @@ search earlier" under Course structure for the fix Brian proposed.
   Lecture 5, so every one of them pays for it, on classroom wifi, simultaneously.
   The dataset library is deliberate and worth keeping, but this one file could
   live behind a download link in its README like the Bolker seed data does.
+
+- [ ] **Lecture 2 should make "write code in a script, not the console" explicit.**
+  Lecture 2 is where students first open RStudio, and by week four some are still
+  typing code straight into the console. The exported Lecture 2 deck never
+  mentions the console, the source pane, or creating a new R script, so this is a
+  gap rather than a point that was made and missed.
+
+  It matters more than it looks, because nearly everything later depends on it:
+
+  - Console code is gone when the session ends, so there is nothing to rerun,
+    fix, or hand in. Assignment 1 grades reproducibility and documentation at
+    20% each, and neither is possible without a script.
+  - Every "Your turn" pause from Lecture 5 onward assumes students are building up
+    a file they can edit and rerun. Typos cost far more class time when the fix
+    means retyping a whole block in the console.
+  - Comments, section headers (`Ctrl/Cmd + Shift + R`) and the outline pane, all
+    introduced in Lecture 6, only exist in the editor.
+
+  One or two slides would cover it: the four RStudio panes with the source pane
+  labeled, File > New File > R Script, and running a line or selection with
+  `Ctrl/Cmd + Enter`. Framing to use: the console is a scratchpad for quick
+  checks like `str()` or `?mean`, and the script is the record of your work.
+  Worth repeating briefly in Lecture 4, when they first load real data.
+
+- [ ] **Lecture 2 mislabels the Holling type II parameters. Show both forms.**
+  The deck writes f(x) = ax/(b + x) and says "Here, a and b are attack rate and
+  handling time". In that form a is the asymptote and b is the half-saturation
+  constant (Bolker ch. 3). Attack rate and handling time are the parameters of the
+  other way of writing the same curve, the Holling type II functional response
+  f(x) = alpha x / (1 + alpha h x). They match when a = 1/h and b = 1/(alpha h),
+  so the maximum is set by handling time and the attack rate is the initial slope
+  a/b.
+
+  Fixed in `R_scripts/Chapter_1_examples.R` in Fall 2026; the deck was left as is
+  because it had already been taught. Lecture 9 now shows both forms side by side
+  ("One curve, two ways to write it") and reconciles them in the speaker notes.
+
+  For next year, put both forms in Lecture 2 itself. It is the best available
+  example of the mechanistic versus phenomenological distinction that Lecture 2
+  introduces: the curve is identical, and only the reason for using it decides
+  which parameters you write down.
 
 - [ ] **Lecture 2's GitHub authentication slides are out of date.** Found this
   while teaching the lecture: in current versions of RStudio, clicking "push"
