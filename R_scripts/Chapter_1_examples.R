@@ -36,8 +36,16 @@
 
     }
 
-  # a is roughly the attack rate, b is related to handling time.
-  # Try changing them and see what each one does to the shape.
+  # In this form, a is the asymptote (the maximum) and b is the half-saturation
+  # point, the value of x where the curve reaches a/2.
+  #
+  # The same curve can also be written with attack rate (alpha) and handling
+  # time (h) as the parameters: alpha * x / (1 + alpha * h * x). The two match
+  # when a = 1/h and b = 1/(alpha * h), so the maximum is set by handling time
+  # and the attack rate is the initial slope, a/b. Which form you write depends
+  # on why you are using the curve (see Chapter_3_examples.R).
+  #
+  # Try changing a and b and see what each one does to the shape.
 
     curve(holling2(x, a = 2, b = 1), from = 0, to = 10,
           lwd = 2, ylim = c(0, 4),
@@ -329,7 +337,7 @@
 
     abline(v = 2, col = "orange", lwd = 3)
 
-  # Both are centred on the truth -- noise doesn't bias the estimate.
+  # Both are centered on the truth -- noise doesn't bias the estimate.
   # What noise does is make any single estimate less reliable.
 
   # So on one draw, the noisy estimate can easily land closer by luck.
