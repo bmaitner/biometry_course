@@ -2,20 +2,22 @@
 
 Name: ______________________________
 
-1.  What does the ggplot2 package do?\
-    &nbsp;\
-    &nbsp;\
-    &nbsp;\
-    &nbsp;
-
-2.  What is the first function you call when producing a figure with ggplot2?\
-    &nbsp;\
+1.  Name one `geom_` function and say what kind of plot it makes.\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-3.  What is one type of plot available via ggplot?\
+2.  What does `aes()` do?\
     &nbsp;\
+    &nbsp;\
+    &nbsp;
+
+3.  In a ggplot call, what does the `+` do?\
+    &nbsp;\
+    &nbsp;\
+    &nbsp;
+
+4.  What does `facet_wrap()` do?\
     &nbsp;\
     &nbsp;\
     &nbsp;

@@ -145,9 +145,8 @@
                                "Sphenisciformes",
                                "Ciconiiformes")) |>
           ggplot(mapping = aes(x= Order1,
-                               y = Wing.Length,
-                               fill = Trophic.Level)) +
-          geom_bar()    
+                               y = Wing.Length)) +
+          geom_boxplot()
 
   # geom_violin
         
