@@ -254,6 +254,11 @@ filter block (seven slides), move the ungroup block and grouping exercise into
 at-home practice (see the at-home problems proposal under Course structure), or
 shorten the opening quiz.
 
+**Lecture 8 worked well**, even with the six carried-over slides from Lecture 7
+in front of the ggplot2 deck. No slides were cut. The candidate cuts that had
+been lined up in case it ran long (the three categorical by categorical slides,
+the geom_line pair, and "Soooo many more options") stay in for now.
+
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
   prose and code with very few figures.

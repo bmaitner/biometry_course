@@ -1,0 +1,1119 @@
+---
+title: "Deterministic functions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 9"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.2
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+library(emdbook)
+data(ReedfrogSizepred)
+tadpoles <- ReedfrogSizepred
+
+ricker <- function(x, a = 1, b = 1) a * x * exp(-b * x)
+negexp <- function(x, a = 1, b = 1) a * exp(-b * x)
+michaelis_menten <- function(x, a, b) a * x / (b + x)
+holling_type2 <- function(x, alpha, h) alpha * x / (1 + alpha * h * x)
+```
+
+## Today's agenda
+
+- What a function is, and why you would write your own
+- Finding a curve with the right shape for real data
+- What the parameters do
+- Fitting it by eye
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later.
+
+Code without the label is there to watch.
+
+::: {.notes}
+Say this out loud. Some code on these slides is a worked example to follow on the
+screen, and some is code they will need a few slides later. Only the second kind is
+labeled, so if something is labeled and they skip it, a later exercise breaks.
+:::
+
+## Where we are
+
+**Chapter 2:** *describe* the pattern.
+Histograms, boxplots, scatterplots.
+
+**Chapter 3:** *name* the pattern.
+Write down a function that has that shape.
+
+**Chapter 4 onward:** fit it, and ask whether you believe it.
+
+::: {.notes}
+Bolker's opening line is that chapter 2 gives "only qualitative descriptions",
+and that you avoid committing too early on purpose. Now is when you commit.
+
+Be concrete about why: a curve with named parameters lets you say how fast, how
+big, where the peak is, and compare those numbers between sites, years or
+species. A scatterplot cannot do that.
+:::
+
+## You have been using functions all semester
+
+```{r}
+#| eval: false
+read.csv()      mean()      hist()
+plot()          filter()    summarise()
+ggplot()        log10()     install.packages()
+```
+
+Every one works the same way:
+
+**inputs go in, something happens, a result comes back.**
+
+::: {.notes}
+Ask the room to name more before moving on. They have used dozens: str(),
+table(), which.max(), curve(), cor(), lm(). The point is that none of this is
+new, it just has not had a name.
+
+The block is shown as code for the formatting, not to run.
+:::
+
+## Anatomy of a function call
+
+```{r}
+mean(c(2, 4, NA))
+mean(c(2, 4, NA), na.rm = TRUE)
+```
+
+- `mean` is the **name**
+- `c(2, 4, NA)` and `na.rm = TRUE` are the **arguments**
+- `na.rm` has a **default**, `FALSE`, used unless you say otherwise
+
+::: {.notes}
+Callback to Lecture 4 and to Quiz 2, so the na.rm behavior should be familiar.
+What is new is the vocabulary: name, arguments, default.
+
+?mean shows the arguments and their defaults. Worth saying that every help page
+they have opened has a Usage section that is exactly this.
+
+Defaults come back later today when they write their own.
+:::
+
+## Functions are just code someone wrote
+
+Type a function's name without the brackets:
+
+```{r}
+sd
+```
+
+`sd()` is `sqrt()` of `var()`, with a default for `na.rm`.
+
+You can write these too.
+
+::: {.notes}
+This is the reveal. A built-in function is not magic, it is a few lines of R that
+someone saved under a name, built from other functions they already know.
+
+Point at function (x, na.rm = FALSE): that is the same syntax they will write in
+a few slides, default and all.
+
+Ignore the bytecode and environment lines; they say where R stored it.
+:::
+
+## Why write your own?
+
+- **Stop copying and pasting.** Lecture 6's four near-identical blocks: write it
+  once instead.
+- **Fix mistakes in one place.** One copy means one fix.
+- **Give an idea a name.** `standard_error(x)` says what it does.
+- **An equation is a function.** $f(x)$ in math, `function(x)` in R.
+  That is this chapter.
+
+::: {.notes}
+The first two are programming reasons and they have felt both: the four-panel
+copy-paste in Lecture 6, and changing ylim in four places.
+
+The last one is the reason for today. A curve like the Ricker is a function in
+the math sense, and writing it as an R function is what lets you draw it, change
+its parameters, and later fit it. From chapter 6 on, fitting a model means handing
+R your model written as a function, so this is not a detour.
+:::
+
+## Writing your own
+
+```{r}
+standard_error <- function(x){
+  sd(x) / sqrt(length(x))
+}
+
+standard_error(c(2, 4, 6, 8))
+```
+
+- `standard_error` is the name you choose
+- `function(x)` says what arguments it takes
+- the body in `{ }` does the work; the last line is the result
+- `x` is a **placeholder**: whatever you pass in becomes `x`
+
+::: {.notes}
+A genuinely useful first example, because R has no built-in standard error of the
+mean. There is a function called stderr(), but it is the stream R writes error
+messages to, and stderr(c(2, 4)) errors. Good for a laugh, and a real trap.
+
+The placeholder point matters for the rest of the lecture. The x inside the
+function is not a variable called x in their workspace; it is whatever they hand
+in. That is why ricker(tadpoles$TBL, ...) works later, and it is related to why
+curve() insists on the letter x.
+:::
+
+## Your turn {background-color="#f0f4f8"}
+
+To convert Celsius to Fahrenheit: $F = \dfrac{9}{5}\,C + 32$
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Here is the other direction:
+f_to_c <- function(temp_f){
+  (temp_f - 32) * 5 / 9
+}
+
+f_to_c(98.6)
+
+# Write this one, from the math above:
+c_to_f <- function(temp_c){
+
+}
+
+c_to_f(c(0, 37, 100))     # should give 32, 98.6, 212
+```
+:::
+
+::: {.notes}
+Short pause, about 5 minutes. Two things are being rehearsed at once: writing a
+function, and turning an equation into R, which is exactly what they do with the
+Ricker shortly.
+
+The check on the last line matters. They can see immediately whether it worked,
+without asking.
+
+Cuttable if time is short. The anatomy slide covers the syntax and the Ricker
+pause later exercises it.
+:::
+
+## Now let's use them
+
+You can write a function.
+
+So far, functions that convert one number into another.
+
+Next: functions that **describe a pattern in data**.
+
+::: {.notes}
+Transition slide, thirty seconds. The Celsius converter and the standard error were
+about how functions work. From here on, the functions are curves, and the question
+is which one matches the data.
+:::
+
+## The question
+
+```{r}
+#| echo: false
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+```
+
+**What curve would you draw through this?**
+
+::: {.notes}
+Bolker's Figure 3.1, data in emdbook as ReedfrogSizepred. Only 15 points.
+
+Let them answer before moving on. Every curve for the rest of the lecture gets
+held up against this plot, so it is worth a minute.
+
+They met tadpoles in Lecture 3, in the frogs and tadpoles regression.
+:::
+
+## What shape do we need? {.smaller}
+
+Load the data and plot it yourself:
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(emdbook)
+data(ReedfrogSizepred)
+tadpoles <- ReedfrogSizepred
+plot(tadpoles$TBL, tadpoles$Kill)
+```
+:::
+
+Reading it off the plot:
+
+- It **rises** from the smallest tadpoles to about 12 mm
+- It **peaks** around 12 mm
+- It **falls back** toward zero for the biggest tadpoles
+
+We need a function that can do all three.
+
+::: {.notes}
+Have everyone run the four lines now. The tadpole data are used on the next several
+slides and in the last exercise, and it is much quicker to sort out a missing
+package here than halfway through.
+
+This list is the test every candidate faces today. Point back at it each time a
+curve fails.
+
+The biology behind each part, worth getting the room to supply: small tadpoles
+hide or are ignored, large ones escape or are too big to swallow, and something
+in between is the worst size to be.
+:::
+
+## Two kinds of description
+
+**Phenomenological:** a curve that fits.
+Chosen because it has the right shape.
+
+**Mechanistic:** a curve derived from a theory about the process.
+Parameters mean something.
+
+. . .
+
+The same equation can be either, depending on why you chose it.
+
+::: {.notes}
+Callback to Lecture 2. Bolker makes it explicitly in 3.1: "the same function can
+be either phenomenological or mechanistic depending on context."
+
+For the tadpoles we will mostly shop by shape, which is the phenomenological
+route. But keep an eye on what each parameter means, because that is what lets
+you read parameter values off the plot at the end.
+:::
+
+## First try: a curve you already know
+
+The Holling type II from Lecture 2 **rises from zero**.
+
+That is the first item on our list. Could it work?
+
+::: {.notes}
+The first reason to try any curve: it already has part of the shape you need. And
+starting with one they know is the natural move.
+
+Before testing it against the data, a short detour that matters: this curve can
+be written two ways, and which one you write depends on why you are using it.
+:::
+
+## One curve, two ways to write it {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Mechanistic**\
+Holling type II functional response
+
+$$f(x) = \frac{\alpha\,x}{1 + \alpha\,h\,x}$$
+
+- $x$: prey density
+- $\alpha$: attack rate
+- $h$: handling time
+
+Written down from a theory of how predators forage.
+:::
+
+::: {.column width="50%"}
+**Phenomenological**\
+Michaelis-Menten form
+
+$$f(x) = \frac{a\,x}{b + x}$$
+
+- $x$: prey density
+- $a$: asymptote, the maximum
+- $b$: half-saturation, where $f(x) = a/2$
+
+Written down because it has the right shape.
+:::
+
+::::
+
+. . .
+
+**The same curve**, when $a = \dfrac{1}{h}$ and $b = \dfrac{1}{\alpha\,h}$.
+
+::: {.notes}
+This is the concrete version of the "two kinds of description" slide, and Bolker
+makes the point in chapter 1: the same function can be used mechanistically
+"because you expected predators to attack prey at a constant rate and be
+constrained by handling time", or phenomenologically "because you wanted a
+function that started at zero, was initially linear, and leveled off".
+
+What changes is not the curve but which parameters you write down, and that
+choice follows from why you are using it:
+
+- Mechanistic form when the parameters are the question. Do handling times differ
+  between prey types? Does attack rate rise with seed size? You can only ask that
+  if alpha and h are in the equation. Also safer to extrapolate.
+- Michaelis-Menten form when you want parameters you can read off a plot. The
+  maximum and the half-way point are both visible on a graph; attack rate and
+  handling time are not.
+
+How they connect, worth saying because Lecture 2 described a and b as attack rate
+and handling time: related, but not the same. The maximum a is 1/h, so it is set
+by handling time. The attack rate alpha is the initial slope, which in the second
+form is a/b. As x gets large the first form tends to alpha x / (alpha h x) = 1/h,
+which is a.
+:::
+
+## Same curve in R
+
+You wrote the second one in Lecture 2, as `holling2()`.
+
+```{r}
+holling_type2 <- function(x, alpha, h){
+  alpha * x / (1 + alpha * h * x)
+}
+
+michaelis_menten <- function(x, a, b){
+  a * x / (b + x)
+}
+
+holling_type2(x = c(1, 5, 50), alpha = 2, h = 0.5)
+michaelis_menten(x = c(1, 5, 50), a = 1 / 0.5, b = 1 / (2 * 0.5))
+```
+
+Identical numbers. **Which one you write depends on why you are using it.**
+
+::: {.notes}
+Let the two output lines sit next to each other for a moment. The same numbers
+from two differently written functions is the most convincing way to show these
+are one curve.
+
+Point at the translation: the Greek letter becomes alpha, because you cannot type
+it, and every multiplication needs a *.
+
+The names are deliberate. In Lecture 2 this was holling2(), but written with a and
+b it is the Michaelis-Menten form, so it gets that name here. Naming each function
+for the form it takes is the "give an idea a name" reason from earlier, and it
+keeps the two versions from being confused.
+:::
+
+## Math to R {.smaller}
+
+| Math | R | |
+|---|---|---|
+| $a\,x$ | `a * x` | every multiplication needs `*` |
+| $\dfrac{a}{b}$ | `a / b` | |
+| $x^2$ | `x^2` | |
+| $e^{-b x}$ | `exp(-b * x)` | a function, not a letter |
+| $e$ | `exp(1)` | there is no `e` in R |
+| $\ln(2)$ | `log(2)` | **`log()` is the natural log** |
+| $\log_{10}(x)$ | `log10(x)` | |
+| $\sum_i y_i$ | `sum(y)` | |
+
+::: {.notes}
+A reference for the rest of the lecture. Two rows are traps worth pointing at.
+
+log(): in math ln is the natural log and log often means base 10. In R, log() is
+the natural log and base 10 is log10(). Students who have used log10() since
+Lecture 5 will reach for it when the book writes ln. This comes up with the
+half-life.
+
+e: typing e gives "object 'e' not found". The number e is exp(1). The exponential
+row comes up in the next exercise, and exp(1) in the eyeball fit.
+
+Cuttable if time is short; the pairings on the function slides make the same
+points one at a time.
+:::
+
+## Defaults
+
+::: {.type-it}
+```{r}
+michaelis_menten <- function(x, a = 1, b = 1){
+  a * x / (b + x)
+}
+```
+:::
+
+`a = 1` sets a **default**. Anything you leave out uses it.
+
+::: {.type-it}
+```{r}
+michaelis_menten(x = 2)
+michaelis_menten(x = 2, a = 3)
+```
+:::
+
+::: {.notes}
+They met defaults earlier today, as na.rm = FALSE in mean() and sd(). Here they
+set their own, with the same syntax they saw when they printed sd.
+
+Have everyone type and run this definition. The next two slides draw it, and the
+negative exponential exercise assumes they already have it. The holling_type2()
+and michaelis_menten() on the previous slide were only for watching.
+:::
+
+## Drawing it
+
+::: {.type-it}
+```{r}
+curve(michaelis_menten(x, a = 4, b = 5), from = 0, to = 40)
+```
+:::
+
+::: {.notes}
+curve() insists the variable is called x. That is a quirk of curve(), not a rule
+about functions.
+
+A trap someone will hit later: curve(x, ...) on its own fails with 'could not
+find function "x"', because a bare name is read as a function. Write
+curve(1 * x, ...). It comes up when we put two curves together.
+:::
+
+## Try it against the data
+
+::: {.type-it}
+```{r}
+#| fig-height: 3.0
+plot(tadpoles$TBL, tadpoles$Kill, xlim = c(0, 40), ylim = c(0, 6),
+     xlab = "Tadpole body length (mm)", ylab = "Number killed")
+curve(michaelis_menten(x, a = 4, b = 5), add = TRUE, col = "red", lwd = 2)
+```
+:::
+
+Rises: **yes**. Peaks and falls back: **no**. It levels off and stays there.
+
+::: {.notes}
+add = TRUE draws the curve on top of the existing plot. Forgetting it silently
+replaces the data with the curve, which someone will do.
+
+The verdict, against the list: right start, wrong ending. And no choice of a and
+b fixes it. A Michaelis-Menten curve can only rise and level off; it has no way to
+come back down. So set it aside, and ask what it was missing: something that
+falls.
+
+If anyone asks what the "best" Michaelis-Menten fit would be: a fitting routine
+only gets close by making b negative, a half-saturation point below zero, which
+means nothing. That is a curve being forced into a shape it cannot make.
+:::
+
+## Second try: something that falls
+
+Large tadpoles escape, so predation should **fall** with size.
+
+The simplest curve that falls: the **negative exponential**.
+
+::: {.notes}
+Setting a curve aside for what it cannot do tells you what to look for next. The
+Holling curve could not fall, so find one that does.
+
+Why this one: it is the simplest decreasing curve there is, with just two
+parameters. That also makes it the best place to learn what parameters do, which
+is the next few slides.
+:::
+
+## Your turn {background-color="#f0f4f8" .smaller}
+
+The negative exponential: $f(x) = a\,e^{-b x}$. Write it in R.
+
+::: {.type-it}
+```{r}
+#| eval: false
+# You typed this one in earlier:
+michaelis_menten <- function(x, a = 1, b = 1){
+  a * x / (b + x)
+}
+
+# Make this one, from the math above:
+negexp <- function(x, a = 1, b = 1){
+
+}
+
+curve(negexp(x), from = 0, to = 7)
+
+# Compare the two shapes: put the Michaelis-Menten curve on top
+curve(michaelis_menten(x, a = 2, b = 1), add = TRUE, col = "red")
+```
+:::
+
+::: {.notes}
+First pause, about 8 minutes. The slide gives the math and they produce the R.
+The Michaelis-Menten function is there as a model for the structure; the new
+piece is the exponential, which is on the Math to R table as exp(-b * x).
+
+The last step is where to circulate. The two curves have different ranges, so the
+Michaelis-Menten curve will run off the top unless they add ylim. That is a real
+problem with overlaying curves and worth them hitting. It also puts the two shapes
+side by side: one rises, one falls.
+:::
+
+## The negative exponential, in math and in R
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Math**
+
+$$f(x) = a\,e^{-b x}$$
+
+- $x$: the input, e.g. time
+- $a$: the value at $x = 0$
+- $b$: the decay rate ($b > 0$)
+:::
+
+::: {.column width="50%"}
+**R**
+
+```{r}
+#| eval: false
+negexp <- function(x, a = 1, b = 1){
+  a * exp(-b * x)
+}
+```
+
+- $e^{-b x}$ becomes `exp(-b * x)`
+:::
+
+::::
+
+::: {.notes}
+The answer to the pause. Check a few people got exactly this.
+
+Why b > 0: that is what makes it fall. With b negative the same equation grows
+without limit, and with b = 0 it is a flat line at a. The name "negative
+exponential" assumes the positive case. The common mistakes
+are writing e^(-b*x), which fails because there is no e, and exp(-bx), which fails
+because bx is read as a single variable name.
+:::
+
+## Your turn {background-color="#f0f4f8" .smaller}
+
+The last slide says what `a` and `b` do. **Check it**, changing only the numbers.
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Round 1: three values of a, same b
+curve(negexp(x, a = 1, b = 1), from = 0, to = 7, ylim = c(0, 3))
+curve(negexp(x, a = 1, b = 1), add = TRUE, col = "red")
+curve(negexp(x, a = 1, b = 1), add = TRUE, col = "blue")
+
+# Round 2: same a, three values of b
+curve(negexp(x, a = 1, b = 1), from = 0, to = 7, ylim = c(0, 3))
+curve(negexp(x, a = 1, b = 1), add = TRUE, col = "red")
+curve(negexp(x, a = 1, b = 1), add = TRUE, col = "blue")
+```
+:::
+
+In your own words: what does `a` seem to control? What does `b` seem to control?
+
+::: {.notes}
+Second pause, about 7 minutes. All they change is numbers, which is exactly the
+concept: same function, different parameters.
+
+This comes before the two figure slides on purpose. Those slides are the answer:
+show them once people have tried it, and let the room compare its own plots to
+them.
+
+Answers to listen for: a sets the height, the value the curve starts from, and
+stretches it vertically. b sets how fast it falls, which stretches or squeezes the
+curve horizontally. Let people describe b in their own terms; "how quickly it drops
+off" and "how spread out it is" are both right.
+
+Worth keeping in mind for later: in the Ricker, b controls where the peak sits,
+so the horizontal effect of b becomes something you can point at.
+:::
+
+## What does `a` do?
+
+```{r}
+#| echo: false
+curve(negexp(x, a = 1, b = 1), from = 0, to = 7, ylim = c(0, 3),
+      xlab = "x", ylab = "y", lwd = 2)
+curve(negexp(x, a = 2, b = 1), add = TRUE, col = "red",  lwd = 2)
+curve(negexp(x, a = 3, b = 1), add = TRUE, col = "blue", lwd = 2)
+legend("topright", lwd = 2, bty = "n", col = c("black", "red", "blue"),
+       legend = c("a = 1", "a = 2", "a = 3"))
+```
+
+`a` is the value at x = 0.
+
+::: {.notes}
+Same shape, taller. a is a scale parameter: it stretches vertically and changes
+nothing else.
+:::
+
+## What does `b` do?
+
+```{r}
+#| echo: false
+curve(negexp(x, a = 1, b = 0.5), from = 0, to = 7, ylim = c(0, 1.1),
+      xlab = "x", ylab = "y", lwd = 2)
+curve(negexp(x, a = 1, b = 1), add = TRUE, col = "red",  lwd = 2)
+curve(negexp(x, a = 1, b = 2), add = TRUE, col = "blue", lwd = 2)
+legend("topright", lwd = 2, bty = "n", col = c("black", "red", "blue"),
+       legend = c("b = 0.5", "b = 1", "b = 2"))
+```
+
+All start in the same place. `b` sets how fast it falls.
+
+::: {.notes}
+Contrast with the previous slide deliberately. a moves the curve up and down, b
+changes its shape. Scale parameter versus rate parameter is the most transferable
+idea in the chapter and shows up in every distribution in chapter 4.
+
+Ask: what are the units of b? If x is in days, b is per day. That is what makes
+it a rate, and why a mechanistic parameter beats a fitted constant.
+:::
+
+## Where does it fall by half?
+
+For $f(x) = a\,e^{-b x}$ the book gives
+
+$$x_{1/2} = \frac{\ln 2}{b}$$
+
+In R, $\ln$ is `log()`. Check it:
+
+```{r}
+log(2) / 0.5
+negexp(log(2) / 0.5, a = 1, b = 0.5)
+```
+
+This is a half-life. Bigger `b`, shorter half-life.
+
+::: {.notes}
+Still on the negative exponential, while its parameters are fresh. The point is
+the habit: the book hands you a formula, you check it in one line rather than
+trusting it.
+
+Point at ln becoming log(). Anyone who types log10(2), a reasonable instinct after
+Lecture 5, gets 0.602 instead of 1.386 and the check on the next line fails. That
+is a good failure to have in the room.
+
+Half-life is worth naming because they meet it again interpreting rate parameters
+all course, and it is the same quantity as radioactive decay and drug clearance.
+:::
+
+## Try it against the data
+
+::: {.type-it}
+```{r}
+#| fig-height: 3.2
+plot(tadpoles$TBL, tadpoles$Kill, xlim = c(0, 40), ylim = c(0, 6),
+     xlab = "Tadpole body length (mm)", ylab = "Number killed")
+curve(negexp(x, a = 6, b = 0.1), add = TRUE, col = "red", lwd = 2)
+```
+:::
+
+Falls back: **yes**. Rises first: **no**. It starts at its highest point.
+
+::: {.notes}
+The verdict, against the list: right ending, wrong start. It says the smallest
+tadpoles are the most likely to be killed, and the data say 12 mm is the worst
+size. So does the biology from the shape slide. No choice of a and b fixes it: a
+negative exponential is always highest at x = 0.
+
+One thing to be ready for, because a sharp student may find it once sum of squares
+comes up: by that measure this curve fits almost as well as the best Ricker (about
+27 against 25). That is not a contradiction. Sum of squares measures distance, not
+whether the shape makes sense, and with 15 points, most of them zeros, both curves
+fit imperfectly. We are choosing on shape and biology, which is the point of the
+shape slide.
+:::
+
+## Put them together
+
+```{r}
+#| echo: false
+#| fig-height: 3.6
+curve(1 * x, from = 0, to = 8, ylim = c(0, 3), xlab = "x", ylab = "y",
+      lty = 2, col = "grey40", lwd = 2)
+curve(exp(-x),     add = TRUE, lty = 2, col = "grey40", lwd = 2)
+curve(x * exp(-x), add = TRUE, col = "red", lwd = 3)
+legend("topright", bty = "n", lwd = c(2, 2, 3), lty = c(2, 2, 1),
+       col = c("grey40", "grey40", "red"),
+       legend = c("x  (rises)", "exp(-x)  (falls)", "x * exp(-x)"))
+```
+
+The Holling curve got the **rise**. The exponential got the **fall**.
+Multiply one that rises by one that falls: $x \times e^{-x}$ humps.
+
+::: {.notes}
+This is why the two failures came first: each one got half of the shape.
+Multiplying them keeps the good half of each. Near zero the rising piece wins; far
+out the exponential wins.
+
+Be honest about one detail: the rising piece here is the simplest one, a straight
+line through zero, not the Holling curve itself. A Holling curve times an
+exponential would also hump, and building curves by combining pieces like that is
+exactly what next lecture's bestiary is about.
+
+Note 1 * x rather than x, for the curve() reason from earlier.
+:::
+
+## The Ricker, in math and in R {.smaller}
+
+That product, with a parameter on each piece, is the **Ricker**: the standard
+choice for humped, right-skewed ecological patterns.
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Math**
+
+$$f(x) = a\,x\,e^{-b x}$$
+
+- $x$: the input, e.g. tadpole size
+- $a$: initial slope, how steeply it rises from zero
+- $b$: sets where it peaks, at $x = 1/b$ ($b > 0$)
+:::
+
+::: {.column width="50%"}
+**R**
+
+```{r}
+ricker <- function(x, a = 1, b = 1){
+  a * x * exp(-b * x)
+}
+```
+
+- $a\,x$ is the rising piece
+- $e^{-b x}$ is the falling piece
+:::
+
+::::
+
+::: {.notes}
+Not a new idea, just a name for the combination from the last slide. The a x is
+the line that rises, and the e^(-bx) is the negative exponential from earlier, so
+b means the same thing it did there: how fast the falling piece falls.
+
+The parameter meanings are Bolker's: a is the initial slope and the peak sits at
+1/b. The peak needs b > 0; with b at or below zero the falling piece does not fall,
+so the curve never turns down. Both get checked in R shortly.
+:::
+
+## Your turn: type in the Ricker {background-color="#f0f4f8"}
+
+Type this into your script and run it. You will use it for the rest of today.
+
+::: {.type-it}
+```{r}
+#| eval: false
+ricker <- function(x, a = 1, b = 1){
+  a * x * exp(-b * x)
+}
+
+ricker(x = 2)          # should give 0.2706706
+```
+:::
+
+Getting `could not find function "ricker"`? The definition has not been run yet.
+
+::: {.notes}
+Two minutes. Typing it, rather than copying, is the point: it is their first
+function with exp() in it, and the check value tells them straight away whether
+they got the brackets and the minus sign right.
+
+Everything from here on uses ricker(), including both remaining exercises, so do
+not skip this one even if time is short.
+:::
+
+## What happens at the ends?
+
+You can just ask.
+
+::: {.type-it}
+```{r}
+ricker(0, a = 1, b = 1)
+ricker(c(10, 100, 1000), a = 1, b = 1)
+```
+:::
+
+Starts at zero. Returns to zero. With a hump in between, that is every item on
+our list.
+
+. . .
+
+Is starting at zero sensible for tadpoles?
+
+::: {.notes}
+Bolker takes limits analytically in 3.3.1. Plugging in numbers gets the same
+answer and is available to everyone in the room.
+
+Check it off against the shape slide: rises, peaks, falls back. This is the first
+candidate that can do all three.
+
+The last question is the biology. A Ricker says predation goes to zero for very
+large tadpoles, which is plausible, and zero at size zero, which is a modeling
+assumption you should notice you are making.
+:::
+
+## When you want the numbers
+
+```{r}
+xvec <- seq(from = 0, to = 8, length.out = 100)
+yvec <- ricker(xvec, a = 1, b = 1)
+head(yvec)
+```
+
+That worked because the function is **vectorized**.
+
+. . .
+
+If it is not, `sapply()` runs it one at a time:
+
+```{r}
+#| eval: false
+yvec <- sapply(X = xvec, FUN = ricker)
+```
+
+::: {.notes}
+Sets up the next slide, which finds the peak by computing lots of values.
+
+This is the promise from Lecture 6 coming due. We said there were two better ways
+than copy-pasting four blocks: a for loop, met in Lecture 7, and something
+tidier. This is it.
+
+A for loop makes you create the output vector first and fill it in. sapply()
+collects the answers for you. Same idea, less bookkeeping.
+
+The sapply half is the part to cut if you run long.
+:::
+
+## Where is the peak?
+
+```{r}
+xvec <- seq(0, 20, length.out = 10000)
+yvec <- ricker(xvec, a = 1, b = 0.25)
+xvec[which.max(yvec)]
+```
+
+. . .
+
+The book does the calculus and gets $x_{\text{peak}} = \dfrac{1}{b}$.
+
+```{r}
+1 / 0.25
+```
+
+::: {.notes}
+We care about the peak because the tadpole data have one, near 12 mm. If we know
+where a Ricker peaks, we can put its peak where the data's peak is.
+:::
+
+## The peak depends only on `b`
+
+```{r}
+#| echo: false
+curve(ricker(x, a = 1, b = 0.5), from = 0, to = 12, ylim = c(0, 1.6),
+      xlab = "x", ylab = "y", lwd = 2)
+curve(ricker(x, a = 1, b = 0.25), add = TRUE, col = "red",  lwd = 2)
+curve(ricker(x, a = 1, b = 1),    add = TRUE, col = "blue", lwd = 2)
+abline(v = c(2, 4, 1), lty = 3, col = c("black", "red", "blue"))
+legend("topright", lwd = 2, bty = "n", col = c("red", "black", "blue"),
+       legend = c("b = 0.25, peak at 4", "b = 0.5, peak at 2", "b = 1, peak at 1"))
+```
+
+Changing `a` stretches it vertically. The peak stays put.
+
+::: {.notes}
+This is what makes the two parameters worth separating, and what makes the
+eyeball fit later possible: b places the peak, a sets its height.
+:::
+
+## Your turn {background-color="#f0f4f8"}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# uses the ricker() you typed in earlier
+a_try <- 1
+b_try <- 0.1
+
+curve(ricker(x, a = a_try, b = b_try), from = 0, to = 40)
+
+# Find the peak numerically
+xvec <- seq(0, 40, length.out = 10000)
+yvec <- ricker(xvec, a = a_try, b = b_try)
+
+xvec[which.max(yvec)]
+
+1 / b_try            # does this agree?
+```
+:::
+
+Now set `a_try <- 5`. Did the peak move?
+
+What `b_try` puts the peak at **x = 20**?
+
+::: {.notes}
+Third pause, about 8 minutes, and the rehearsal for the eyeball fit.
+
+Putting a_try and b_try at the top means the rest of the block is re-runnable
+without editing anything inside the function calls. Same trick they will use on
+the tadpole data.
+
+The last question is the one that matters: they have to invert 1/b, which is
+exactly the step they need in a moment on real data.
+:::
+
+## Back to the tadpoles
+
+```{r}
+#| echo: false
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+```
+
+Peak near **12 mm**. Height about **4** killed.
+
+That is two facts. The Ricker has two parameters.
+
+::: {.notes}
+We chose the Ricker because it is the first candidate with the right shape. Now
+put it where the data are.
+
+Say the last line slowly. Reading two numbers off a picture determines two
+parameters, which is why knowing what parameters mean matters: you get a starting
+point without any fitting at all.
+:::
+
+## Eyeballing it
+
+Peak is at `1/b`, and we want it at 12:
+
+```{r}
+b_eye <- 1 / 12
+```
+
+Height at the peak is $\dfrac{a}{b\,e}$, and we want 4. In R, $e$ is `exp(1)`:
+
+```{r}
+a_eye <- 4 * b_eye * exp(1)
+a_eye
+```
+
+::: {.notes}
+The height formula comes from substituting x = 1/b back into the Ricker, which
+the book does. Quote it rather than deriving it; the useful skill is knowing such
+a formula exists and using it.
+:::
+
+## How good is a fit?
+
+$$\text{SS} = \sum_i \big(y_i - f(x_i)\big)^2$$
+
+- $y_i$: each observed value, `tadpoles$Kill`
+- $f(x_i)$: what the curve predicts there, `ricker(tadpoles$TBL, a, b)`
+- $\sum_i$: add them all up, `sum()`
+
+```{r}
+sum((tadpoles$Kill - ricker(tadpoles$TBL, a = a_eye, b = b_eye))^2)
+```
+
+Smaller is better.
+
+::: {.notes}
+The first equation with a subscript, so read it aloud piece by piece and point at
+the matching part of the R line each time. The i just means "for each data point".
+Once they see that the sum is sum() and y_i is a whole column, the line of R reads
+straight off the math.
+
+No theory needed yet: total squared distance between data and curve, squared so
+misses above and below do not cancel. Chapter 6 makes it respectable.
+:::
+
+## Your turn {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# uses the ricker() you typed in earlier
+library(emdbook)
+data(ReedfrogSizepred)
+tadpoles <- ReedfrogSizepred
+
+a_try <- 0.906                 # change these two
+b_try <- 0.0833
+
+plot(tadpoles$TBL, tadpoles$Kill, xlim = c(0, 40), ylim = c(0, 6))
+
+curve(ricker(x, a = a_try, b = b_try), add = TRUE, col = "red", lwd = 2)
+
+sum((tadpoles$Kill - ricker(tadpoles$TBL, a_try, b_try))^2)
+```
+:::
+
+Starting score: **87.5**. Lower is better. Can you beat it?
+
+::: {.notes}
+Fourth pause, about 10 minutes. Then have them try to beat 87.5 by tweaking a and
+b, which is the real exercise and is genuinely fun for about five minutes.
+
+For reference, the best a Ricker can do on these data is about 24.9, at a = 1.01
+and b = 0.151. That puts the peak at 6.6 mm rather than 12, which is itself a hint
+that the Ricker is not quite the right shape.
+
+They need library(emdbook) and data(ReedfrogSizepred) up somewhere while they
+work.
+:::
+
+## It does not fit. Good.
+
+```{r}
+#| echo: false
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+curve(ricker(x, a = 4 * (1/12) * exp(1), b = 1/12),
+      add = TRUE, col = "red", lwd = 3)
+```
+
+Right kind of shape, but the right tail is too heavy. So you modify the function.
+
+::: {.notes}
+Same move as earlier, one level up. The Holling curve and the exponential each
+failed in a way that told us what to try next. The Ricker has the right kind of
+shape but fails in a smaller way: it falls too slowly, predicting kills at 30 mm
+where the data say zero.
+
+That is the book's own framing. Figure 3.1 shows the Ricker fitting badly and two
+modified versions, the power-Ricker and a modified logistic, fitting well. Noticing
+how a fit fails tells you what to change, and changing standard functions is next
+lecture.
+:::
+
+## Before next class
+
+Read Bolker **3.4 to 3.5**
+
+Next time: the bestiary of functions, and modifying them to fit
+
+Also: complete **3.6** (the R supplement)
