@@ -153,7 +153,7 @@ From midterm feedback, Fall 2025:
 
   **Piloted in Lecture 9 (Fall 2026).** Lecture 9 turned out to be the right
   first candidate rather than 07 or 08: it was being built from scratch, so
-  there was no conversion cost at all. `lectures/lecture_09_deterministic_functions.qmd`
+  there was no conversion cost at all. `lectures/Lecture_09_deterministic_functions.qmd`
   renders to a self-contained revealjs deck with Quarto 1.9.37, which is already
   installed. Speaker notes live in `::: {.notes}` blocks and open with the `s`
   key. Every figure and every printed result is computed at render time, so the
