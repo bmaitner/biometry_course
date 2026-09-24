@@ -1,0 +1,784 @@
+---
+title: "The bestiary of functions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 10"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.2
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+library(emdbook)
+data(ReedfrogSizepred)
+data(ReedfrogFuncresp)
+tadpoles <- ReedfrogSizepred
+kills_by_density <- ReedfrogFuncresp
+
+avonet <- read.csv("../data/Avonet/AVONET1_BirdLife.csv")
+
+ricker <- function(x, a = 1, b = 1) a * x * exp(-b * x)
+michaelis_menten <- function(x, a = 1, b = 1) a * x / (b + x)
+power_ricker <- function(x, height, peak, alpha) height * (x / peak * exp(1 - x / peak))^alpha
+hockey_stick <- function(x, a, s) ifelse(x < s, a * x, a * s)
+```
+
+## Today's agenda
+
+- Reading a function by its shape
+- The right curve depends on the question
+- Modifying a function to fit
+- Piecewise functions and derivatives in R (3.6)
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later.
+
+Code without the label is there to watch.
+
+::: {.notes}
+Say this out loud, as in Lecture 9. Some code on these slides is a worked example to follow on the
+screen, and some is code they will need a few slides later. Only the second kind is
+labeled, so if something is labeled and they skip it, a later exercise breaks.
+:::
+
+## Where we left off
+
+```{r}
+#| echo: false
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+curve(ricker(x, a = 4 * (1/12) * exp(1), b = 1/12),
+      add = TRUE, col = "red", lwd = 3)
+```
+
+The Ricker had the right kind of shape, but its right tail is too heavy.
+Score: **87.5**.
+
+::: {.notes}
+The closing figure from Lecture 9. The eyeballed Ricker keeps predicting kills at
+25 and 37 mm, where the data say zero, and that is most of its 87.5.
+
+Today picks that thread straight back up. By the end, students will have fixed
+this fit.
+:::
+
+## Two ways forward
+
+1. **Try a different function**, one whose shape matches better.
+2. **Modify the function you have**, so its shape changes.
+
+. . .
+
+Either way you need a vocabulary of shapes. That is what the **bestiary** is.
+
+::: {.notes}
+Bolker's own advice about the bestiary is to skim it on a first reading and use it
+as a reference, not to memorize it. So today is about how to use it: how to find
+a shape, and how to bend one that is close.
+
+Both routes get used today, and the tadpoles get fixed by the second one.
+:::
+
+## Get set up {background-color="#f0f4f8"}
+
+Run this so the rest of today works.
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(emdbook)
+data(ReedfrogSizepred)
+data(ReedfrogFuncresp)
+tadpoles <- ReedfrogSizepred
+kills_by_density <- ReedfrogFuncresp
+
+ricker <- function(x, a = 1, b = 1){
+  a * x * exp(-b * x)
+}
+
+michaelis_menten <- function(x, a = 1, b = 1){
+  a * x / (b + x)
+}
+```
+:::
+
+::: {.notes}
+Two minutes. The two functions are the ones they wrote last lecture, so typing
+them again is a quick rehearsal. Anyone who still has last lecture's script open
+can run it from there.
+
+ReedfrogFuncresp is new: a second tadpole experiment, used in a few slides.
+:::
+
+## Reading a function by its shape {.center}
+
+## Read a function by its ends and its middle
+
+Three questions to ask of any function:
+
+1. What happens at the **left end**?
+2. What happens at the **right end**?
+3. What happens **in between**? Does it rise, fall, peak, level off, or switch?
+
+. . .
+
+Bolker's Table 3.1 sorts the whole bestiary by exactly these.
+
+::: {.notes}
+They already asked the first two of the Ricker last lecture, on the "what happens
+at the ends" slide. This generalizes it into a way of reading any function.
+
+The middle is where the shape names come from: saturating, S-shaped, humped, and
+so on, which is the next slide.
+:::
+
+## A catalog of shapes
+
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+par(mfrow = c(2, 3), mar = c(2.5, 2.5, 3, 0.8), mgp = c(1.4, 0.5, 0))
+curve(michaelis_menten(x, a = 1, b = 1), 0, 10, lwd = 3, col = "red", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "Saturating\nMichaelis-Menten")
+curve(plogis(x, location = 5, scale = 1), 0, 10, lwd = 3, col = "red", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "S-shaped (sigmoid)\nlogistic")
+curve(ricker(x, a = 1, b = 1), 0, 8, lwd = 3, col = "red",
+      xlab = "", ylab = "", main = "Humped\nRicker")
+curve(exp(-0.5 * x), 0, 10, lwd = 3, col = "red", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "Decreasing\nnegative exponential")
+curve(x^2, 0, 3, lwd = 3, col = "red", ylim = c(0, 9),
+      xlab = "", ylab = "", main = "Power law\na x^b")
+curve(sqrt(x) * 3, 0, 3, lwd = 3, col = "blue", add = TRUE)
+curve(hockey_stick(x, a = 1, s = 5), 0, 10, lwd = 3, col = "red", ylim = c(0, 6),
+      xlab = "", ylab = "", main = "Switch\nhockey stick")
+```
+
+::: {.notes}
+Six shapes cover most of what they will meet. Each panel is one representative;
+the bestiary has several functions for most shapes.
+
+On the power law panel, red has b > 1 (accelerating) and blue has 0 < b < 1
+(decelerating). Both are a x^b.
+
+Point out that they already know three of these from last lecture: saturating,
+humped, and decreasing.
+:::
+
+## Your turn: which shape would you try first? {background-color="#f0f4f8" .smaller}
+
+No code. For each, name a starting shape and one reason.
+
+1. Seeds eaten by a mouse ~ seed density
+2. Light level ~ depth in a lake
+3. Bird body mass ~ leg length
+4. Probability a tree has flowered ~ trunk diameter
+5. Total offspring produced ~ population density
+6. Food eaten by a filter feeder with a hard maximum ~ food concentration
+
+Read `~` as "depends on": **response ~ predictor**, the y axis on the left and
+the x axis on the right.
+
+More than one answer can be defensible. The reason is the point.
+
+::: {.notes}
+Three to five minutes in pairs, then go around. Deliberately low stakes.
+
+The tilde is R's formula notation, met already in Lecture 5 as
+boxplot(log10(Mass) ~ Trophic.Level, data = avonet) and in the lm() calls in the
+chapter 1 script. Worth naming it here, because it is how every model gets
+written from chapter 9 on, and it is on the AVONET slide later today.
+
+Answers to listen for:
+
+1. Saturating. A mouse can only handle so many seeds; handling time, the Holling
+   argument from last lecture.
+2. Decreasing, negative exponential. Each meter of water absorbs a constant
+   fraction of the light that reaches it. Bolker mentions the same law for light
+   in plant canopies.
+3. Power law. Bolker's own example.
+4. S-shaped. Small trees almost never flower, big ones almost always do, with a
+   switch in between.
+5. Humped. The Ricker was built for this: more adults means more offspring, until
+   crowding cuts fecundity.
+6. Switch, hockey stick. Intake rises until it hits the limit and then flattens
+   suddenly. Bolker calls this the Holling type I response.
+
+If someone argues a sigmoid for 1, that is a real alternative (Holling type III),
+and it is worth saying so.
+:::
+
+## The right curve depends on the question {.center}
+
+## A second tadpole experiment
+
+```{r}
+#| echo: false
+#| fig-height: 3.8
+plot(kills_by_density$Initial, kills_by_density$Killed,
+     xlab = "Number of tadpoles in the tank", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 100), ylim = c(0, 40))
+```
+
+Same predators, same prey. This time the question is **how many** tadpoles, not
+**how big**. What shape is this?
+
+::: {.notes}
+ReedfrogFuncresp, from the same research program as last lecture's size data.
+
+Let them answer. It rises and seems to flatten: saturating. The biology is the
+handling-time argument: with more tadpoles around, predators spend more of their
+time eating and less searching, so kills cannot keep rising in proportion.
+:::
+
+## Michaelis-Menten fits this one
+
+```{r}
+#| fig-height: 3.2
+plot(kills_by_density$Initial, kills_by_density$Killed,
+     xlim = c(0, 100), ylim = c(0, 40),
+     xlab = "Number of tadpoles in the tank", ylab = "Number killed")
+curve(michaelis_menten(x, a = 60, b = 100), add = TRUE, col = "red", lwd = 2)
+```
+
+The curve that failed on **size** in Lecture 9 fits **density**.
+
+::: {.notes}
+This is the payoff of the section title. Last lecture Michaelis-Menten was set
+aside because size data rise and then fall. Here the pattern really does saturate,
+for a mechanistic reason. The function did not change; the question did.
+
+It also closes the loop on the two formulations from last lecture: this is a
+functional response, so the mechanistic Holling form, with attack rate and
+handling time, is a natural way to write it.
+:::
+
+## Your turn: how high does it go? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+a_try <- 60                    # the asymptote
+b_try <- 100                   # the half-saturation point
+
+plot(kills_by_density$Initial, kills_by_density$Killed,
+     xlim = c(0, 100), ylim = c(0, 40))
+curve(michaelis_menten(x, a = a_try, b = b_try), add = TRUE, col = "red", lwd = 2)
+
+sum((kills_by_density$Killed -
+     michaelis_menten(kills_by_density$Initial, a_try, b_try))^2)
+```
+:::
+
+Starting score: **404**. Now try `a_try <- 150` and `b_try <- 390`.
+
+What does that tell you about the maximum number of kills?
+
+::: {.notes}
+About 5 minutes. The second pair scores about 376, nearly the same. With b adjusted
+to match, any asymptote from about 60 to 300 fits these data about equally well.
+
+The lesson: the data never get near the asymptote, so they cannot tell you where it
+is. Bolker warns about exactly this for Michaelis-Menten: it approaches its
+asymptote very slowly. That says more about what data you would need than about
+the function, and it is worth remembering before reporting a maximum from a fit.
+
+Cuttable if time is short; the previous slide makes the main point.
+:::
+
+## Modifying a function to fit {.center}
+
+## Four ways to change a function
+
+Start from any $f(x)$:
+
+| Change | Math | Effect |
+|---|---|---|
+| **Scale** | $a \cdot f(x)$ | taller or shorter |
+| **Stretch** | $f(x / b)$ | wider or narrower |
+| **Shift** | $f(x - c)$ | slides right |
+| **Bend** | $f(x)^{\alpha}$ | changes the shape itself |
+
+::: {.notes}
+Bolker covers the first three under shifting and scaling in 3.3, which they read
+for last lecture, and the fourth under power laws in the bestiary.
+
+The first three move or resize a curve without changing its basic shape. The power
+is different: it changes the shape, which is what the tadpoles need.
+
+They have already seen the first two in action. In Michaelis-Menten, a scales and
+b stretches: that is why a is the height and b is where it gets halfway.
+:::
+
+## What each one does
+
+```{r}
+#| echo: false
+#| fig-width: 8
+#| fig-height: 5
+base <- function(x) x / (1 + x)
+par(mfrow = c(2, 2), mar = c(2.5, 2.5, 2.5, 0.8), mgp = c(1.4, 0.5, 0))
+curve(base(x), 0, 10, lty = 2, lwd = 2, col = "grey50", ylim = c(0, 2),
+      xlab = "", ylab = "", main = "Scale:  2 f(x)")
+curve(2 * base(x), add = TRUE, col = "red", lwd = 3)
+curve(base(x), 0, 10, lty = 2, lwd = 2, col = "grey50", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "Stretch:  f(x / 3)")
+curve(base(x / 3), add = TRUE, col = "red", lwd = 3)
+curve(base(x), 0, 10, lty = 2, lwd = 2, col = "grey50", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "Shift:  f(x - 2)")
+curve(base(pmax(x - 2, 0)), add = TRUE, col = "red", lwd = 3)
+curve(base(x), 0, 10, lty = 2, lwd = 2, col = "grey50", ylim = c(0, 1),
+      xlab = "", ylab = "", main = "Bend:  f(x) ^ 3")
+curve(base(x)^3, add = TRUE, col = "red", lwd = 3)
+```
+
+Gray dashed: $f(x) = x / (1 + x)$. Red: the changed version.
+
+::: {.notes}
+Point at the bend panel. Cubing a saturating curve turns it S-shaped: flat near
+zero, then rising. The first three panels are the same shape moved around; the
+fourth is a different shape.
+
+On the shift panel the curve is held at zero before x = 2. Without that, x/(1+x)
+shifted right hits a division by zero, which Bolker warns about.
+:::
+
+## Power laws
+
+$$f(x) = a\,x^{b}$$
+
+- $a$: scale, the value at $x = 1$
+- $b$: the exponent. $b > 1$ accelerates, $0 < b < 1$ decelerates, $b < 0$ decreases
+
+```{r}
+#| eval: false
+power_law <- function(x, a = 1, b = 1){
+  a * x^b
+}
+```
+
+On log-log axes, a power law is a **straight line** with slope $b$.
+
+::: {.notes}
+Callback to Lecture 5: the log-log axes that turned the mass versus wing length
+cloud into a line. That line was a power law, and its slope was the exponent.
+
+Power laws describe allometry, metabolic rates, and species-area curves, among
+others.
+:::
+
+## A power law in AVONET
+
+```{r}
+#| echo: false
+#| fig-height: 3.9
+fit <- lm(log10(Mass) ~ log10(Tarsus.Length), data = avonet)
+plot(log10(avonet$Tarsus.Length), log10(avonet$Mass),
+     pch = 16, cex = 0.3, col = rgb(0, 0, 0, 0.2),
+     xlab = "log10 tarsus length (mm)", ylab = "log10 body mass (g)")
+abline(fit, col = "red", lwd = 3)
+```
+
+Slope about **2.2**: body mass rises roughly as leg length to the power 2.2.
+
+::: {.notes}
+Bolker's own example of a power law is bird mass against tarsus length, and AVONET
+has both columns.
+
+If you want the number: lm(log10(Mass) ~ log10(Tarsus.Length), data = avonet)
+gives a slope of 2.17.
+
+Worth a caution, and Bolker makes it: if birds were scaled-up copies of each
+other, mass would go as length cubed, a slope of 3. The slope is 2.2. It is
+tempting to read a mechanism off that number, but many different processes produce
+power laws, so an exponent on its own is weak evidence for any one of them.
+:::
+
+## Fixing the tadpoles {.center}
+
+## The Ricker's hump is too wide
+
+A power **bends** a curve's shape.
+
+Raise the Ricker to a power greater than 1 and the hump gets **narrower**, with
+lighter tails.
+
+. . .
+
+That is exactly what the tadpole data need.
+
+::: {.notes}
+Tie back to the bend panel: a power changed the shape of a saturating curve. Here
+it does the same to a humped one.
+
+Bolker's Figure 3.1 shows this fix: the power-Ricker, from Persson and colleagues,
+fits the tadpole size data far better than the plain Ricker.
+:::
+
+## The only change is an exponent {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Ricker**, as you wrote it last time
+
+$$f(x) = a\,x\,e^{-b x}$$
+
+the same curve, written with the peak's height $h$ and position $p$
+
+$$f(x) = h \left( \frac{x}{p}\, e^{\,1 - x/p} \right)$$
+:::
+
+::: {.column width="50%"}
+**Power-Ricker**
+
+$$f(x) = h \left( \frac{x}{p}\, e^{\,1 - x/p} \right)^{\alpha}$$
+
+Everything in the brackets is the Ricker.
+
+The only new thing is the $\alpha$.
+:::
+
+::::
+
+::: {.notes}
+Two moves, so take them one at a time.
+
+First, down the left column: the same curve rewritten. Both lines are the Ricker;
+they just carry different parameters. They match when a = h e / p and b = 1 / p,
+so last lecture's eyeballed fit, peak 4 killed at 12 mm, is h = 4 and p = 12. The
+reason for rewriting is the one from last lecture's two versions of
+Michaelis-Menten: choose the parameters you can read off a plot.
+
+Then across: the brackets are identical, and the exponent is the whole
+modification. This is the "bend" row of the four-ways table, applied to a curve
+they already have.
+
+The shapes those equations make are on the next slide.
+:::
+
+## Side by side
+
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 3.8
+par(mfrow = c(1, 2), mar = c(3.2, 3.2, 2.6, 0.8), mgp = c(1.9, 0.6, 0))
+curve(power_ricker(x, 4, 12, 1), from = 0, to = 40, ylim = c(0, 4.4),
+      col = "red", lwd = 3, main = "Ricker", xlab = "x", ylab = "f(x)")
+abline(v = 12, lty = 3, col = "grey50")
+curve(power_ricker(x, 4, 12, 1), from = 0, to = 40, ylim = c(0, 4.4),
+      col = "grey60", lwd = 2, lty = 2,
+      main = "Power-Ricker, raised to the power 3", xlab = "x", ylab = "f(x)")
+curve(power_ricker(x, 4, 12, 3), add = TRUE, col = "red", lwd = 3)
+abline(v = 12, lty = 3, col = "grey50")
+```
+
+Same peak, same height. The power **narrows the hump** and **pulls the right
+tail down**.
+
+::: {.notes}
+The picture behind the claim on the last slide, before any equation.
+
+Gray dashed on the right is the plain Ricker from the left panel, so the change
+is visible without looking back and forth between slides.
+
+Two things to point at, because they are what the tadpoles need: the right tail
+reaches zero far sooner, and the rise on the left is steeper and starts later.
+The peak does not move, which is the whole reason this version is convenient.
+
+The function that drew this arrives on the next slide. Nobody needs to type it
+yet.
+:::
+
+## The power-Ricker, in math and in R {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Math**
+
+$$f(x) = h \left( \frac{x}{p}\, e^{\,1 - x/p} \right)^{\alpha}$$
+
+- $h$: the height of the peak
+- $p$: where the peak is
+- $\alpha$: how narrow the hump is ($\alpha > 0$)
+
+With $\alpha = 1$ it **is** the Ricker.
+:::
+
+::: {.column width="50%"}
+**R**
+
+```{r}
+#| eval: false
+power_ricker <- function(x, height, peak, alpha){
+  height * (x / peak * exp(1 - x / peak))^alpha
+}
+```
+
+- the Ricker part is inside the brackets
+- `^alpha` is the bend
+:::
+
+::::
+
+::: {.notes}
+Written with the peak's height and position as parameters, which are exactly the
+two numbers read off the plot last lecture: 4 killed, at 12 mm. Same idea as last
+lecture's two ways of writing Michaelis-Menten: choose the parameters you can see.
+
+With alpha = 1 this is algebraically the Ricker with a = h e / p and b = 1 / p, so
+height 4 and peak 12 reproduces last lecture's eyeballed fit exactly. The students
+will confirm that in a moment, because it scores 87.5 again.
+:::
+
+## Your turn: fix the fit {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+power_ricker <- function(x, height, peak, alpha){
+  height * (x / peak * exp(1 - x / peak))^alpha
+}
+
+alpha_try <- 1                 # change this
+
+plot(tadpoles$TBL, tadpoles$Kill, xlim = c(0, 40), ylim = c(0, 6))
+curve(power_ricker(x, height = 4, peak = 12, alpha = alpha_try),
+      add = TRUE, col = "red", lwd = 2)
+
+sum((tadpoles$Kill - power_ricker(tadpoles$TBL, 4, 12, alpha_try))^2)
+```
+:::
+
+With `alpha_try <- 1` you should get **87.5**, last lecture's score.
+The best any Ricker can do is **24.9**. Can you beat it?
+
+::: {.notes}
+About 8 minutes. The check at alpha = 1 matters: it confirms their function is
+typed correctly and shows the power-Ricker contains the Ricker.
+
+Scores to expect with height 4 and peak 12: alpha 2 gives about 58, alpha 4 about
+34, alpha 6 about 24, which beats the best plain Ricker. Anyone who keeps going
+will find it keeps improving, which sets up the slide after next.
+:::
+
+## What $\alpha$ does
+
+```{r}
+#| echo: false
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+curve(power_ricker(x, 4, 12, 1), add = TRUE, col = "grey50", lwd = 2, lty = 2)
+curve(power_ricker(x, 4, 12, 2), add = TRUE, col = "orange", lwd = 2)
+curve(power_ricker(x, 4, 12, 6), add = TRUE, col = "red", lwd = 3)
+legend("topright", bty = "n", lwd = c(2, 2, 3), lty = c(2, 1, 1),
+       col = c("grey50", "orange", "red"),
+       legend = c("alpha = 1 (the Ricker), SS 87.5", "alpha = 2, SS 58.4",
+                  "alpha = 6, SS 24.0"))
+```
+
+Same peak, same height. Bigger $\alpha$, narrower hump.
+
+::: {.notes}
+The peak stays at 12 mm and 4 killed for every alpha, because those are their own
+parameters. Only the width changes, which is why this parameterization is so easy
+to use.
+:::
+
+## How far should you go?
+
+```{r}
+#| echo: false
+#| fig-height: 3.8
+plot(tadpoles$TBL, tadpoles$Kill,
+     xlab = "Tadpole body length (mm)", ylab = "Number killed",
+     pch = 16, cex = 1.4, xlim = c(0, 40), ylim = c(0, 6))
+curve(power_ricker(x, 4.002, 11.939, 38.075), add = TRUE, col = "red", lwd = 3,
+      n = 1001)
+```
+
+The best fit has $\alpha = 38$ and a score of **5**. **Do you believe it?**
+
+::: {.notes}
+Let the room argue. The spike fits the data very well, but look at what it claims
+where there are no data: 4 kills at 12 mm, about 1.4 at 15 mm, and 0.1 at 18 mm.
+Nobody measured tadpoles between 12 and 21 mm. The data cannot tell a sharp spike
+from a gentler hump in that gap, so the curve is filling it with an assumption.
+
+The general lesson: a more flexible function can always fit better, and a better
+score does not mean a better description. Bolker notes that exponents like this
+are hard to estimate from small data sets. Later chapters give tools, like
+likelihood-based model comparison, for deciding when extra flexibility is earned.
+Callback to Lecture 9's first slide: fit it, and then ask whether you believe it.
+:::
+
+## Piecewise functions and derivatives in R {.center}
+
+## Piecewise functions with `ifelse()` {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Math**: a hockey stick
+
+$$f(x) = \begin{cases} a\,x & \text{if } x < s \\ a\,s & \text{if } x \ge s \end{cases}$$
+
+- $a$: the slope before the switch
+- $s$: where it switches
+:::
+
+::: {.column width="50%"}
+**R**
+
+::: {.type-it}
+```{r}
+#| eval: false
+hockey_stick <- function(x, a, s){
+  ifelse(x < s, a * x, a * s)
+}
+```
+:::
+
+`ifelse(condition, if true, if false)`
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 6
+par(mar = c(3, 3, 0.5, 0.5), mgp = c(1.6, 0.5, 0))
+curve(hockey_stick(x, a = 2, s = 5), from = 0, to = 10, lwd = 3, col = "red",
+      xlab = "x", ylab = "f(x)")
+```
+
+::: {.notes}
+Section 3.6.2 of the R supplement.
+
+The biology: a filter feeder whose intake rises with food concentration until it
+physically cannot process any more, then stops rising. Bolker notes this is the
+Holling type I functional response. Piecewise functions make sense when there is a
+genuine switch point.
+
+ifelse works on a whole vector at once, which is why it plays well with curve().
+:::
+
+## Your turn: a threshold {background-color="#f0f4f8"}
+
+A threshold is flat, jumps at $s$, then is flat again:
+$f(x) = a_1$ if $x < s$, otherwise $a_2$.
+
+```{r}
+#| echo: false
+#| fig-height: 2.2
+#| fig-width: 6
+par(mar = c(3.2, 3.2, 0.4, 0.8), mgp = c(1.9, 0.6, 0))
+plot(NULL, xlim = c(0, 10), ylim = c(0, 4), xlab = "x", ylab = "f(x)")
+abline(v = 5, lty = 3, col = "grey50")
+segments(0, 1, 5, 1, col = "red", lwd = 3)
+segments(5, 3, 10, 3, col = "red", lwd = 3)
+text(2.5, 1.45, expression(a[1]), cex = 1.4)
+text(7.5, 3.45, expression(a[2]), cex = 1.4)
+text(5.3, 0.25, "s", cex = 1.4, adj = 0)
+```
+
+::: {.type-it}
+```{r}
+#| eval: false
+threshold <- function(x, a1, a2, s){
+
+}
+
+curve(threshold(x, a1 = 1, a2 = 3, s = 5), from = 0, to = 10)
+```
+:::
+
+::: {.notes}
+About 4 minutes. The answer is ifelse(x < s, a1, a2), one line, and it is a direct
+adaptation of the hockey stick on the previous slide.
+
+The figure is the target: a1 = 1 before the switch, a2 = 3 after it, s = 5, which
+are the numbers in the curve() call below it. Their plot should look like this.
+It shows the shape, not the code, so the exercise is still theirs.
+
+If the plot shows a sloped line at the jump rather than a vertical step, that is
+just curve() drawing a line between neighboring points; add n = 1001 to make the
+step look sharper.
+:::
+
+## R can do the calculus
+
+Last lecture the book told us the Ricker peaks at $x = 1/b$. Check it with `D()`:
+
+::: {.type-it}
+```{r}
+d_ricker <- D(expression(a * x * exp(-b * x)), "x")
+d_ricker
+
+eval(d_ricker, list(a = 1, b = 0.25, x = 1 / 0.25))
+eval(d_ricker, list(a = 2, b = 0.25, x = 0))
+```
+:::
+
+Slope **0** at $x = 1/b$: that is the peak. Slope **$a$** at $x = 0$: the initial slope.
+
+::: {.notes}
+Section 3.6.3 of the R supplement. D() takes a derivative symbolically; eval() plugs
+in numbers.
+
+A peak is where the slope is zero, so a zero derivative at x = 1/b confirms last
+lecture's claim without doing the calculus by hand. The second line confirms that a
+is the initial slope, the other parameter meaning from last lecture.
+
+Worth saying that R does not simplify its answer, which is why it looks messy.
+:::
+
+## Remainder of class
+
+Complete **3.6**, the R supplement:
+
+- 3.6.1 Plotting functions (most of today)
+- 3.6.2 Piecewise functions with `ifelse()`
+- 3.6.3 Derivatives with `D()` and `deriv()`
+
+Code: `R_scripts/Chapter_3_examples.R`
+
+::: {.notes}
+Matches the syllabus row for Lecture 10: "Read 3.4 to 3.5; Complete 3.6".
+:::
+
+## Before next class
+
+Read Bolker **4.1 to 4.2**, and **4.4**
+
+Next time: probability and stochastic distributions
