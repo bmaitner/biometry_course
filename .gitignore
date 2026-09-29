@@ -24,3 +24,8 @@ assignments/assignment_3/*.html
 # Draft slide content -- working notes, not for publication
 *_draft_additions.md
 lectures/README.md
+
+# Answer keys -- the repo is public, so these stay local
+*_key.md
+*_key.docx
+*_key.html
