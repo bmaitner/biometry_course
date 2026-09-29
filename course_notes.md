@@ -73,7 +73,9 @@ Two things to keep if this happens:
   remove the trying from the room.
 
 Related: this overlaps with "Add additional examples to course R scripts" below,
-and with the "Intro to R" strand of the course-splitting idea above.
+and with the "Intro to R" strand of the course-splitting idea above. See also
+"Move the R supplement out of class", from Lecture 10, which is the same trade
+applied to the book's R supplements.
 
 ## Course materials
 
@@ -258,6 +260,79 @@ shorten the opening quiz.
 in front of the ggplot2 deck. No slides were cut. The candidate cuts that had
 been lined up in case it ran long (the three categorical by categorical slides,
 the geom_line pair, and "Soooo many more options") stay in for now.
+
+**Lecture 9 timing was good**, the first deck of the semester to fit comfortably.
+Two things are worth keeping from it.
+
+**Partial code on the exercise slides worked.** Every "Your turn" gave students a
+worked example plus a skeleton with the body left blank, rather than the full
+answer or a blank script. The technical name is scaffolding, and the specific
+version here, a worked example next to a problem with pieces removed, is a
+completion problem. The point is that the removed piece is the thing being
+learned and everything else is handed over, so nobody spends the pause stuck on
+syntax they already know. Use this pattern for the remaining rebuilt decks.
+
+Related and also worth keeping: the decks label which code blocks students should
+type and run, with a badge, so the rest is understood to be for watching. Added
+after slide 20 of Lecture 9 asked students to use a function the slides had never
+told them to type.
+
+- [ ] **Say why more often, not just what.** Brian's note after teaching Lecture
+  9: the slides move quickly from one function to the next, and Bolker's text is
+  clearer than the slides about the motivation. Students followed the mechanics
+  but the reasons were thinner than they should have been.
+
+  Places to add a line, in Lecture 9 and in the chapter 3 material generally:
+
+  - Why bother naming a curve at all, rather than staying with the scatterplot:
+    parameters let you say how fast, how big, and where the peak is, and compare
+    those numbers across sites or species.
+  - Why the phenomenological and mechanistic forms of one curve are worth
+    separating: the form you choose decides which questions you can ask.
+  - Why a curve that fails is useful: how it fails tells you what to try next,
+    which is the spine of the whole lecture and is currently implicit.
+  - Why sum of squares at all, before any theory: it makes "better fit" a number
+    instead of an opinion.
+
+  Bolker 3.1 makes most of these directly. Some are already in the speaker notes,
+  which means they get said only if Brian remembers to say them; the ones that
+  matter should be on the slides.
+
+**Lecture 10 finished about 30 minutes early**, not counting the time set aside
+for the R supplement. That is the first deck with slack in it rather than
+overrun, and it came right after two overruns and one deck that fit, so the
+rebuilt decks are now landing short. Useful calibration: a 32-slide Quarto deck
+with four work pauses runs about an hour.
+
+- [ ] **Move the R supplement out of class and put something else in that time.**
+  Brian's proposal after teaching Lecture 10. **Not for Fall 2026.** Students have
+  already been told how the class periods work, and the syllabus reading rows have
+  gone out, so draft this before the next offering rather than mid-semester. Working through 3.6 in the room is
+  the most substitutable thing in the period: it is a tutorial students can follow
+  on their own, and it is the part where the room goes quiet and everyone works at
+  a different pace.
+
+  What to put in the recovered time is the open question. Candidates, roughly in
+  order of how well they use having Brian in the room:
+
+  - The same shape-finding work on the students' own datasets, which is where
+    they will actually have to choose a function, and where the reasons are
+    harder than on a textbook dataset.
+  - The at-home problem sets proposed under Course structure, done in class
+    instead, so the troubleshooting happens with help available.
+  - More examples of choosing between two defensible shapes, argued out loud.
+    That is the skill the lecture is really teaching and it got the least time.
+  - Starting the next chapter's material, which would buy back some of the
+    schedule pressure later in the semester.
+
+  What has to be true first: students can get through the supplement alone. The
+  chapter scripts and the labeled type-along code on the slides are most of that,
+  but the supplement sections should be listed explicitly on the reading row in
+  the syllabus rather than assigned from the slides, and it is worth some way to
+  tell who actually did it before class builds on it.
+
+  Related: this is the same move as the at-home problems proposal under Course
+  structure, applied to the supplement rather than to the exercises.
 
 - [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
   Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
