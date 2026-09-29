@@ -57,8 +57,7 @@ Students will be graded on both meeting the criteria outlined in the overview as
 The reproducibility portion of the grade is for work that runs on a computer
 that is not yours:
 
-- It runs **top to bottom in a fresh R session**, with no leftover objects in
-  the environment and no steps done by hand.
+- It runs **top to bottom in a fresh R session**, with no steps done by hand.
 - The **data are loaded by the script**, either from a URL or from a path
   relative to the project folder. An absolute path such as
   `C:/Users/yourname/Desktop/data.csv` will not run on my computer.
