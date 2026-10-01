@@ -1,0 +1,873 @@
+---
+title: "Probability distributions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 12"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+avonet <- readRDS("../data/Avonet/AVONET1_BirdLife.rds")
+set.seed(1)
+```
+
+## Today's agenda
+
+- Assignment 2
+- What a probability distribution is
+- The four R functions every distribution has
+- The bestiary: which distribution for which kind of data
+- What the parameters do
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Same convention as the last three lectures.
+
+Today is mostly playing with distributions in R. The reason to do that rather
+than read Table 4.1: a distribution is a shape, and you learn a shape by moving
+its parameters and watching, not by reading its formula.
+:::
+
+## Assignment 2: Distributions
+
+**Already posted. Due Friday Oct 9, by midnight.**
+
+Two parts:
+
+1. **Twelve kinds of data.** For each: discrete or continuous, then name a
+   distribution, then one sentence on why.
+2. **Your own dataset.** At least three numeric variables: histogram, discrete
+   or continuous, mean and median, and an argument for a distribution.
+
+Submit as a `.R` script or the output of a `.Rmd`, same as before.
+
+::: {.notes}
+Part 1 answers live in comments if they use a .R file, as text if they use .Rmd.
+
+Say the thing that makes the assignment easier: several items have more than one
+defensible answer, and the reasoning is what gets graded. A well argued second
+choice beats a bare right answer.
+
+Everything they need for Part 1 is in Table 4.1 and section 4.5, plus today.
+:::
+
+## You already have most of this {.smaller}
+
+| The assignment asks for | Where you got it |
+|---|---|
+| Discrete or continuous | Tuesday |
+| Mean, median, and what the gap means | Tuesday |
+| `na.rm = TRUE` on real data | Tuesday |
+| Histograms, raw and logged | Lecture 5 |
+| Which distribution, and why | **today** |
+| Checking a distribution against your data | **today** |
+
+Part 2 needs nothing you have not already done.
+
+::: {.notes}
+Worth a minute, because an assignment that looks like new work gets started late,
+and this one is mostly assembly.
+
+Tuesday did the summary statistics and the discrete versus continuous split.
+Today does the distributions themselves and the comparison against data. Lecture
+5 did the histograms, including the log scale, which is the step most of them
+will need.
+
+The one genuinely new thing is naming a distribution and defending it, which is
+what the rest of today is for.
+:::
+
+## Where we are
+
+**Chapter 3:** the deterministic part. The curve the data follow on average.
+
+. . .
+
+**Chapter 4:** the stochastic part. How the data scatter around that curve.
+
+. . .
+
+Every model from here on is both: a curve, plus a distribution around it.
+
+::: {.notes}
+This is the sentence that makes the chapter make sense. In chapter 3 they fit a
+Ricker by eye and the leftover scatter was something to be minimized. Here the
+scatter gets its own model.
+
+Bolker's framing: the deterministic function says what you expect, the
+distribution says how far from it you land.
+
+Forward reference worth making: in chapter 6 the two get combined, and fitting a
+model means choosing both a curve and a distribution.
+:::
+
+## What a distribution is
+
+**Discrete:** a probability for each possible value.
+
+$P(X = 3) = 0.18$. The probabilities add to 1.
+
+. . .
+
+**Continuous:** a density, and probability is **area** under it.
+
+$P(X = 3.000...) = 0$. Ask instead for $P(X < 3)$. The total area is 1.
+
+::: {.notes}
+From Lecture 11: the exact-value probability for a continuous variable is zero,
+so the questions are always about ranges.
+
+The practical consequence shows up in a moment: for discrete distributions
+dbinom() gives you an actual probability, and for continuous ones dnorm() gives
+you a density, which is not a probability until you integrate it. Nobody needs
+to integrate anything today; they need to know why one maxes out above 1.
+:::
+
+## Every distribution has four functions {.smaller}
+
+| Letter | Means | Normal | Binomial |
+|---|---|---|---|
+| `d` | **d**ensity, or probability | `dnorm()` | `dbinom()` |
+| `p` | **p**robability of being below | `pnorm()` | `pbinom()` |
+| `q` | **q**uantile, the value at a probability | `qnorm()` | `qbinom()` |
+| `r` | **r**andom draws | `rnorm()` | `rbinom()` |
+
+The pattern holds for every distribution in section 4.5.
+
+::: {.notes}
+This table is the single most useful thing on the slides today. Once they have
+it, every distribution in the bestiary is four functions they already know how
+to call.
+
+Point at the pattern rather than the entries: the letter says what you want, the
+name says which distribution. dpois, ppois, qpois, rpois. dgamma, pgamma, and so
+on.
+
+?dnorm shows all four on one help page, which is worth demonstrating live.
+:::
+
+## `d` is for density
+
+::: {.type-it}
+```{r}
+#| fig-height: 3.0
+x_vector <- seq(from = -10, to = 10, by = 0.1)
+
+plot(dnorm(x = x_vector, mean = 0, sd = 1) ~ x_vector)
+```
+:::
+
+::: {.notes}
+Deliberately their old slide's code, because it works and because the formula
+interface `y ~ x` was just met in Lecture 10.
+
+Note the shape of the call: a vector of x values goes in, a vector of heights
+comes out. Same idea as the functions they wrote in chapter 3, which is the
+point: a density is just a function.
+
+Anyone who wants a line instead of circles: add type = "l".
+:::
+
+## Your turn: what do the parameters do? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+x_vector <- seq(from = -10, to = 10, by = 0.1)
+
+# Round 1: change the mean, keep sd the same
+plot(dnorm(x = x_vector, mean = 0, sd = 1) ~ x_vector, type = "l")
+plot(dnorm(x = x_vector, mean = 3, sd = 1) ~ x_vector, type = "l")
+
+# Round 2: keep the mean, change sd
+plot(dnorm(x = x_vector, mean = 0, sd = 2) ~ x_vector, type = "l")
+plot(dnorm(x = x_vector, mean = 0, sd = 4) ~ x_vector, type = "l")
+```
+:::
+
+In your own words: what does `mean` do? What does `sd` do?
+
+::: {.notes}
+Five minutes. Same move as the negative exponential in Lecture 9: change only
+the numbers.
+
+Watch for the thing that makes this worth doing live: each plot gets its own y
+axis, so the sd = 4 curve looks the same height as the sd = 1 curve until you
+read the axis. Fixing it with ylim = c(0, 0.4) is the lesson from Lecture 6
+about comparing panels, met again.
+
+Answers to listen for: the mean slides the curve left and right without changing
+its shape, the sd stretches it. A scale parameter and a location parameter,
+which is the vocabulary from chapter 3.
+:::
+
+## What they do
+
+```{r}
+#| echo: false
+#| fig-height: 3.6
+#| fig-width: 9
+x_vector <- seq(-10, 10, by = 0.05)
+par(mfrow = c(1, 2), mar = c(3.2, 3.4, 2.4, 0.8), mgp = c(2, 0.6, 0))
+plot(dnorm(x_vector, mean = 0, sd = 1) ~ x_vector, type = "l", lwd = 3,
+     col = "red", ylim = c(0, 0.45), xlab = "x", ylab = "density",
+     main = "Changing the mean")
+lines(x_vector, dnorm(x_vector, mean = 3, sd = 1), lwd = 3, col = "blue")
+lines(x_vector, dnorm(x_vector, mean = -4, sd = 1), lwd = 3, col = "grey50")
+legend("topleft", bty = "n", lwd = 3, col = c("grey50", "red", "blue"),
+       legend = c("-4", "0", "3"), cex = 0.9)
+plot(dnorm(x_vector, mean = 0, sd = 1) ~ x_vector, type = "l", lwd = 3,
+     col = "red", ylim = c(0, 0.45), xlab = "x", ylab = "density",
+     main = "Changing the sd")
+lines(x_vector, dnorm(x_vector, mean = 0, sd = 2), lwd = 3, col = "blue")
+lines(x_vector, dnorm(x_vector, mean = 0, sd = 4), lwd = 3, col = "grey50")
+legend("topleft", bty = "n", lwd = 3, col = c("red", "blue", "grey50"),
+       legend = c("1", "2", "4"), cex = 0.9)
+```
+
+`mean` moves it. `sd` spreads it. The area stays 1.
+
+::: {.notes}
+On the same axes, which is what their four separate plots could not show.
+
+The area point explains why the wide curve is shorter: total probability is
+fixed at 1, so spreading it out lowers it. That is the difference between a
+density and a probability showing up visually.
+:::
+
+## `p` is for probability below
+
+```{r}
+#| fig-height: 2.6
+pnorm(q = 0, mean = 0, sd = 1)
+pnorm(q = 1.96, mean = 0, sd = 1)
+```
+
+```{r}
+#| echo: false
+#| fig-height: 2.4
+par(mar = c(3.2, 3.2, 0.5, 0.8), mgp = c(1.9, 0.6, 0))
+xs <- seq(-4, 4, by = 0.01)
+plot(dnorm(xs) ~ xs, type = "l", lwd = 2, xlab = "x", ylab = "density")
+shade <- xs[xs <= 1.96]
+polygon(c(shade, 1.96), c(dnorm(shade), 0), col = "lightsteelblue", border = NA)
+lines(xs, dnorm(xs), lwd = 2)
+```
+
+The shaded area is 0.975.
+
+::: {.notes}
+Half the area is below the mean, which is the first line and a good sanity check.
+
+1.96 is worth naming now, quietly: 97.5% of a normal distribution is below it,
+so 95% sits between -1.96 and 1.96. They will meet that number constantly from
+chapter 6 on, and meeting it first as an area is better than meeting it as a
+magic constant.
+
+This is also the answer to "what is a p-value" at the level they need today:
+an area under a distribution.
+:::
+
+## `q` is for quantile
+
+`q` is `p` backwards. Give it a probability, it gives you the value.
+
+```{r}
+qnorm(p = 0.975, mean = 0, sd = 1)
+qnorm(p = 0.5, mean = 10, sd = 2)
+```
+
+::: {.notes}
+Point at the pair: pnorm(1.96) is 0.975 and qnorm(0.975) is 1.96. Same
+relationship read in the two directions.
+
+The second line is a free check on understanding: the median of a normal
+distribution is its mean.
+
+Where they will use it: confidence intervals in chapter 6 are built from
+quantiles.
+:::
+
+## `r` is for random
+
+::: {.type-it}
+```{r}
+set.seed(42)
+rnorm(n = 5, mean = 0, sd = 1)
+```
+:::
+
+. . .
+
+`set.seed()` makes the randomness repeatable. Run it again, same five numbers.
+
+::: {.notes}
+This is the function they will use most for the rest of the semester, and it is
+the whole of chapter 5.
+
+set.seed() is worth the thirty seconds: without it a script that simulates gives
+different answers each run, which makes it hard to tell a real change from
+noise. With it, the work is reproducible, which is the Assignment 2 criterion
+and the Lecture 27 topic.
+
+Ask what happens without the seed. Run it twice.
+:::
+
+## Your turn: simulate and compare {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+draws <- rnorm(n = 100, mean = 10, sd = 2)
+
+hist(draws, freq = FALSE)
+
+curve(dnorm(x, mean = 10, sd = 2), add = TRUE, col = "red", lwd = 2)
+```
+:::
+
+Now change `n` to 10000. What happens to the match?
+
+::: {.notes}
+Six minutes. This slide is the bridge between a distribution as an idea and data
+as something you hold.
+
+freq = FALSE is the key argument: it puts the histogram on the density scale so
+the curve and the bars are comparable. With freq = TRUE the curve is invisible
+along the bottom, which someone will see.
+
+curve() is back from chapter 3, with add = TRUE from Lecture 9.
+
+The lesson from raising n: the histogram wobbles around the curve, and the wobble
+shrinks as n grows. The distribution is what the data look like in the limit.
+That is also why 20 data points cannot tell you much about a distribution's
+shape, which is the honest caveat for Assignment 2 Part 2.
+:::
+
+## The bestiary {.center}
+
+## How do you choose?
+
+1. **Discrete or continuous?** Counts or measurements.
+2. **What range?** 0 to 1, 0 to infinity, any number.
+3. **What process generated it?** Table 4.1 is organized this way.
+4. **Compare the shape** to a histogram of your data.
+5. **Look at what others did** with data like yours.
+
+. . .
+
+Then **justify it**. More than one answer can be defensible.
+
+::: {.notes}
+Their old slide, kept, because it is the procedure Assignment 2 Part 1 is
+testing. Steps 1 and 2 eliminate most of Table 4.1 in about ten seconds.
+
+Step 3 is the one that separates a good answer from a guess, and it is what the
+next few slides are about: each distribution comes from a story about how the
+numbers were made.
+:::
+
+## Discrete: binomial
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**The story:** a fixed number of tries, each succeeds or fails independently
+with the same probability.
+
+- `size`: number of tries
+- `prob`: probability of success
+
+**Range:** 0 to `size`
+
+`dbinom()`, `rbinom()`
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-height: 3.6
+#| fig-width: 4.6
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+k <- 0:20
+plot(k, dbinom(k, size = 20, prob = 0.5), type = "h", lwd = 4, col = "red",
+     xlab = "number of successes", ylab = "probability", ylim = c(0, 0.3))
+points(k, dbinom(k, size = 20, prob = 0.2), type = "h", lwd = 4,
+       col = adjustcolor("blue", 0.6))
+legend("topright", bty = "n", lwd = 4, col = c("blue", "red"),
+       legend = c("prob = 0.2", "prob = 0.5"), cex = 0.85)
+```
+:::
+
+::::
+
+::: {.notes}
+Examples from the assignment: survivors out of a known starting number, larvae
+settling out of larvae released. The giveaway phrase is "out of".
+
+The ceiling matters. A binomial can never exceed size, which is what separates
+it from the count distributions on the next slide.
+:::
+
+## Your turn: the binomial {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+k <- seq(from = 0, to = 20, by = 1)
+
+plot(dbinom(x = k, size = 20, prob = 0.5) ~ k, ylim = c(0, 0.3))
+
+# now try these, one at a time
+# size = 20, prob = 0.1
+# size = 20, prob = 0.9
+# size = 5,  prob = 0.5
+```
+:::
+
+What does `prob` do? What does `size` do?
+
+::: {.notes}
+Five minutes.
+
+Answers: prob slides the peak left or right, since the expected number of
+successes is size times prob. size sets how far the distribution can reach and
+also widens it.
+
+Worth pointing out while circulating: with prob = 0.9 the distribution is skewed
+toward the top, which is the first asymmetric distribution they have drawn.
+
+The ylim is there on purpose, from the Lecture 6 lesson about comparable axes.
+:::
+
+## Discrete: Poisson
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**The story:** counts of things that happen independently at a constant average
+rate, with no ceiling.
+
+- `lambda`: the mean count
+
+**Range:** 0 to infinity
+
+Mean and variance are **both** `lambda`.
+
+`dpois()`, `rpois()`
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-height: 3.6
+#| fig-width: 4.6
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+k <- 0:20
+plot(k, dpois(k, lambda = 1), type = "h", lwd = 4, col = "grey40",
+     xlab = "count", ylab = "probability", ylim = c(0, 0.4))
+points(k + 0.25, dpois(k, lambda = 3), type = "h", lwd = 4, col = "red")
+points(k + 0.5, dpois(k, lambda = 8), type = "h", lwd = 4, col = "blue")
+legend("topright", bty = "n", lwd = 4, col = c("grey40", "red", "blue"),
+       legend = c("lambda = 1", "lambda = 3", "lambda = 8"), cex = 0.85)
+```
+:::
+
+::::
+
+::: {.notes}
+Seeds per quadrat, visits per flower per hour, fish on a transect. The giveaway
+is a count with no natural maximum.
+
+The mean equals the variance claim is the testable part, and it is what fails on
+real data constantly, which sets up the next slide.
+
+Notice the shape changes as lambda grows: skewed at lambda = 1, nearly
+symmetric by lambda = 8. A Poisson with a large mean looks normal, which is
+worth saying because it explains why normal approximations show up everywhere.
+:::
+
+## When the Poisson is not enough
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+k <- 0:25
+plot(k, dpois(k, lambda = 5), type = "h", lwd = 5, col = "grey50",
+     xlab = "count", ylab = "probability", ylim = c(0, 0.25))
+points(k + 0.3, dnbinom(k, mu = 5, size = 1), type = "h", lwd = 5, col = "red")
+legend("topright", bty = "n", lwd = 5, col = c("grey50", "red"),
+       legend = c("Poisson, mean 5", "negative binomial, mean 5"))
+```
+
+Same mean. The **negative binomial** allows more zeros and more big values:
+**clumping**.
+
+::: {.notes}
+Real organisms are not spread at random. They cluster, around resources, around
+each other, or because conditions vary from plot to plot. Clumping makes the
+variance exceed the mean, which a Poisson cannot do.
+
+This is overdispersion, and it is the single most common reason a count model
+fails. dnbinom() takes mu and size, where size controls the clumping: small size
+means heavy clumping, and as size grows it becomes a Poisson.
+
+For Assignment 2, "Poisson, unless individuals cluster, in which case negative
+binomial" is the best answer a student can give on a count item.
+:::
+
+## Two more discrete
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Geometric**
+
+How many tries until the first success.
+
+- `prob`: success probability
+
+Ages, if the chance of dying each year is constant.
+
+`dgeom()`
+:::
+
+::: {.column width="50%"}
+**Beta-binomial**
+
+A binomial whose `prob` itself varies between groups.
+
+Infection prevalence across ponds, settlement across tanks.
+
+`dbetabinom()` in `emdbook`
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.4
+#| fig-width: 9
+par(mfrow = c(1, 2), mar = c(3.2, 3.4, 1.6, 0.6), mgp = c(1.9, 0.6, 0))
+k <- 0:20
+plot(k, dgeom(k, prob = 0.3), type = "h", lwd = 4, col = "red",
+     xlab = "tries before success", ylab = "probability", main = "Geometric")
+plot(k, emdbook::dbetabinom(k, prob = 0.5, size = 20, theta = 5), type = "h",
+     lwd = 4, col = "red", xlab = "successes", ylab = "probability",
+     ylim = c(0, 0.2), main = "Beta-binomial vs binomial")
+points(k + 0.3, dbinom(k, size = 20, prob = 0.5), type = "h", lwd = 4,
+       col = "grey60")
+```
+
+::: {.notes}
+Both are in the bestiary and both show up on Assignment 2.
+
+Geometric is the discrete version of the exponential, which is on the next
+slide. Constant hazard, so most waits are short and a few are long.
+
+Beta-binomial is to the binomial what the negative binomial is to the Poisson:
+the same story plus variation in the rate. Say that pairing out loud, it makes
+four distributions into two ideas.
+:::
+
+## Continuous: normal and lognormal
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Normal**
+
+Many small effects added together.
+
+Range: any number, including negatives.
+
+`dnorm()`, `rnorm()`
+:::
+
+::: {.column width="50%"}
+**Lognormal**
+
+Many small effects **multiplied** together.
+
+Range: positive only. Right skewed.
+
+Normal after a log transform.
+
+`dlnorm()`, `rlnorm()`
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 9
+par(mfrow = c(1, 2), mar = c(3.2, 3.4, 1.6, 0.6), mgp = c(1.9, 0.6, 0))
+xs <- seq(-4, 4, by = 0.01)
+plot(xs, dnorm(xs), type = "l", lwd = 3, col = "red", xlab = "x",
+     ylab = "density", main = "Normal")
+xs2 <- seq(0.001, 8, by = 0.01)
+plot(xs2, dlnorm(xs2, meanlog = 0, sdlog = 1), type = "l", lwd = 3, col = "red",
+     xlab = "x", ylab = "density", main = "Lognormal")
+```
+
+::: {.notes}
+The added versus multiplied distinction is the most useful sentence in the
+chapter. Height is many small additive contributions. Body mass, population
+size, and most abundances are multiplicative, each year's value a factor times
+the last, which produces the long right tail.
+
+That is why log transforming works so often in biology, and why Lecture 5 used
+log axes for mass. It is not a trick to make a plot look nicer; it is a claim
+about how the numbers were made.
+
+Negative values rule out the lognormal instantly, which is a fast
+elimination step for Assignment 2.
+:::
+
+## Continuous: waiting times and proportions
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Exponential and gamma**
+
+Time or distance until something happens.
+
+Exponential: constant hazard.
+Gamma: the wait for several events.
+
+`dexp()`, `dgamma()`
+:::
+
+::: {.column width="50%"}
+**Beta**
+
+A proportion, between 0 and 1.
+
+Cover, prevalence, any fraction.
+
+`dbeta()`
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 9
+par(mfrow = c(1, 2), mar = c(3.2, 3.4, 1.6, 0.6), mgp = c(1.9, 0.6, 0))
+xs <- seq(0, 8, by = 0.01)
+plot(xs, dexp(xs, rate = 1), type = "l", lwd = 3, col = "red", ylim = c(0, 1),
+     xlab = "x", ylab = "density", main = "Exponential and gamma")
+lines(xs, dgamma(xs, shape = 2, rate = 1), lwd = 3, col = "blue")
+lines(xs, dgamma(xs, shape = 5, rate = 1), lwd = 3, col = "grey40")
+legend("topright", bty = "n", lwd = 3, col = c("red", "blue", "grey40"),
+       legend = c("exp", "gamma, shape 2", "gamma, shape 5"), cex = 0.8)
+ps <- seq(0.001, 0.999, by = 0.001)
+plot(ps, dbeta(ps, 2, 5), type = "l", lwd = 3, col = "red", ylim = c(0, 3),
+     xlab = "proportion", ylab = "density", main = "Beta")
+lines(ps, dbeta(ps, 5, 2), lwd = 3, col = "blue")
+lines(ps, dbeta(ps, 1, 1), lwd = 3, col = "grey40")
+legend("top", bty = "n", lwd = 3, col = c("red", "blue", "grey40"),
+       legend = c("beta(2,5)", "beta(5,2)", "beta(1,1) = uniform"), cex = 0.8)
+```
+
+::: {.notes}
+The exponential is the gamma with shape 1, which the figure shows. As shape
+grows the gamma stops being highest at zero and develops a hump, because waiting
+for five events is unlikely to be quick.
+
+Time to germination, time to death, step lengths: all waiting times.
+
+Beta covers the 0 to 1 range, and beta(1,1) is flat, the uniform. Worth pointing
+at that line: the uniform is not a separate idea, it is a beta with both
+parameters 1.
+:::
+
+## The whole bestiary, in one picture
+
+```{r}
+#| echo: false
+#| fig-width: 9.5
+#| fig-height: 5
+par(mfrow = c(2, 3), mar = c(2.6, 2.6, 2.2, 0.6), mgp = c(1.4, 0.5, 0))
+k <- 0:20
+plot(k, dbinom(k, 20, 0.3), type = "h", lwd = 4, col = "red",
+     xlab = "", ylab = "", main = "Binomial\nout of a fixed number")
+plot(k, dpois(k, 4), type = "h", lwd = 4, col = "red",
+     xlab = "", ylab = "", main = "Poisson\ncounts, no ceiling")
+plot(k, dnbinom(k, mu = 4, size = 1), type = "h", lwd = 4, col = "red",
+     xlab = "", ylab = "", main = "Negative binomial\nclumped counts")
+xs <- seq(-4, 4, by = 0.01)
+plot(xs, dnorm(xs), type = "l", lwd = 3, col = "red",
+     xlab = "", ylab = "", main = "Normal\nadditive")
+xs2 <- seq(0.001, 8, by = 0.01)
+plot(xs2, dlnorm(xs2), type = "l", lwd = 3, col = "red",
+     xlab = "", ylab = "", main = "Lognormal\nmultiplicative")
+ps <- seq(0.001, 0.999, by = 0.001)
+plot(ps, dbeta(ps, 2, 5), type = "l", lwd = 3, col = "red",
+     xlab = "", ylab = "", main = "Beta\nproportions")
+```
+
+::: {.notes}
+The six that cover most of what they will meet, and most of Assignment 2.
+
+Top row discrete, bottom row continuous. Worth leaving up while they do the next
+exercise.
+
+Table 4.1 has the rest, including the geometric and the gamma.
+:::
+
+## Your turn: name a distribution {background-color="#f0f4f8" .smaller}
+
+No code. Discrete or continuous first, then a distribution, then why.
+
+1. Number of seeds germinating out of 50 planted
+2. Number of beetles on each of 200 trees, where beetles aggregate
+3. Time until a radio-tagged bird leaves the study area
+4. Proportion of each quadrat covered by moss
+5. Body mass of adult fish
+6. Number of lightning strikes per square kilometer per year
+
+::: {.notes}
+Eight minutes in pairs. This is Assignment 2 Part 1 with training wheels, and it
+is the best predictor of how that part will go.
+
+Answers: 1 binomial, out of a fixed number. 2 negative binomial, the word
+aggregate is the tell. 3 exponential or gamma, a waiting time. 4 beta, a
+proportion. 5 lognormal, positive and right skewed. 6 Poisson, counts per unit
+area and time with no ceiling.
+
+Push on the why rather than the name. A student who says "Poisson because counts
+with no ceiling" has the method; a student who says "Poisson because it is a
+count" will pick Poisson for item 2 as well.
+:::
+
+## Does it match the data?
+
+```{r}
+#| fig-height: 3.2
+hist(log10(avonet$Mass), freq = FALSE, breaks = 40,
+     main = "", xlab = "log10 body mass (g)")
+
+curve(dnorm(x, mean = mean(log10(avonet$Mass)), sd = sd(log10(avonet$Mass))),
+      add = TRUE, col = "red", lwd = 3)
+```
+
+Roughly **lognormal**: much closer to normal once you take the log, but still
+right skewed. **Close enough to be useful is the standard.**
+
+::: {.notes}
+The payoff slide, and the model for Assignment 2 Part 2. Three steps: histogram
+on the density scale, overlay the candidate distribution, look.
+
+Be honest about the fit, and make that the lesson. The curve sits to the right
+of the data: there are more small birds than a normal distribution on the log
+scale predicts, and the skew on the log scale is still about 0.85. This is
+11,000 species from many families pooled together, so no single simple
+distribution should fit perfectly.
+
+The useful question is not "is it exactly lognormal", which is always no, but
+"is lognormal a better description than normal", which is clearly yes: plot the
+raw mass and the curve is hopeless.
+
+Worth asking the room what would make this fit better. Splitting by family or by
+trophic level is the honest answer, and that is what the rest of the course is
+for.
+
+freq = FALSE again, for the same reason as the simulation slide.
+
+This is also the answer to "how did you know it was lognormal?" from Lecture 5,
+when we logged the mass axis without justifying it.
+:::
+
+## Your turn: start Assignment 2, Part 2 {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+my_data <- read.csv("your_file.csv")
+
+x <- my_data$your_variable
+
+hist(x, freq = FALSE, breaks = 30)
+
+mean(x, na.rm = TRUE)
+median(x, na.rm = TRUE)
+
+# if it is positive and right skewed, try the log
+hist(log10(x), freq = FALSE, breaks = 30)
+```
+:::
+
+Then: discrete or continuous? Which distribution, and why?
+
+::: {.notes}
+The rest of class. This is Part 2 of the assignment, started with help in the
+room, which is the point of doing it here.
+
+Circulate on the decision, not the code. The question to ask each student is
+"what process made this number?", which is step 3 of the how-do-you-choose
+slide.
+
+Common cases to expect: counts stored as numeric, variables with a hard upper
+bound that make a proportion, and heavily zero-inflated data, which is genuinely
+hard and worth saying so. Zero inflation is in section 4.6.
+:::
+
+## Remainder of class
+
+Work on **Assignment 2**.
+
+- Part 1: the twelve items, using Table 4.1 and section 4.5
+- Part 2: your own data, the three steps above
+
+Due **Friday Oct 9**, by midnight.
+
+::: {.notes}
+Point out that Part 1 is doable now: today covered every distribution on the
+list.
+:::
+
+## Before next class
+
+Read Bolker **5.1 to 5.2**
+
+Next time: stochastic simulation, and the midterm explained
+
+::: {.notes}
+Chapter 5 is where rnorm and friends stop being a demonstration and become a
+method: simulating data to find out what your analysis would do before you
+collect anything.
+:::
