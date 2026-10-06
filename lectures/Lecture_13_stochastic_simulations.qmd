@@ -32,18 +32,30 @@ execute:
 
 ```{r}
 #| echo: false
+# Tighter default plot margins, so the plotting region fills more of each
+# figure. Chunks that set their own par() still override this.
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
 library(emdbook)
 data(ReedfrogFuncresp)
 frogs <- ReedfrogFuncresp
+avonet <- readRDS("../data/Avonet/AVONET1_BirdLife.rds")
+bbs <- read.csv("../data/BBS/FL_BBS.csv")
+cardinals <- bbs$total_sightings[bbs$Year == 2019 &
+                                 bbs$Scientific_Name == "Cardinalis cardinalis"]
 set.seed(101)
 ```
 
 ## Today's agenda
 
+- The midterm
 - What a simulation is, and why you would run one
 - Building a simulation: a curve, plus noise
 - Groups, and how to simulate them
-- The midterm
+- Three worked examples on real data
 
 . . .
 
@@ -57,6 +69,101 @@ describe it.
 The through line: a simulation is chapter 3 plus chapter 4. A deterministic
 function for the pattern, a distribution for the scatter. They have both halves
 already.
+:::
+
+## The midterm {.center}
+
+## The midterm: three parts {.smaller}
+
+**Take-home. Due Tuesday Oct 13, 11:59 pm.** Same dataset you have been using.
+
+| Part | What | Weight |
+|---|---|---|
+| 1 | A short partial paper: introduction, methods, results with figures | 60% |
+| 2 | Given data, decide what model and distribution fit | 30% |
+| 3 | A power analysis | 10% |
+
+Any tools you like for code, including AI. **Part 1 text must be yours.**
+
+::: {.notes}
+Say the tool policy out loud, because it is unusual and students will assume
+otherwise: book, notes, classmates, AI and online resources are all fair for the
+coding, because that is what real analysis looks like. The writing in Part 1 is
+the exception.
+
+Part 3 needs Thursday's lecture, so nobody should panic about it today.
+:::
+
+## What each part uses
+
+**Part 1:** your dataset, Assignment 1 figures, Assignment 2 distributions.
+Mostly writing.
+
+**Part 2:** three datasets I give you. Chapter 3 shapes, chapter 4
+distributions. This is Assignment 2 with harder data.
+
+**Part 3:** simulate, analyze, repeat, count. How does **noise** change your
+chance of detecting a real effect? Today plus Thursday.
+
+. . .
+
+Nothing in it is new. It is the semester so far, assembled.
+
+::: {.notes}
+Worth being explicit, because a midterm reads as a wall until you see it is made
+of things they have already done.
+
+Part 1 can reuse code and figures from Assignments 1 and 2, and the draft can be
+reused again in the final. Say that: the work compounds rather than being thrown
+away.
+
+The ESA writing guide is linked in the midterm document for anyone new to
+scientific writing.
+:::
+
+## Getting started on the midterm
+
+The data and starter code are in the course repository:
+
+```{r}
+#| eval: false
+library(readr)
+
+twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2a.RDS")
+twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2b.RDS")
+twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2c.RDS")
+```
+
+`midterm/midterm_b_example.R` also has the power analysis skeleton for Part 3.
+
+::: {.notes}
+Three datasets for Part 2, loaded straight from the repository so nobody has to
+download anything. Note the b_ prefix: those are this year's. The unprefixed
+2a/2b/2c files are last year's midterm and are still in the folder.
+
+What they are: bird egg mass against adult body mass, reef fish species richness
+against total abundance, and hard bottom cover against rugosity.
+
+For each: plot it, decide on a shape and a distribution, justify both. The
+procedure is the one from Lecture 12: plot it, use a number rather than an
+impression, overlay the candidate, and say how it fails.
+
+Also in that script: citation() and citation("packagename"), which Part 1 needs
+for citing R and any packages used.
+:::
+
+## Any questions about the midterm? {.center}
+
+::: {.notes}
+Stop here properly, rather than asking on the way past.
+
+Questions that usually come: how long the writing needs to be, whether the
+dataset has to be the one from Assignment 1, whether Part 3 can be a separate
+file, and what counts as using AI. All four are answered in the document, so
+this is also a nudge to read it.
+
+If nobody asks anything, say that questions by email are fine and move on. The
+rest of the period is simulation, and Part 3 depends on it.
 :::
 
 ## What is a simulation?
@@ -203,11 +310,12 @@ This is also the honest version of "my result did not replicate". Some of that
 spread is just this.
 :::
 
-## When the noise grows with the mean
+## When the noise grows with the mean {.smaller}
 
 ::: {.type-it}
 ```{r}
-#| fig-height: 2.7
+#| fig-height: 3.3
+#| fig-width: 6
 sd_multiplier <- 0.3
 
 y_stoch <- rnorm(n = 20, mean = y_det, sd = y_det * sd_multiplier)
@@ -300,7 +408,8 @@ which is a designed experiment with fixed levels.
 
 ::: {.type-it}
 ```{r}
-#| fig-height: 2.3
+#| fig-height: 3.2
+#| fig-width: 6
 a <- 20
 b <- 1
 k <- 5
@@ -318,8 +427,9 @@ Run it several times. The scatter is wider at the left, where the mean is
 larger, which is what a negative binomial does automatically: its variance grows
 with its mean.
 
-k is the clumping parameter from Lecture 12, the one they estimated for
-cardinals as 1.8. Small k, more scatter.
+k is the clumping parameter of the negative binomial from the bestiary in
+Lecture 12. Small k, more scatter. They estimate one from real data later
+today.
 
 Note the model written correctly as a * b / (b + x). With b = 1 that is the same
 as a / (b + x), which is why the old version of this slide looked fine, but the
@@ -376,8 +486,10 @@ b <- c(1, 2)
 `a` and `b` are now **vectors**, one value per group.
 
 ::: {.notes}
-This is the structural idea from the end of Lecture 12, arriving as something
-they build rather than something to watch out for.
+Groups are the first structural idea of the course: until now every
+observation came from one process, and here there are two. Building it is the
+easiest way to see it, and it is also how a real dataset with two species, two
+sites or two sexes is put together.
 
 factor() matters: g is a grouping label, not the number 1 or 2. R will use it to
 pick parameters and to pick colors.
@@ -468,9 +580,9 @@ Raising k makes everything easier to see, which is the same lesson as the sd
 exercise earlier.
 :::
 
-## Does my model make data like my data? {.center}
+## Three worked examples, on real data {.center}
 
-## The tadpoles, again
+## Example 1: the tadpoles, again
 
 ```{r}
 #| echo: false
@@ -482,12 +594,16 @@ plot(frogs$Initial, frogs$Killed, pch = 16, cex = 1.5, col = "black",
 curve(60 * x / (100 + x), add = TRUE, col = "red", lwd = 2)
 ```
 
-Lecture 10: the curve. Lecture 12: killed **out of** Initial, so binomial.
+Lecture 10 gave us the curve. Each tank started with a known number, so the
+kills are **out of** that number: binomial.
 
 ::: {.notes}
-Same dataset for the third lecture running, which is deliberate. They fitted the
-Michaelis-Menten curve by eye in Lecture 10 with a = 60 and b = 100, and
-identified the binomial structure in Lecture 12.
+Same dataset they fitted by eye in Lecture 10, with a = 60 and b = 100 for the
+Michaelis-Menten curve.
+
+The binomial part may need a sentence: the response is a number killed out of a
+known starting number, which is the "out of" phrasing from the bestiary. That is
+all it takes to pick the distribution here.
 
 Today those two halves become a generator: a curve for the expected number
 killed, and binomial noise around it.
@@ -524,39 +640,260 @@ model is not obviously wrong, which is as much as these data support.
 In chapter 6 this becomes a formal check. Here it is eyeball.
 :::
 
-## What simulation buys you
+## Example 2: counting cardinals
+
+Breeding Bird Survey, Florida, 2019. One count per route, 71 routes.
+
+:::: {.columns}
+
+::: {.column width="68%"}
+```{r}
+#| echo: false
+#| fig-height: 2.8
+#| fig-width: 6.3
+hist(cardinals, breaks = seq(0, 180, by = 10), col = "grey85",
+     main = "", xlab = "cardinals counted on a route")
+```
+:::
+
+::: {.column width="30%"}
+![](figures/northern_cardinal.jpg)
+
+[*Cardinalis cardinalis*]{style="font-size:0.7em"}<br>
+[Photo: USFWS, public domain]{style="font-size:0.45em; color:#777"}
+:::
+
+::::
+
+A count with no ceiling. **Poisson?**
+
+::: {.notes}
+Real data from the course repository, `data/BBS/`, and a dataset some of them may
+use for the midterm.
+
+One row per route: a volunteer stops every half mile along a 24.5 mile route and
+counts every bird heard or seen.
+
+Run the shape test from the bestiary: counts, no fixed ceiling, so Poisson is the
+first guess. The next slide checks that rather than taking it on faith.
+:::
+
+## A Poisson makes a testable claim
+
+::: {.type-it}
+```{r}
+mean(cardinals)
+var(cardinals)
+var(cardinals) / mean(cardinals)
+```
+:::
+
+A Poisson has **mean = variance**, so that ratio should be about 1.
+
+It is **28**: far more spread than a Poisson allows.
+
+::: {.notes}
+Two lines of code, and it works on any count data they will ever have. Around 1
+means a Poisson is plausible; much more than 1 means overdispersion, which is
+what real ecological counts almost always look like.
+
+Why cardinals clump: habitat varies between routes, some suburban, some pine
+flatwoods, and birds respond to that. Variation in the rate between routes is
+exactly the negative binomial story from the bestiary.
+
+This is new to them. The bestiary slide said the negative binomial is for clumped
+counts; this is how you find out whether yours are.
+:::
+
+## Matching a negative binomial, then simulating from it
+
+The negative binomial has a mean and a clumping parameter. Solve for both from
+the data, then generate fake routes:
+
+::: {.type-it}
+```{r}
+#| eval: false
+mu <- mean(cardinals)
+size <- mu^2 / (var(cardinals) - mu)      # about 1.8
+
+fake <- rnbinom(n = 71, mu = mu, size = size)
+
+hist(fake)
+hist(cardinals)
+```
+:::
+
+::: {.notes}
+The `size` line is the method of moments: set the distribution's mean and
+variance equal to the data's, then solve. It is the simplest way to fit a
+distribution and it needs no optimizer. Chapter 6 replaces it with maximum
+likelihood.
+
+size = 1.8 is heavy clumping. Above about 10 it would look nearly Poisson.
+
+Then the point of today: having fitted it, run it forwards. Have them do that
+several times before the next slide, holding one question in mind, which is
+whether they could tell a fake set of 71 routes from the real set.
+:::
+
+## Fake routes against real ones
 
 ```{r}
 #| echo: false
-#| fig-height: 3.0
-par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
-slopes <- replicate(1000, {
-  xs <- 1:20
-  ys <- rnorm(20, mean = 2 + 1 * xs, sd = 8)
-  coef(lm(ys ~ xs))[2]
-})
-hist(slopes, breaks = 40, col = "grey85", main = "",
-     xlab = "estimated slope from 1000 simulated studies")
-abline(v = 1, col = "red", lwd = 3)
+#| fig-height: 3.4
+#| fig-width: 9
+mu <- mean(cardinals); sz <- mu^2 / (var(cardinals) - mu)
+par(mfrow = c(1, 3), mar = c(3.4, 3.4, 2.2, 0.6), mgp = c(2, 0.6, 0))
+brks <- seq(0, 260, by = 20)
+hist(cardinals, breaks = brks, col = "grey70", main = "real", xlab = "count")
+for (i in 1:2) {
+  hist(rnbinom(71, mu = mu, size = sz), breaks = brks, col = "lightsteelblue",
+       main = paste("simulated", i), xlab = "count")
+}
 ```
 
-The true slope is **1**. With `sd = 8` and 20 points, individual studies land
-anywhere from about 0 to 2.
+Close enough that you could not pick the real one out of a line-up.
+
+. . .
+
+A Poisson would never do this: it cannot make a 175.
 
 ::: {.notes}
-Built with replicate(), which runs an expression many times and collects the
-answers. Same idea as sapply from Lecture 9.
+This is the model check, done honestly. The simulated sets have the same kind of
+long right tail and the same pile of low counts.
 
-This figure is the answer to "why does my result disagree with the published
-one". Run the same honest study 1000 times and the estimates spread out this
-much. Nobody did anything wrong.
+Worth running it live a few times, because occasionally a simulated set looks
+wrong, and that is useful too: one dataset is one draw.
 
-It is also exactly what power analysis counts: how often does a study like this
-come back with a slope far enough from zero to notice. Thursday puts a number on
+If someone asks what would count as a failure: simulated data that never reach
+the real maximum, or that are symmetric when the real data are skewed. That is
+exactly what a Poisson gives here.
+:::
+
+## Example 3: how much data do you need to see a shape?
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+#| fig-width: 9
+lm_mass <- mean(log10(avonet$Mass)); ls_mass <- sd(log10(avonet$Mass))
+par(mfrow = c(1, 4), mar = c(3.2, 3.2, 2.2, 0.6), mgp = c(1.9, 0.6, 0))
+for (n in c(10, 50, 200, 5000)) {
+  draws <- rlnorm(n, meanlog = lm_mass * log(10), sdlog = ls_mass * log(10))
+  hist(log10(draws), breaks = 15, col = "grey85", main = paste("n =", n),
+       xlab = "log10 mass")
+}
+```
+
+All four are lognormal, with the parameters of real bird masses.
+
+::: {.notes}
+The point of the lecture, applied to their own assignment: with 10 observations
+you cannot see a distribution's shape, and with 50 you can barely argue about
 it.
 
-Callback worth making: they saw this figure in Lecture 3 as a finished picture.
-Now they can build it.
+Use this when a student says their Assignment 2 variable "does not look like
+anything". If they have 30 points, that may be all it means.
+
+The parameters come from AVONET body mass, converted to natural log for rlnorm,
+so these are plausible bird faunas rather than invented numbers.
+:::
+
+## Your turn: how few is too few? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+draws <- rlnorm(n = 20, meanlog = 3.5, sdlog = 1.6)
+
+hist(log10(draws), breaks = 15)
+
+# run it several times at n = 20, then try n = 100, n = 1000
+```
+:::
+
+At what sample size does the shape stop changing every time you run it?
+
+::: {.notes}
+Six minutes, and the most directly useful exercise for the midterm and the
+final.
+
+There is no single answer, which is the lesson. For a roughly symmetric
+distribution a few dozen points is often enough; for a skewed one with a long
+tail you need hundreds before the histogram settles down.
+
+The habit worth naming: when you are not sure whether a feature in your data is
+real, simulate data without it and see how often the feature shows up anyway.
+:::
+
+## What the three examples had in common
+
+1. **Build the data you expected**, from a curve plus a distribution.
+2. **Compare it to what you actually got.**
+3. **Repeat it**, because one dataset is one draw.
+
+. . .
+
+That is model checking, and it is most of what simulation is for.
+
+::: {.notes}
+Tadpoles, cardinals, bird masses: a binomial, a negative binomial and a
+lognormal, each checked against real data from the course repository.
+
+Step 3 is the one people skip, and it is the one that separates "my model looks
+fine" from knowing how much variation to expect.
+
+Thursday turns the same machinery into a number: how often would a study like
+mine detect an effect that is really there?
+:::
+
+## What simulation buys you: 10 sites or 40? {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 4.1
+#| fig-width: 7
+run_study <- function(n) {
+  x <- sample(1:20, n, replace = TRUE)
+  y <- rnorm(n, mean = 2 + 1 * x, sd = 8)
+  summary(lm(y ~ x))$coefficients["x", c("Estimate", "Pr(>|t|)")]
+}
+par(mfrow = c(2, 1), mar = c(3.4, 3.4, 2.0, 0.6), mgp = c(2, 0.6, 0))
+for (n in c(10, 40)) {
+  res <- t(replicate(1000, run_study(n)))
+  detected <- mean(res[, 2] < 0.05)
+  hist(res[, 1], breaks = seq(-2.5, 4.5, by = 0.1), col = "grey85",
+       xlim = c(-1.5, 3.5), xlab = "estimated slope",
+       main = sprintf("n = %d:  detected the effect %.0f%% of the time",
+                      n, 100 * detected))
+  abline(v = 1, col = "red", lwd = 3)
+}
+```
+
+Same truth, same noise. **1000 studies each.**
+
+::: {.notes}
+The true slope is 1, the red line, and every one of these 2000 studies was done
+honestly.
+
+With 10 sites the estimates run from about -0.6 to 2.9, and a few come out
+negative, pointing the wrong way entirely. With 40 they run from about 0.3 to
+1.7.
+
+The percentages are the decision-relevant part. Running the small study means
+missing a real effect more than half the time, which is a lot of field work for
+a coin flip. The large one essentially always finds it.
+
+Say the name now: that percentage is **power**, and computing it is exactly
+Thursday's lecture and Part 3 of the midterm. The only new thing on Thursday is
+sweeping it across many parameter values instead of two.
+
+This is also the honest answer to "why does my result disagree with the
+published one". Two studies, same truth, different draws. Nobody did anything
+wrong.
+
+Callback worth making: they saw a figure like the top panel in Lecture 3 as a
+finished picture. Now they can build it.
 :::
 
 ## Start simple
@@ -573,100 +910,6 @@ The advice is Bolker's and it is the same advice as writing functions in chapter
 
 Practical version for the midterm: get a line with noise working before adding
 groups.
-:::
-
-## The midterm {.center}
-
-## The midterm: three parts {.smaller}
-
-**Take-home. Due Tuesday Oct 13, 11:59 pm.** Same dataset you have been using.
-
-| Part | What | Weight |
-|---|---|---|
-| 1 | A short partial paper: introduction, methods, results with figures | 60% |
-| 2 | Given data, decide what model and distribution fit | 30% |
-| 3 | A power analysis | 10% |
-
-Any tools you like for code, including AI. **Part 1 text must be yours.**
-
-::: {.notes}
-Say the tool policy out loud, because it is unusual and students will assume
-otherwise: book, notes, classmates, AI and online resources are all fair for the
-coding, because that is what real analysis looks like. The writing in Part 1 is
-the exception.
-
-Part 3 needs Thursday's lecture, so nobody should panic about it today.
-:::
-
-## What each part uses
-
-**Part 1:** your dataset, Assignment 1 figures, Assignment 2 distributions.
-Mostly writing.
-
-**Part 2:** three datasets I give you. Chapter 3 shapes, chapter 4
-distributions. This is Assignment 2 with harder data.
-
-**Part 3:** simulate, analyze, repeat, count. How does **noise** change your
-chance of detecting a real effect? Today plus Thursday.
-
-. . .
-
-Nothing in it is new. It is the semester so far, assembled.
-
-::: {.notes}
-Worth being explicit, because a midterm reads as a wall until you see it is made
-of things they have already done.
-
-Part 1 can reuse code and figures from Assignments 1 and 2, and the draft can be
-reused again in the final. Say that: the work compounds rather than being thrown
-away.
-
-The ESA writing guide is linked in the midterm document for anyone new to
-scientific writing.
-:::
-
-## Getting started on the midterm
-
-The data and starter code are in the course repository:
-
-```{r}
-#| eval: false
-library(readr)
-
-twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2a.RDS")
-twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2b.RDS")
-twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2c.RDS")
-```
-
-`midterm/midterm_b_example.R` also has the power analysis skeleton for Part 3.
-
-::: {.notes}
-Three datasets for Part 2, loaded straight from the repository so nobody has to
-download anything. Note the b_ prefix: those are this year's. The unprefixed
-2a/2b/2c files are last year's midterm and are still in the folder.
-
-What they are: bird egg mass against adult body mass, reef fish species richness
-against total abundance, and hard bottom cover against rugosity.
-
-For each: plot it, decide on a shape and a distribution, justify both. The
-procedure is the four steps from Lecture 12.
-
-Also in that script: citation() and citation("packagename"), which Part 1 needs
-for citing R and any packages used.
-:::
-
-## Remainder of class
-
-Work on the midterm, or keep playing with the simulations.
-
-Good first steps:
-
-- Load the three Part 2 datasets and plot them
-- Start the Part 1 introduction, 300 words, on the question you already chose
-
-::: {.notes}
-Circulate on Part 2 choices rather than on writing. The shape plus distribution
-decision is the part where being in the room helps most.
 :::
 
 ## Before next class
