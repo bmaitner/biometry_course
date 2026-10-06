@@ -310,6 +310,32 @@ told them to type.
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
 
+**Lecture 13 got through all of its material**, in spite of the data-loading
+problem below, and the timing looks about right for the period once the setup
+slide is in. That ends the run of short lectures: 30, 40 and 50 minutes early for
+Lectures 10, 11 and 12, then a full period here. The difference is the worked
+examples on real data, which is worth remembering as the thing to add when a deck
+runs short.
+
+**Lecture 13's slides did not work in class: the data were never loaded.** The
+deck told students to run `mean(cardinals)` and to simulate from `frogs`, but
+nothing had told them to load either one. The deck itself rendered correctly,
+because its hidden setup chunk loads the data for the figures, so the fault was
+invisible from the rendered slides and only appeared in the room.
+
+Fixed by adding a "Get set up" slide at the head of the worked-examples section
+in Lectures 12 and 13, loading the BBS counts and the tadpole data, with a
+`length(cardinals)` check that should print 71. Lecture 12 had the same latent
+fault in the block added after it was taught, and would have failed the same way.
+
+**The general rule, now checked automatically:** every object used in a labeled
+"Type and run" block must be created by an earlier "Type and run" block.
+`R_scripts/check_deck_student_code.R` extracts those blocks from a deck in slide
+order and runs them in sequence, exactly as a student typing along would, and
+reports the first one that fails. Run `check_all_decks()` before teaching from a
+rebuilt deck. It labels the two legitimate failures, fill-in-the-blank exercises
+and "use your own data" placeholders, so anything else it reports is a real bug.
+
 **Lecture 12 finished about 50 minutes early**, on the rebuilt Quarto deck, and
 that is three short lectures in a row with the gap growing each time: 30, 40,
 then 50 minutes. The fix applied here was ten slides of worked examples on real

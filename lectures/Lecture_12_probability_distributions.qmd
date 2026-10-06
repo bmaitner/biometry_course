@@ -820,6 +820,40 @@ when we logged the mass axis without justifying it.
 
 ## Real data, three times {.center}
 
+## Get set up {background-color="#f0f4f8" .smaller}
+
+Run this before the examples. The three of them use these two datasets.
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Breeding Bird Survey counts (about 15 MB, give it a moment)
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+cardinals <- bbs$total_sightings[bbs$Year == 2019 &
+                                 bbs$Scientific_Name == "Cardinalis cardinalis"]
+
+length(cardinals)     # should be 71
+
+# the bird trait data from Lecture 5
+avonet <- readRDS(url("https://tinyurl.com/avonetbirddata"))
+```
+:::
+
+::: {.notes}
+Two or three minutes, and worth waiting for everyone: every exercise from here on
+uses one of these.
+
+Start the BBS download before explaining anything, since it is the slow one, and
+expect a few people to need a second try on a busy network.
+
+The check matters: 71 routes. Zero means the species name is misspelled or the
+year is wrong.
+
+AVONET is the same data as Lecture 5, loaded through the short link so nobody has
+to type a long URL.
+:::
+
 ## Example 1: counting cardinals
 
 Breeding Bird Survey, Florida, 2019. One count per route, 71 routes.

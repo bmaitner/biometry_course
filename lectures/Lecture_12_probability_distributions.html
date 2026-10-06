@@ -1823,6 +1823,40 @@ display:block!important;
 <section id="real-data-three-times" class="slide level2 center">
 <h2>Real data, three times</h2>
 </section>
+<section id="get-set-up" class="slide level2 smaller" data-background-color="#f0f4f8">
+<h2>Get set up</h2>
+<p>Run this before the examples. The three of them use these two datasets.</p>
+<div class="type-it">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Breeding Bird Survey counts (about 15 MB, give it a moment)</span></span>
+<span id="cb16-2"><a href aria-hidden="true" tabindex="-1"></a>bbs <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv&quot;</span>)</span>
+<span id="cb16-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href aria-hidden="true" tabindex="-1"></a>cardinals <span class="ot">&lt;-</span> bbs<span class="sc">$</span>total_sightings[bbs<span class="sc">$</span>Year <span class="sc">==</span> <span class="dv">2019</span> <span class="sc">&amp;</span></span>
+<span id="cb16-5"><a href aria-hidden="true" tabindex="-1"></a>                                 bbs<span class="sc">$</span>Scientific_Name <span class="sc">==</span> <span class="st">&quot;Cardinalis cardinalis&quot;</span>]</span>
+<span id="cb16-6"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(cardinals)     <span class="co"># should be 71</span></span>
+<span id="cb16-8"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># the bird trait data from Lecture 5</span></span>
+<span id="cb16-10"><a href aria-hidden="true" tabindex="-1"></a>avonet <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">url</span>(<span class="st">&quot;https://tinyurl.com/avonetbirddata&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<aside class="notes">
+<p>Two or three minutes, and worth waiting for everyone: every exercise from here on uses one of these.</p>
+<p>Start the BBS download before explaining anything, since it is the slow one, and expect a few people to need a second try on a busy network.</p>
+<p>The check matters: 71 routes. Zero means the species name is misspelled or the year is wrong.</p>
+<p>AVONET is the same data as Lecture 5, loaded through the short link so nobody has to type a long URL.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="example-1-counting-cardinals" class="slide level2">
 <h2>Example 1: counting cardinals</h2>
 <p>Breeding Bird Survey, Florida, 2019. One count per route, 71 routes.</p>
@@ -1848,15 +1882,15 @@ display:block!important;
 <h2>The Poisson makes a testable claim</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 49.4507</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1399.994</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals) <span class="sc">/</span> <span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals) <span class="sc">/</span> <span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 28.3109</code></pre>
 </div>
@@ -1905,14 +1939,14 @@ display:block!important;
 <p>The negative binomial has a mean and a clumping parameter. Solve for them from the data:</p>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(cardinals)</span>
-<span id="cb22-2"><a href aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> mu<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="fu">var</span>(cardinals) <span class="sc">-</span> mu)</span>
-<span id="cb22-3"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href aria-hidden="true" tabindex="-1"></a>mu</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(cardinals)</span>
+<span id="cb23-2"><a href aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> mu<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="fu">var</span>(cardinals) <span class="sc">-</span> mu)</span>
+<span id="cb23-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href aria-hidden="true" tabindex="-1"></a>mu</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 49.4507</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href aria-hidden="true" tabindex="-1"></a>size</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href aria-hidden="true" tabindex="-1"></a>size</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1.810658</code></pre>
 </div>
@@ -1939,15 +1973,15 @@ display:block!important;
 <h2>Your turn: a different species</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href aria-hidden="true" tabindex="-1"></a>bbs <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv&quot;</span>)</span>
-<span id="cb26-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-3"><a href aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> bbs<span class="sc">$</span>total_sightings[bbs<span class="sc">$</span>Year <span class="sc">==</span> <span class="dv">2019</span> <span class="sc">&amp;</span></span>
-<span id="cb26-4"><a href aria-hidden="true" tabindex="-1"></a>                              bbs<span class="sc">$</span>Scientific_Name <span class="sc">==</span> <span class="st">&quot;Melanerpes carolinus&quot;</span>]</span>
-<span id="cb26-5"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(counts)</span>
-<span id="cb26-7"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-8"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(counts)</span>
-<span id="cb26-9"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(counts) <span class="sc">/</span> <span class="fu">mean</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href aria-hidden="true" tabindex="-1"></a>bbs <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv&quot;</span>)</span>
+<span id="cb27-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> bbs<span class="sc">$</span>total_sightings[bbs<span class="sc">$</span>Year <span class="sc">==</span> <span class="dv">2019</span> <span class="sc">&amp;</span></span>
+<span id="cb27-4"><a href aria-hidden="true" tabindex="-1"></a>                              bbs<span class="sc">$</span>Scientific_Name <span class="sc">==</span> <span class="st">&quot;Melanerpes carolinus&quot;</span>]</span>
+<span id="cb27-5"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(counts)</span>
+<span id="cb27-7"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(counts)</span>
+<span id="cb27-9"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(counts) <span class="sc">/</span> <span class="fu">mean</span>(counts)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <p>Is this one clumped too? Try another species of your own.</p>
@@ -2015,13 +2049,13 @@ display:block!important;
 <h2>Your turn: how big are bird ranges?</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> avonet<span class="sc">$</span>Range.Size</span>
-<span id="cb27-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(r, <span class="at">breaks =</span> <span class="dv">50</span>)</span>
-<span id="cb27-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(r, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb27-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(r, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb27-6"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(r), <span class="at">breaks =</span> <span class="dv">50</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> avonet<span class="sc">$</span>Range.Size</span>
+<span id="cb28-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(r, <span class="at">breaks =</span> <span class="dv">50</span>)</span>
+<span id="cb28-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(r, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(r, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-6"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(r), <span class="at">breaks =</span> <span class="dv">50</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <p>Mean 2,580,000 km². Median 416,000 km². What does that gap tell you? Does the log fix it?</p>
@@ -2137,12 +2171,12 @@ display:block!important;
 <h2>Your turn: is your variable one thing?</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># a grouping column: sex, site, species, year, treatment</span></span>
-<span id="cb28-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(my_data<span class="sc">$</span>your_variable <span class="sc">~</span> my_data<span class="sc">$</span>your_group)</span>
-<span id="cb28-3"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># or one histogram per group</span></span>
-<span id="cb28-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(my_data<span class="sc">$</span>your_variable[my_data<span class="sc">$</span>your_group <span class="sc">==</span> <span class="st">&quot;A&quot;</span>])</span>
-<span id="cb28-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(my_data<span class="sc">$</span>your_variable[my_data<span class="sc">$</span>your_group <span class="sc">==</span> <span class="st">&quot;B&quot;</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># a grouping column: sex, site, species, year, treatment</span></span>
+<span id="cb29-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(my_data<span class="sc">$</span>your_variable <span class="sc">~</span> my_data<span class="sc">$</span>your_group)</span>
+<span id="cb29-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># or one histogram per group</span></span>
+<span id="cb29-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(my_data<span class="sc">$</span>your_variable[my_data<span class="sc">$</span>your_group <span class="sc">==</span> <span class="st">&quot;A&quot;</span>])</span>
+<span id="cb29-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(my_data<span class="sc">$</span>your_variable[my_data<span class="sc">$</span>your_group <span class="sc">==</span> <span class="st">&quot;B&quot;</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <p>Does the picture change? If it does, say so in Assignment 2.</p>
@@ -2166,17 +2200,17 @@ display:block!important;
 <h2>Your turn: start Assignment 2, Part 2</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href aria-hidden="true" tabindex="-1"></a>my_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;your_file.csv&quot;</span>)</span>
-<span id="cb29-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-3"><a href aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> my_data<span class="sc">$</span>your_variable</span>
-<span id="cb29-4"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(x, <span class="at">freq =</span> <span class="cn">FALSE</span>, <span class="at">breaks =</span> <span class="dv">30</span>)</span>
-<span id="cb29-6"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb29-8"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb29-9"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-10"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># if it is positive and right skewed, try the log</span></span>
-<span id="cb29-11"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(x), <span class="at">freq =</span> <span class="cn">FALSE</span>, <span class="at">breaks =</span> <span class="dv">30</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href aria-hidden="true" tabindex="-1"></a>my_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;your_file.csv&quot;</span>)</span>
+<span id="cb30-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> my_data<span class="sc">$</span>your_variable</span>
+<span id="cb30-4"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(x, <span class="at">freq =</span> <span class="cn">FALSE</span>, <span class="at">breaks =</span> <span class="dv">30</span>)</span>
+<span id="cb30-6"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb30-8"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb30-9"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># if it is positive and right skewed, try the log</span></span>
+<span id="cb30-11"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(x), <span class="at">freq =</span> <span class="cn">FALSE</span>, <span class="at">breaks =</span> <span class="dv">30</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <p>Then: discrete or continuous? Which distribution, and why?</p>

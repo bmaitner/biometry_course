@@ -1865,6 +1865,42 @@ display:block!important;
 <section id="three-worked-examples-on-real-data" class="slide level2 center">
 <h2>Three worked examples, on real data</h2>
 </section>
+<section id="get-set-up" class="slide level2 smaller" data-background-color="#f0f4f8">
+<h2>Get set up</h2>
+<p>Run this before the examples. The three of them use these two datasets.</p>
+<div class="type-it">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># tadpole predation, from the book&#39;s package</span></span>
+<span id="cb13-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(emdbook)</span>
+<span id="cb13-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(ReedfrogFuncresp)</span>
+<span id="cb13-4"><a href aria-hidden="true" tabindex="-1"></a>frogs <span class="ot">&lt;-</span> ReedfrogFuncresp</span>
+<span id="cb13-5"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Breeding Bird Survey counts (about 15 MB, give it a moment)</span></span>
+<span id="cb13-7"><a href aria-hidden="true" tabindex="-1"></a>bbs <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv&quot;</span>)</span>
+<span id="cb13-8"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href aria-hidden="true" tabindex="-1"></a>cardinals <span class="ot">&lt;-</span> bbs<span class="sc">$</span>total_sightings[bbs<span class="sc">$</span>Year <span class="sc">==</span> <span class="dv">2019</span> <span class="sc">&amp;</span></span>
+<span id="cb13-10"><a href aria-hidden="true" tabindex="-1"></a>                                 bbs<span class="sc">$</span>Scientific_Name <span class="sc">==</span> <span class="st">&quot;Cardinalis cardinalis&quot;</span>]</span>
+<span id="cb13-11"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(cardinals)     <span class="co"># should be 71</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<aside class="notes">
+<p>Two or three minutes, and worth waiting for everyone: every exercise in the rest of the lecture uses one of these.</p>
+<p>The BBS file is large, so start it before explaining anything else, and expect a few people to need a second try if the campus network is busy. Anyone who cannot get it can work from a neighbor’s screen for the cardinal examples.</p>
+<p>The check on the last line matters: 71 routes. If someone gets 0, the species name is misspelled or the year is wrong, which is the usual cause.</p>
+<p>emdbook is the package from Lecture 9, so most of them have it installed already. install.packages(“emdbook”) for anyone who does not.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="example-1-the-tadpoles-again" class="slide level2">
 <h2>Example 1: the tadpoles, again</h2>
 
@@ -1889,13 +1925,13 @@ display:block!important;
 <h2>Simulate the experiment</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> (<span class="dv">60</span> <span class="sc">*</span> frogs<span class="sc">$</span>Initial <span class="sc">/</span> (<span class="dv">100</span> <span class="sc">+</span> frogs<span class="sc">$</span>Initial)) <span class="sc">/</span> frogs<span class="sc">$</span>Initial</span>
-<span id="cb13-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href aria-hidden="true" tabindex="-1"></a>killed_sim <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(<span class="at">n =</span> <span class="fu">nrow</span>(frogs), <span class="at">size =</span> frogs<span class="sc">$</span>Initial, <span class="at">prob =</span> p)</span>
-<span id="cb13-4"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(frogs<span class="sc">$</span>Initial, killed_sim, <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
-<span id="cb13-6"><a href aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;tadpoles in the tank&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;number killed&quot;</span>)</span>
-<span id="cb13-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(frogs<span class="sc">$</span>Initial, frogs<span class="sc">$</span>Killed, <span class="at">pch =</span> <span class="dv">1</span>, <span class="at">cex =</span> <span class="fl">1.4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> (<span class="dv">60</span> <span class="sc">*</span> frogs<span class="sc">$</span>Initial <span class="sc">/</span> (<span class="dv">100</span> <span class="sc">+</span> frogs<span class="sc">$</span>Initial)) <span class="sc">/</span> frogs<span class="sc">$</span>Initial</span>
+<span id="cb14-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href aria-hidden="true" tabindex="-1"></a>killed_sim <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(<span class="at">n =</span> <span class="fu">nrow</span>(frogs), <span class="at">size =</span> frogs<span class="sc">$</span>Initial, <span class="at">prob =</span> p)</span>
+<span id="cb14-4"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(frogs<span class="sc">$</span>Initial, killed_sim, <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">col =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb14-6"><a href aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;tadpoles in the tank&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;number killed&quot;</span>)</span>
+<span id="cb14-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(frogs<span class="sc">$</span>Initial, frogs<span class="sc">$</span>Killed, <span class="at">pch =</span> <span class="dv">1</span>, <span class="at">cex =</span> <span class="fl">1.4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure>
@@ -1962,15 +1998,15 @@ display:block!important;
 <h2>A Poisson makes a testable claim</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 49.4507</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1399.994</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals) <span class="sc">/</span> <span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(cardinals) <span class="sc">/</span> <span class="fu">mean</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 28.3109</code></pre>
 </div>
@@ -1999,13 +2035,13 @@ display:block!important;
 <p>The negative binomial has a mean and a clumping parameter. Solve for both from the data, then generate fake routes:</p>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(cardinals)</span>
-<span id="cb20-2"><a href aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> mu<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="fu">var</span>(cardinals) <span class="sc">-</span> mu)      <span class="co"># about 1.8</span></span>
-<span id="cb20-3"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href aria-hidden="true" tabindex="-1"></a>fake <span class="ot">&lt;-</span> <span class="fu">rnbinom</span>(<span class="at">n =</span> <span class="dv">71</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> size)</span>
-<span id="cb20-5"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(fake)</span>
-<span id="cb20-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(cardinals)</span>
+<span id="cb21-2"><a href aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> mu<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="fu">var</span>(cardinals) <span class="sc">-</span> mu)      <span class="co"># about 1.8</span></span>
+<span id="cb21-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href aria-hidden="true" tabindex="-1"></a>fake <span class="ot">&lt;-</span> <span class="fu">rnbinom</span>(<span class="at">n =</span> <span class="dv">71</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> size)</span>
+<span id="cb21-5"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(fake)</span>
+<span id="cb21-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cardinals)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <aside class="notes">
@@ -2071,11 +2107,11 @@ display:block!important;
 <h2>Your turn: how few is too few?</h2>
 <div class="type-it">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href aria-hidden="true" tabindex="-1"></a>draws <span class="ot">&lt;-</span> <span class="fu">rlnorm</span>(<span class="at">n =</span> <span class="dv">20</span>, <span class="at">meanlog =</span> <span class="fl">3.5</span>, <span class="at">sdlog =</span> <span class="fl">1.6</span>)</span>
-<span id="cb21-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(draws), <span class="at">breaks =</span> <span class="dv">15</span>)</span>
-<span id="cb21-4"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-5"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># run it several times at n = 20, then try n = 100, n = 1000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href aria-hidden="true" tabindex="-1"></a>draws <span class="ot">&lt;-</span> <span class="fu">rlnorm</span>(<span class="at">n =</span> <span class="dv">20</span>, <span class="at">meanlog =</span> <span class="fl">3.5</span>, <span class="at">sdlog =</span> <span class="fl">1.6</span>)</span>
+<span id="cb22-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log10</span>(draws), <span class="at">breaks =</span> <span class="dv">15</span>)</span>
+<span id="cb22-4"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># run it several times at n = 20, then try n = 100, n = 1000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <p>At what sample size does the shape stop changing every time you run it?</p>

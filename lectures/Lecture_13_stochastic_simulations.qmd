@@ -732,6 +732,43 @@ said how big an effect you want to be able to detect.
 
 ## Three worked examples, on real data {.center}
 
+## Get set up {background-color="#f0f4f8" .smaller}
+
+Run this before the examples. The three of them use these two datasets.
+
+::: {.type-it}
+```{r}
+#| eval: false
+# tadpole predation, from the book's package
+library(emdbook)
+data(ReedfrogFuncresp)
+frogs <- ReedfrogFuncresp
+
+# Breeding Bird Survey counts (about 15 MB, give it a moment)
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+cardinals <- bbs$total_sightings[bbs$Year == 2019 &
+                                 bbs$Scientific_Name == "Cardinalis cardinalis"]
+
+length(cardinals)     # should be 71
+```
+:::
+
+::: {.notes}
+Two or three minutes, and worth waiting for everyone: every exercise in the rest
+of the lecture uses one of these.
+
+The BBS file is large, so start it before explaining anything else, and expect a
+few people to need a second try if the campus network is busy. Anyone who cannot
+get it can work from a neighbor's screen for the cardinal examples.
+
+The check on the last line matters: 71 routes. If someone gets 0, the species
+name is misspelled or the year is wrong, which is the usual cause.
+
+emdbook is the package from Lecture 9, so most of them have it installed
+already. install.packages("emdbook") for anyone who does not.
+:::
+
 ## Example 1: the tadpoles, again
 
 ```{r}
