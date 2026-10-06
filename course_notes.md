@@ -298,6 +298,39 @@ told them to type.
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
 
+**Lecture 12 finished about 50 minutes early**, on the rebuilt Quarto deck, and
+that is three short lectures in a row with the gap growing each time: 30, 40,
+then 50 minutes. The fix applied here was ten slides of worked examples on real
+data from the course repository, which is the thing the decks were thinnest on.
+Worth treating as the default remedy rather than adding more explanation: the
+material was understood, there was just not enough practice attached to it.
+
+**Lecture 11 finished about 40 minutes early**, the second short lecture in a
+row and the larger of the two. The deck is 22 slides after the check-in was cut.
+The recommended additions in the Lecture 11 change list take it to 30, and even
+then it is unlikely to fill the period, which supports the supplement proposal
+above rather than arguing against it: there is room in these classes for work
+that currently happens at home, or for the at-home practice to happen here.
+
+Worth introducing Assignment 2 in this lecture rather than the next one. The
+work block at the end of Lecture 11, loading a focal dataset and running today's
+functions on it, is Part 2 of the assignment under another name, so naming it
+costs one slide and turns the block from an exercise into progress. A slide for
+this is drafted in the change list.
+
+**The `var(x) == sd(x)^2` check on the Lecture 11 activity slide failed on the
+Macs in the room** and passed elsewhere. It is floating point: `var()` and
+`sd()` reach the answer by different routes, and whether the last digits agree
+depends on the machine and the math library R was built against. Confirmed on
+Brian's Windows machine, where the difference is exactly 0 for AVONET mass.
+
+A slide explaining this is drafted in the Lecture 11 change list: `0.1 + 0.2 ==
+0.3` is FALSE everywhere, `all.equal()` is the fix, and `==` stays fine for
+whole numbers and text. Two points worth keeping for future offerings: demo it
+with `0.1 + 0.2` rather than the variance, because the variance version passes
+on Windows, and the students hit the bug before being told about it, which is
+the best possible setup for the explanation.
+
 **Lecture 10 finished about 30 minutes early**, not counting the time set aside
 for the R supplement. That is the first deck with slack in it rather than
 overrun, and it came right after two overruns and one deck that fit, so the

@@ -33,6 +33,12 @@ execute:
 ```{r}
 #| echo: false
 avonet <- readRDS("../data/Avonet/AVONET1_BirdLife.rds")
+bbs <- read.csv("../data/BBS/FL_BBS.csv")
+cardinals <- bbs$total_sightings[bbs$Year == 2019 &
+                                 bbs$Scientific_Name == "Cardinalis cardinalis"]
+library(emdbook)
+data(ReedfrogFuncresp)
+frogs <- ReedfrogFuncresp
 set.seed(1)
 ```
 
@@ -810,6 +816,382 @@ freq = FALSE again, for the same reason as the simulation slide.
 
 This is also the answer to "how did you know it was lognormal?" from Lecture 5,
 when we logged the mass axis without justifying it.
+:::
+
+## Real data, three times {.center}
+
+## Example 1: counting cardinals
+
+Breeding Bird Survey, Florida, 2019. One count per route, 71 routes.
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+hist(cardinals, breaks = seq(0, 180, by = 10), col = "grey85",
+     main = "", xlab = "Northern cardinals counted on a route")
+```
+
+A count with no ceiling. **Poisson?**
+
+::: {.notes}
+Real data in the course repository, from `data/BBS/`, and a dataset several of
+them may use for Assignment 2.
+
+One row per route: a volunteer stops every half mile along a 24.5 mile route and
+counts every bird heard or seen. So the count is "cardinals detected on this
+route this year".
+
+Run the shape test from earlier: counts, no fixed ceiling, so the bestiary says
+Poisson. The next slide checks that properly rather than taking it on faith.
+:::
+
+## The Poisson makes a testable claim
+
+::: {.type-it}
+```{r}
+mean(cardinals)
+var(cardinals)
+var(cardinals) / mean(cardinals)
+```
+:::
+
+A Poisson has **mean = variance**, so that ratio should be about 1.
+
+It is **28**.
+
+::: {.notes}
+This is the most useful two lines of code in the lecture, and it takes ten
+seconds on any count data they will ever have.
+
+The ratio is the diagnostic. Around 1 means a Poisson is plausible. Much greater
+than 1 means overdispersion, which is almost always what real ecological counts
+look like.
+
+Why cardinals clump: habitat varies between routes, some routes are suburban and
+some are pine flatwoods, and birds respond to that. Variation in the rate between
+routes is exactly the negative binomial story.
+:::
+
+## How wrong is the Poisson here?
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+mu <- mean(cardinals); v <- var(cardinals); sz <- mu^2 / (v - mu)
+k <- 0:180
+hist(cardinals, breaks = seq(0, 180, by = 10), freq = FALSE, col = "grey88",
+     border = "grey60", main = "", xlab = "cardinals per route",
+     ylim = c(0, 0.062))
+lines(k, dpois(k, lambda = mu), col = "blue", lwd = 3)
+lines(k, dnbinom(k, mu = mu, size = sz), col = "red", lwd = 3)
+legend("topright", bty = "n", lwd = 3, col = c("blue", "red"),
+       legend = c("Poisson", "negative binomial"))
+```
+
+One route counted **175**. The Poisson says that is essentially impossible
+($10^{-43}$). The negative binomial says about 1 in 100.
+
+::: {.notes}
+The blue curve is too narrow and too tall: a Poisson with mean 49 expects almost
+everything between 35 and 65, and the data run from single digits to 175.
+
+The 10^-43 number is the honest way to say "wrong model". It is not that the
+Poisson fits slightly worse, it is that it calls the observed data impossible.
+
+Where the red curve comes from is the next slide, and it is one line of
+arithmetic.
+:::
+
+## Matching a negative binomial
+
+The negative binomial has a mean and a clumping parameter. Solve for them from
+the data:
+
+::: {.type-it}
+```{r}
+mu <- mean(cardinals)
+size <- mu^2 / (var(cardinals) - mu)
+
+mu
+size
+```
+:::
+
+Small `size` means heavy clumping. As `size` grows it becomes a Poisson.
+
+::: {.notes}
+This is the method of moments: set the distribution's mean and variance equal to
+the data's, then solve. It is the simplest way to fit a distribution and it
+needs no optimizer.
+
+Chapter 6 replaces it with maximum likelihood, which is better but no more
+honest. Worth saying so now: they have just fitted a distribution to real data,
+in two lines, in week five.
+
+size = 1.8 is heavy clumping. For reference, size above about 10 would look
+nearly Poisson at this mean.
+:::
+
+## Your turn: a different species {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+counts <- bbs$total_sightings[bbs$Year == 2019 &
+                              bbs$Scientific_Name == "Melanerpes carolinus"]
+
+hist(counts)
+
+mean(counts)
+var(counts) / mean(counts)
+```
+:::
+
+Is this one clumped too? Try another species of your own.
+
+::: {.notes}
+Six minutes. The red-bellied woodpecker gives a ratio of about 5.3: still
+overdispersed, but much less than the cardinal's 28.
+
+That contrast is the point. Overdispersion is not all or nothing, and the ratio
+puts a number on how badly a Poisson would do.
+
+Species names in the data are scientific names. Mourning dove, Zenaida macroura,
+gives about 16. Anyone who picks a rare species will get few routes and a noisy
+answer, which is itself worth discussing.
+:::
+
+## Example 2: killed out of how many
+
+Tadpole predation. Each tank started with a known number, so each result is
+"killed **out of** Initial".
+
+```{r}
+#| echo: false
+#| fig-height: 2.8
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+plot(frogs$Initial, frogs$Killed / frogs$Initial, pch = 16, cex = 1.5,
+     ylim = c(0, 0.8), xlab = "tadpoles in the tank",
+     ylab = "proportion killed")
+```
+
+Out of a fixed number, so **binomial**. But the proportion is not constant.
+
+::: {.notes}
+Same data as Lecture 10, asked a different way. There the question was how many
+were killed; here it is what fraction.
+
+The giveaway phrase for a binomial is "out of", and it is on the Assignment 2
+list twice.
+
+Read the plot: the proportion killed is around 0.5 at low density and drops to
+about 0.3 at high density. A single binomial with one p cannot produce that,
+because p would have to change with density.
+:::
+
+## This is the whole course in one slide
+
+**Chapter 3:** a curve for how the proportion changes with density.
+
+**Chapter 4:** a binomial for the scatter around that curve.
+
+. . .
+
+**Chapter 6:** fit both at once. That is what a model is.
+
+::: {.notes}
+Worth slowing down for. They have now built both halves separately, five weeks
+apart, on the same dataset.
+
+The curve is the functional response from Lecture 10, the Holling type II, which
+they fitted by eye. The noise is today's binomial. Putting them together is
+chapter 6, and when it arrives it should feel like assembly rather than
+novelty.
+
+If anyone asks what "fit both at once" means: choose the curve's parameters so
+that the binomial scatter around it makes the observed data as likely as
+possible. That sentence is maximum likelihood.
+:::
+
+## Your turn: how big are bird ranges? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+r <- avonet$Range.Size
+
+hist(r, breaks = 50)
+mean(r, na.rm = TRUE)
+median(r, na.rm = TRUE)
+
+hist(log10(r), breaks = 50)
+```
+:::
+
+Mean 2,580,000 km². Median 416,000 km². What does that gap tell you?
+Does the log fix it?
+
+::: {.notes}
+Six minutes, and the answer is more interesting than it looks.
+
+The raw variable is hugely right skewed, which the mean against the median says
+before any plot: the mean is six times the median.
+
+The log10 version is better but overshoots, leaving a left skew of about -0.95.
+So this one is not lognormal either. The right answer to "which distribution" is
+"none of these cleanly", and saying that with evidence is a full credit answer on
+Assignment 2.
+
+Also note the 57 missing values, which is why na.rm is in the code.
+:::
+
+## What the three examples had in common
+
+1. **Plot it.** Shape first.
+2. **Use a number, not an impression.** Mean against variance for counts, mean
+   against median for skew.
+3. **Overlay the candidate** on the data.
+4. **Say how it fails**, and whether that matters.
+
+Nobody looked up a formula.
+
+::: {.notes}
+This is the procedure for Assignment 2 Part 2, and it is four steps they have now
+done three times on real data.
+
+Step 4 is the one that separates a good answer from a confident wrong one. Every
+distribution is wrong about something; the question is whether it is wrong about
+the thing you care about.
+:::
+
+## A warning: groups hide inside your data
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 9
+set.seed(7)
+males   <- rlnorm(300, meanlog = log(60), sdlog = 0.18)
+females <- rlnorm(300, meanlog = log(95), sdlog = 0.18)
+par(mfrow = c(1, 2), mar = c(3.4, 3.4, 2, 0.6), mgp = c(2, 0.6, 0))
+hist(c(males, females), breaks = 30, col = "grey85",
+     main = "All lizards measured", xlab = "body length (mm)")
+hist(males, breaks = 25, col = rgb(0.2, 0.4, 1, 0.55), ylim = c(0, 30),
+     xlim = range(c(males, females)), main = "Split by sex",
+     xlab = "body length (mm)")
+hist(females, breaks = 25, col = rgb(1, 0.3, 0.1, 0.5), add = TRUE)
+legend("topright", fill = c(rgb(0.2, 0.4, 1, 0.55), rgb(1, 0.3, 0.1, 0.5)),
+       legend = c("males", "females"), bty = "n")
+```
+
+Each sex is **lognormal**. Pooled, they look like nothing in the bestiary.
+
+::: {.notes}
+Simulated, so the right answer is known: both groups are lognormal, the females
+larger. Pooled, the histogram is wide and lumpy and matches no standard shape.
+
+This is the most common reason a real variable refuses to look like anything in
+Table 4.1, and it is not a flaw in the data. It means the sample contains more
+than one kind of thing.
+
+Sexual size dimorphism is the obvious case in lizards. Others they will hit:
+species pooled together, sites with different conditions, juveniles and adults,
+sampling years.
+:::
+
+## The same thing in real data
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 9
+amniote <- readRDS("../data/Amniote_traits/Amniote_Database_Aug_2015.rds")
+amniote[amniote == -999] <- NA
+m <- amniote[!is.na(amniote$adult_body_mass_g) &
+             amniote$class %in% c("Aves", "Mammalia"), ]
+x <- log10(m$adult_body_mass_g)
+par(mfrow = c(1, 2), mar = c(3.4, 3.4, 2, 0.6), mgp = c(2, 0.6, 0))
+hist(x, breaks = 45, col = "grey85", main = "Birds and mammals pooled",
+     xlab = "log10 body mass (g)")
+hist(x[m$class == "Aves"], breaks = 40, col = rgb(0.2, 0.4, 1, 0.55),
+     xlim = range(x), main = "Split by class", xlab = "log10 body mass (g)")
+hist(x[m$class == "Mammalia"], breaks = 40, col = rgb(1, 0.3, 0.1, 0.5),
+     add = TRUE)
+legend("topright", fill = c(rgb(0.2, 0.4, 1, 0.55), rgb(1, 0.3, 0.1, 0.5)),
+       legend = c("birds", "mammals"), bty = "n")
+```
+
+The long right tail is mammals. Birds alone are far tighter.
+
+::: {.notes}
+Amniote trait database, in the course repository.
+
+Numbers if useful: on the log10 scale the pooled skew is 1.5, birds alone 0.8.
+Birds have a standard deviation of 0.69 and mammals 1.26, so mammals are nearly
+twice as spread out. The second bump around 10,000 to 100,000 g is large
+mammals, which have no bird equivalent.
+
+Honest point: splitting does not make these perfectly lognormal either. It makes
+them better, and it tells you something biological, which is the real payoff.
+:::
+
+## What to do about it {.smaller}
+
+1. **Plot by group before naming a distribution.** `boxplot(y ~ group)`, or one
+   histogram per group.
+2. **Suspect a mixture** when you see two humps, a shoulder, or a spread far
+   wider than any single distribution would give.
+3. **If the groups differ, describe them separately.** A distribution per group
+   beats one bad distribution for everything.
+4. **If you cannot measure the group, say so.** That is an honest answer, and it
+   is section 4.6.
+
+. . .
+
+Later in the course the group stops being a problem and becomes a **predictor**.
+
+::: {.notes}
+Point 3 is what Assignment 2 Part 2 wants when a variable is structured: not a
+shrug, and not a forced label, but "males and females each look lognormal with
+different means".
+
+Point 4 covers the genuinely hard cases. Unmeasured structure is why zero
+inflation and mixture models exist, and 4.6 is where Bolker puts them.
+
+The last line is the forward reference that makes this feel less like a warning
+and more like a preview: from chapter 9 on, sex or site goes into the model as a
+term, and the "mixture" becomes the thing being estimated.
+:::
+
+## Your turn: is your variable one thing? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# a grouping column: sex, site, species, year, treatment
+boxplot(my_data$your_variable ~ my_data$your_group)
+
+# or one histogram per group
+hist(my_data$your_variable[my_data$your_group == "A"])
+hist(my_data$your_variable[my_data$your_group == "B"])
+```
+:::
+
+Does the picture change? If it does, say so in Assignment 2.
+
+::: {.notes}
+Four minutes, and it rolls straight into the Part 2 work block.
+
+Most of their datasets have a grouping column they have not thought about:
+species, site, sex, year, treatment. Asking "is this one thing?" once is usually
+enough to find it.
+
+If a student has no grouping variable at all, that is worth saying out loud too.
+A single species measured once in one place is the easy case.
 :::
 
 ## Your turn: start Assignment 2, Part 2 {background-color="#f0f4f8" .smaller}
