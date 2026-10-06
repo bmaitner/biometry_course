@@ -124,6 +124,18 @@ From midterm feedback, Fall 2025:
 
 ## Infrastructure
 
+- [x] **The midterm is Markdown now**, converted on 2026-10-06, with
+  `midterm/render_midterm.R` producing the `.docx` and `.html` the same way the
+  assignments and quizzes work. The `.html` is gitignored, the `.docx` is kept
+  because students download it.
+
+  **Lettered versions, same idea as the quizzes.** `Midterm_a` is the Fall 2025
+  version, kept so future classes have a past midterm to practice on, and so
+  parts of it can be reused. Its wording is unchanged, but its links were
+  repointed from `Statistical_ecology_course` to `biometry_course` so it stays
+  usable. `Midterm_b` is the Fall 2026 version and the one students are pointed
+  to. Add `Midterm_c` next year rather than editing `Midterm_b`.
+
 - [ ] **Convert the slides to Markdown, so the decks are fully reproducible.**
   Quarto's `revealjs` format is the obvious target: plain-text source, code
   chunks that actually execute, HTML for teaching and PDF for the repo from one
