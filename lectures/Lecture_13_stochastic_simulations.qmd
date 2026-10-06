@@ -1,0 +1,682 @@
+---
+title: "Stochastic simulation"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 13"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+library(emdbook)
+data(ReedfrogFuncresp)
+frogs <- ReedfrogFuncresp
+set.seed(101)
+```
+
+## Today's agenda
+
+- What a simulation is, and why you would run one
+- Building a simulation: a curve, plus noise
+- Groups, and how to simulate them
+- The midterm
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Chapter 5. This is the first lecture where they produce data rather than
+describe it.
+
+The through line: a simulation is chapter 3 plus chapter 4. A deterministic
+function for the pattern, a distribution for the scatter. They have both halves
+already.
+:::
+
+## What is a simulation?
+
+**Experimentation with the help of a model.**
+
+Choose a model, choose parameters, generate data, see what happens.
+
+. . .
+
+You already have both pieces:
+
+- **Chapter 3:** a function for the expected value
+- **Chapter 4:** a distribution for the noise around it
+
+::: {.notes}
+Worth saying plainly that nothing new is being introduced today, only combined.
+They wrote Ricker and Michaelis-Menten functions in chapter 3 and met rnorm,
+rbinom and rnbinom in chapter 4.
+
+The one new idea is direction. Until now data came first and the model was
+fitted to it. Today the model comes first and the data come out of it.
+:::
+
+## Why simulate?
+
+- **Study design.** How many samples do I need to detect this effect?
+- **Model checking.** Does my model produce data that look like my data?
+- **Method checking.** Does this analysis recover the answer I put in?
+- **Theory.** What happens if I add this mechanism?
+
+. . .
+
+The second and third are why this is not optional: it is how you find out
+whether your analysis works **before** you trust it.
+
+::: {.notes}
+Study design is Thursday's lecture, power analysis, and part 3 of the midterm.
+
+Method checking is the one worth dwelling on. If you simulate data with a known
+slope of 1.5 and your analysis says 0.4, the analysis is wrong, and you found
+out without needing a single real measurement. Real data cannot do that for you,
+because you never know the true answer.
+
+Bolker's framing in 5.1: simulation is how you make sure the pieces work
+together before you commit to them.
+:::
+
+## The recipe
+
+1. Pick a model, the deterministic part
+2. Pick parameters
+3. Add noise from a distribution
+4. Look at the output
+5. Change something and repeat
+
+::: {.notes}
+Five steps, and the rest of the lecture is three passes through them with
+different pieces swapped in: a line with normal noise, a curve with negative
+binomial noise, then groups.
+
+Step 5 is where the learning happens, and it is also the step students skip.
+:::
+
+## Start with the deterministic part {.smaller}
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.4
+a <- 2
+b <- 1
+x <- 1:20
+
+y_det <- a + b * x
+
+plot(x = x, y = y_det)
+```
+:::
+
+A line: $y = a + bx$. No randomness yet.
+
+::: {.notes}
+Deliberately the simplest possible model, so the attention is on the structure
+rather than on the function.
+
+Note that y_det is a vector of 20 expected values, one per x. The noise gets
+added to each of them in a moment.
+:::
+
+## Now add noise
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.8
+y_stoch <- rnorm(n = 20, mean = y_det, sd = 2)
+
+plot(x = x, y = y_stoch)
+```
+:::
+
+`mean = y_det` is the trick: **a different mean for every point.**
+
+::: {.notes}
+This is the step that makes it a statistical model, and the vectorized mean is
+the part worth pointing at. rnorm is given 20 means and returns 20 draws, one
+around each.
+
+Say it as a sentence: each observation is its expected value plus noise. That
+sentence is every model in the rest of the course.
+:::
+
+## Run it again
+
+::: {.type-it}
+```{r}
+#| eval: false
+y_stoch <- rnorm(n = 20, mean = y_det, sd = 2)
+plot(x = x, y = y_stoch)
+```
+:::
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+par(mfrow = c(1, 4), mar = c(3.2, 3.2, 1.6, 0.6), mgp = c(1.9, 0.6, 0))
+for (i in 1:4) {
+  ys <- rnorm(n = 20, mean = y_det, sd = 2)
+  plot(x, ys, pch = 16, col = "grey30", ylim = c(0, 28),
+       xlab = "x", ylab = "y", main = paste("run", i))
+  abline(a = 2, b = 1, col = "red", lwd = 2)
+}
+```
+
+Same model, same parameters, four different datasets.
+
+::: {.notes}
+Have them run it several times themselves before showing this.
+
+The point is the one students find genuinely surprising: the data are not the
+model. Each dataset is one draw from a process, and the red line, the truth, is
+the same in all four panels.
+
+This is also the honest version of "my result did not replicate". Some of that
+spread is just this.
+:::
+
+## When the noise grows with the mean
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.7
+sd_multiplier <- 0.3
+
+y_stoch <- rnorm(n = 20, mean = y_det, sd = y_det * sd_multiplier)
+
+plot(x = x, y = y_stoch)
+points(x, y_det, col = "blue")
+```
+:::
+
+Bigger things vary more. Very common in biology.
+
+::: {.notes}
+Body size, abundance, biomass: in all of them the spread grows with the mean,
+which is why a constant sd is often wrong.
+
+Connect to Lecture 12: this is the multiplicative idea again. Constant
+proportional variation is what makes data lognormal.
+
+The blue points are the deterministic expectation, so the fan shape is visible
+against it.
+:::
+
+## Your turn: break it {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+a <- 2
+b <- 1
+x <- 1:20
+y_det <- a + b * x
+
+y_stoch <- rnorm(n = 20, mean = y_det, sd = 2)
+plot(x = x, y = y_stoch)
+abline(a = a, b = b, col = "red")
+
+# now try
+# sd = 0.1    sd = 20    b = 0    b = -1
+```
+:::
+
+How big does `sd` have to be before the line is invisible in the data?
+
+::: {.notes}
+Six minutes. The last question has no single right answer and that is the point:
+whether a pattern is visible depends on the ratio of signal to noise, not on
+either one alone.
+
+With sd = 20 and this slope, the line is hopeless with 20 points. That is
+exactly the question power analysis answers on Thursday, so this exercise is the
+setup for it.
+
+b = 0 is worth doing too: it shows what "no effect" data look like, which is the
+thing they will be testing against all semester.
+:::
+
+## A curve instead of a line
+
+Bolker's example: a hyperbolic function with **negative binomial** noise.
+
+$$y = \frac{a\,b}{b + x}$$
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+a2 <- 20; b2 <- 1
+xx <- runif(50, min = 0, max = 5)
+plot(xx, a2 * b2 / (b2 + xx), pch = 16, col = "grey30",
+     xlab = "x", ylab = "expected y")
+```
+
+Why would a normal error term be wrong here?
+
+::: {.notes}
+Section 5.2 in the book. Two things are new: the deterministic part is a curve,
+and the noise is a count distribution.
+
+Answer to the question on the slide: y is a count, so it cannot be negative and
+it cannot be fractional, and near the right side the expected value is small
+enough that a normal would predict negative counts. Counts need a count
+distribution.
+
+Note runif for the x values: the predictor itself is random here, which is what
+an observational study looks like. Worth asking how that differs from x <- 0:5,
+which is a designed experiment with fixed levels.
+:::
+
+## Adding negative binomial noise {.smaller}
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.3
+a <- 20
+b <- 1
+k <- 5
+x <- runif(50, min = 0, max = 5)
+
+y_det <- a * b / (b + x)
+y <- rnbinom(n = 50, mu = y_det, size = k)
+
+plot(x = x, y = y)
+```
+:::
+
+::: {.notes}
+Run it several times. The scatter is wider at the left, where the mean is
+larger, which is what a negative binomial does automatically: its variance grows
+with its mean.
+
+k is the clumping parameter from Lecture 12, the one they estimated for
+cardinals as 1.8. Small k, more scatter.
+
+Note the model written correctly as a * b / (b + x). With b = 1 that is the same
+as a / (b + x), which is why the old version of this slide looked fine, but the
+two differ as soon as b is not 1, which happens on the group slides shortly.
+:::
+
+## Your turn: what does each parameter do? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+a <- 20
+b <- 1
+k <- 5
+x <- runif(50, min = 0, max = 5)
+
+y_det <- a * b / (b + x)
+y <- rnbinom(n = 50, mu = y_det, size = k)
+
+plot(x = x, y = y, ylim = c(0, 60))
+points(x, y_det, col = "blue", pch = 16)
+```
+:::
+
+Try `k = 0.5` and `k = 100`. Then `a = 50`. Then `b = 3`.
+
+::: {.notes}
+Seven minutes.
+
+What to listen for: a sets the starting height, b controls how fast the curve
+drops, and k controls only the scatter, not the expectation. That last one is
+the distinction that matters: a and b are the biology, k is the noise.
+
+k = 100 looks almost Poisson, k = 0.5 is wild. Same expected curve underneath
+both, which is the blue points.
+:::
+
+## Groups {.center}
+
+## Different species, different parameters
+
+Two species, 25 observations each. They differ in `a` and `b`, but share the
+same noise.
+
+::: {.type-it}
+```{r}
+g <- factor(rep(1:2, each = 25))
+
+a <- c(20, 10)
+b <- c(1, 2)
+```
+:::
+
+`a` and `b` are now **vectors**, one value per group.
+
+::: {.notes}
+This is the structural idea from the end of Lecture 12, arriving as something
+they build rather than something to watch out for.
+
+factor() matters: g is a grouping label, not the number 1 or 2. R will use it to
+pick parameters and to pick colors.
+:::
+
+## Indexing by group {.smaller}
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.2
+x <- runif(50, min = 0, max = 5)
+
+y_det <- a[g] * b[g] / (b[g] + x)
+
+plot(x = x, y = y_det, col = g, pch = 16)
+```
+:::
+
+`a[g]` reads "the `a` for whichever group this observation belongs to".
+
+::: {.notes}
+a[g] is the piece of R syntax worth slowing down on. g is a factor of 1s and 2s,
+so a[g] is a 50-long vector made of a[1] and a[2] in the right places.
+
+Have them try a[1] and a[2] on their own to see the pieces.
+
+col = g colors the points by group, because R converts the factor to 1 and 2 and
+those are the first two colors in the palette. pch = g works the same way for
+symbols.
+:::
+
+## Now add the noise
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.8
+k <- 5
+
+y <- rnbinom(n = 50, mu = y_det, size = k)
+
+plot(x = x, y = y, col = g, pch = as.numeric(g))
+legend("topright", bty = "n", col = 1:2, pch = 1:2,
+       legend = c("species 1", "species 2"))
+```
+:::
+
+::: {.notes}
+Plotting it badly first is worth doing: without col and pch the two species are
+indistinguishable, which is the honest version of the question "could I even
+tell these apart in real data?".
+
+The legend is the Lecture 8 habit arriving in base graphics.
+
+Ask the room: do the two species look different here? With k = 5 and this much
+overlap it is genuinely arguable, which leads into the next slide.
+:::
+
+## Your turn: can you tell them apart? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+a <- c(20, 10)      # change these
+b <- c(1, 2)
+k <- 5
+
+y_det <- a[g] * b[g] / (b[g] + x)
+y <- rnbinom(n = 50, mu = y_det, size = k)
+plot(x = x, y = y, col = g, pch = as.numeric(g))
+```
+:::
+
+Find parameters where the two species look **clearly different**.
+Then find parameters where they look **identical**.
+Then find parameters where they differ only at **low x**.
+
+::: {.notes}
+Eight minutes, and the best exercise in the lecture. It is a real research
+question in disguise: how different do two groups have to be before you could
+detect it with 25 observations each?
+
+The third case, differing only at low x, is the interesting one. It is common in
+real data and it is why where you sample matters as much as how much you sample.
+Anyone who finds it has learned something about study design that no amount of
+reading would teach.
+
+Raising k makes everything easier to see, which is the same lesson as the sd
+exercise earlier.
+:::
+
+## Does my model make data like my data? {.center}
+
+## The tadpoles, again
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+plot(frogs$Initial, frogs$Killed, pch = 16, cex = 1.5, col = "black",
+     xlab = "tadpoles in the tank", ylab = "number killed",
+     xlim = c(0, 100), ylim = c(0, 40))
+curve(60 * x / (100 + x), add = TRUE, col = "red", lwd = 2)
+```
+
+Lecture 10: the curve. Lecture 12: killed **out of** Initial, so binomial.
+
+::: {.notes}
+Same dataset for the third lecture running, which is deliberate. They fitted the
+Michaelis-Menten curve by eye in Lecture 10 with a = 60 and b = 100, and
+identified the binomial structure in Lecture 12.
+
+Today those two halves become a generator: a curve for the expected number
+killed, and binomial noise around it.
+:::
+
+## Simulate the experiment {.smaller}
+
+::: {.type-it}
+```{r}
+#| fig-height: 2.2
+p <- (60 * frogs$Initial / (100 + frogs$Initial)) / frogs$Initial
+
+killed_sim <- rbinom(n = nrow(frogs), size = frogs$Initial, prob = p)
+
+plot(frogs$Initial, killed_sim, pch = 16, col = "red",
+     xlab = "tadpoles in the tank", ylab = "number killed")
+points(frogs$Initial, frogs$Killed, pch = 1, cex = 1.4)
+```
+:::
+
+Red: a fake experiment. Open circles: the real one.
+
+::: {.notes}
+This is the most important idea in the lecture: if your model is any good, data
+simulated from it should be hard to tell from the real thing.
+
+Walk the first line slowly. The curve gives the expected number killed; dividing
+by Initial turns that into a per-tadpole probability, which is what rbinom wants.
+
+Run it several times. Sometimes the fake data look like the real data,
+sometimes they do not, and the honest conclusion with 16 points is that this
+model is not obviously wrong, which is as much as these data support.
+
+In chapter 6 this becomes a formal check. Here it is eyeball.
+:::
+
+## What simulation buys you
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2, 0.6, 0))
+slopes <- replicate(1000, {
+  xs <- 1:20
+  ys <- rnorm(20, mean = 2 + 1 * xs, sd = 8)
+  coef(lm(ys ~ xs))[2]
+})
+hist(slopes, breaks = 40, col = "grey85", main = "",
+     xlab = "estimated slope from 1000 simulated studies")
+abline(v = 1, col = "red", lwd = 3)
+```
+
+The true slope is **1**. With `sd = 8` and 20 points, individual studies land
+anywhere from about 0 to 2.
+
+::: {.notes}
+Built with replicate(), which runs an expression many times and collects the
+answers. Same idea as sapply from Lecture 9.
+
+This figure is the answer to "why does my result disagree with the published
+one". Run the same honest study 1000 times and the estimates spread out this
+much. Nobody did anything wrong.
+
+It is also exactly what power analysis counts: how often does a study like this
+come back with a slope far enough from zero to notice. Thursday puts a number on
+it.
+
+Callback worth making: they saw this figure in Lecture 3 as a finished picture.
+Now they can build it.
+:::
+
+## Start simple
+
+- Simple models are easier to check and debug
+- Complexity adds realism, and new ways to be wrong
+- Add one piece at a time, and look after each one
+
+Section **5.2.2.2** has a more complex worked example.
+
+::: {.notes}
+The advice is Bolker's and it is the same advice as writing functions in chapter
+3: build a small piece, check it, then extend.
+
+Practical version for the midterm: get a line with noise working before adding
+groups.
+:::
+
+## The midterm {.center}
+
+## The midterm: three parts {.smaller}
+
+**Take-home. Due Tuesday Oct 13, 11:59 pm.** Same dataset you have been using.
+
+| Part | What | Weight |
+|---|---|---|
+| 1 | A short partial paper: introduction, methods, results with figures | 60% |
+| 2 | Given data, decide what model and distribution fit | 30% |
+| 3 | A power analysis | 10% |
+
+Any tools you like for code, including AI. **Part 1 text must be yours.**
+
+::: {.notes}
+Say the tool policy out loud, because it is unusual and students will assume
+otherwise: book, notes, classmates, AI and online resources are all fair for the
+coding, because that is what real analysis looks like. The writing in Part 1 is
+the exception.
+
+Part 3 needs Thursday's lecture, so nobody should panic about it today.
+:::
+
+## What each part uses
+
+**Part 1:** your dataset, Assignment 1 figures, Assignment 2 distributions.
+Mostly writing.
+
+**Part 2:** three datasets I give you. Chapter 3 shapes, chapter 4
+distributions. This is Assignment 2 with harder data.
+
+**Part 3:** simulate, analyze, repeat, count. How does **noise** change your
+chance of detecting a real effect? Today plus Thursday.
+
+. . .
+
+Nothing in it is new. It is the semester so far, assembled.
+
+::: {.notes}
+Worth being explicit, because a midterm reads as a wall until you see it is made
+of things they have already done.
+
+Part 1 can reuse code and figures from Assignments 1 and 2, and the draft can be
+reused again in the final. Say that: the work compounds rather than being thrown
+away.
+
+The ESA writing guide is linked in the midterm document for anyone new to
+scientific writing.
+:::
+
+## Getting started on the midterm
+
+The data and starter code are in the course repository:
+
+```{r}
+#| eval: false
+library(readr)
+
+twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2a.RDS")
+twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2b.RDS")
+twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2c.RDS")
+```
+
+`midterm/midterm_b_example.R` also has the power analysis skeleton for Part 3.
+
+::: {.notes}
+Three datasets for Part 2, loaded straight from the repository so nobody has to
+download anything. Note the b_ prefix: those are this year's. The unprefixed
+2a/2b/2c files are last year's midterm and are still in the folder.
+
+What they are: bird egg mass against adult body mass, reef fish species richness
+against total abundance, and hard bottom cover against rugosity.
+
+For each: plot it, decide on a shape and a distribution, justify both. The
+procedure is the four steps from Lecture 12.
+
+Also in that script: citation() and citation("packagename"), which Part 1 needs
+for citing R and any packages used.
+:::
+
+## Remainder of class
+
+Work on the midterm, or keep playing with the simulations.
+
+Good first steps:
+
+- Load the three Part 2 datasets and plot them
+- Start the Part 1 introduction, 300 words, on the question you already chose
+
+::: {.notes}
+Circulate on Part 2 choices rather than on writing. The shape plus distribution
+decision is the part where being in the room helps most.
+:::
+
+## Before next class
+
+Read Bolker **5.3**
+
+Next time: **power analysis**, which is Part 3 of the midterm
+
+::: {.notes}
+5.3 is short and it is directly needed. Say that the reading is unusually
+load-bearing this time: Thursday's class is the method they need for Part 3,
+and the midterm is due the Tuesday after.
+:::
