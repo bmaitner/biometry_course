@@ -1075,13 +1075,14 @@ Dr. Brian Maitner
 </div>
 
 </section>
-<section id="todays-agenda" class="slide level2">
+<section id="todays-agenda" class="slide level2 smaller">
 <h2>Today’s agenda</h2>
 <ul>
 <li>The midterm</li>
 <li>What a simulation is, and why you would run one</li>
 <li>Building a simulation: a curve, plus noise</li>
 <li>Groups, and how to simulate them</li>
+<li>Choosing the model, the distribution and the numbers</li>
 <li>Three worked examples on real data</li>
 </ul>
 <div class="fragment">
@@ -1690,6 +1691,177 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="choosing-the-pieces" class="slide level2 center">
+<h2>Choosing the pieces</h2>
+</section>
+<section id="three-choices-every-time" class="slide level2">
+<h2>Three choices, every time</h2>
+<p>A simulation needs all three before it will run:</p>
+<ol type="1">
+<li><strong>The model.</strong> What shape does the average follow?</li>
+<li><strong>The distribution.</strong> How do observations scatter around it?</li>
+<li><strong>The parameters.</strong> What numbers go in?</li>
+</ol>
+<div class="fragment">
+<p>You have done the first two already, on real data. Today they get used in the other direction.</p>
+<aside class="notes">
+<p>Worth naming as a checklist, because a simulation will not run until all three are chosen. Vagueness you can get away with when describing data becomes impossible when you have to generate it.</p>
+<p>That is the hidden benefit of simulating: it catches the places where you have not actually decided anything.</p>
+<p>One slide each, next.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
+<section id="the-model-what-shape" class="slide level2 smaller">
+<h2>1. The model: what shape?</h2>
+<p>From chapter 3, Lectures 9 and 10. Ask three questions of the pattern:</p>
+<ul>
+<li>What happens at the <strong>left end</strong>?</li>
+<li>What happens at the <strong>right end</strong>?</li>
+<li>What happens <strong>in between</strong>: rise, fall, peak, level off, switch?</li>
+</ul>
+<div class="fragment">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Shape</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Straight</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">a + bx</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td>Rises and levels off</td>
+<td>Michaelis-Menten, Holling type II</td>
+</tr>
+<tr class="odd">
+<td>Humped</td>
+<td>Ricker, power-Ricker</td>
+</tr>
+<tr class="even">
+<td>Falling</td>
+<td>negative exponential</td>
+</tr>
+<tr class="odd">
+<td>Flat then a switch</td>
+<td>hockey stick, threshold</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>Deliberately the same three questions as the bestiary slide in Lecture 10, and the same table in miniature.</p>
+<p>Two routes to a choice, both legitimate: the shape the data have, which is the phenomenological route, or the mechanism you believe, which is the mechanistic one. The tadpole functional response was both.</p>
+<p>If there is no predictor, the answer to “what shape” is a flat line: the expected value is the same for every observation. That is a perfectly good model, and two of the three worked examples later are exactly that case.</p>
+<p>For a simulation there is a third route, which is what you want to test. If the question is “could I detect a hump”, simulate a hump.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
+<section id="the-distribution-what-kind-of-number" class="slide level2 smaller">
+<h2>2. The distribution: what kind of number?</h2>
+<p>From chapter 4, Lecture 12. Eliminate, then check:</p>
+<ul>
+<li><strong>Discrete or continuous?</strong></li>
+<li><strong>What range?</strong> 0 to 1, 0 upward, any number</li>
+<li><strong>What process made it?</strong> Out of a known total, a count with no ceiling, a measurement, a waiting time</li>
+</ul>
+<div class="fragment">
+<p>Then <strong>use a number, not an impression</strong>:</p>
+<ul>
+<li>Counts: is the variance bigger than the mean? Poisson or negative binomial</li>
+<li>Continuous and positive: is the mean far from the median? Lognormal or gamma</li>
+</ul>
+<aside class="notes">
+<p>The elimination steps are from the “how do you choose” slide in Lecture 12, and the two checks are the ones they will use on the midterm.</p>
+<p>In R this is the choice between rnorm, rbinom, rpois, rnbinom, rlnorm and so on. The r functions are the simulation half of the four-letter family.</p>
+<p>Say the pairing out loud: the model sets the mean, the distribution sets the scatter around it. On the slides so far that is <code>mean = y_det</code> inside rnorm, and <code>mu = y_det</code> inside rnbinom.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
+<section id="the-parameters-where-do-the-numbers-come-from" class="slide level2 smaller">
+<h2>3. The parameters: where do the numbers come from?</h2>
+<p>You have to put numbers in. Four honest sources:</p>
+<ol type="1">
+<li><strong>Pilot data.</strong> Even 10 observations give you a rough mean and spread.</li>
+<li><strong>Published studies</strong> on the same system, or a similar one. Methods sections and figures have numbers in them.</li>
+<li><strong>Your own previous data.</strong> The variance from last season is usually the best guess for next season.</li>
+<li><strong>Biological limits.</strong> A proportion is between 0 and 1, a clutch is not 400 eggs, a seedling does not weigh a kilogram.</li>
+</ol>
+<div class="fragment">
+<p>And when you genuinely do not know: <strong>try a range</strong> and see whether the answer changes.</p>
+<aside class="notes">
+<p>This is the question students ask as soon as they try it on their own system, and it has a reputation for being a dark art. It is not.</p>
+<p>Source 1 is the most useful and the most ignored. A single afternoon of pilot sampling turns a guess into an estimate, and it also finds the problems with your protocol while they are cheap to fix.</p>
+<p>The fallback matters just as much: if you cannot pin down a number, run the simulation across a plausible range of it. If the conclusion holds across the range, the uncertainty did not matter. If it flips, you have learned that this number is worth measuring before you commit.</p>
+<p>Spreading one parameter across a range and watching the answer move is exactly what Thursday does with sample size and noise.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
+<section id="the-one-number-nobody-can-give-you" class="slide level2">
+<h2>The one number nobody can give you</h2>
+<p><strong>How big an effect would matter?</strong></p>
+<p>A 2% change in growth rate might be real and still not be worth designing a study around.</p>
+<div class="fragment">
+<p>Simulate the <strong>smallest effect you would care about</strong>, not the biggest one you hope for.</p>
+<aside class="notes">
+<p>The one parameter no dataset can give them, because it is a judgment about the biology, not a measurement.</p>
+<p>Why it matters practically: a study powered for a huge effect will miss the modest one you are likely to have, and designing around your most optimistic guess is the most common way power analyses mislead people.</p>
+<p>Ask the room for their own systems. If their study found a difference of X, would anyone change what they do? That number is the one to simulate.</p>
+<p>Thursday’s lecture is built on this: power only means anything once you have said how big an effect you want to be able to detect.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
 <section id="three-worked-examples-on-real-data" class="slide level2 center">
 <h2>Three worked examples, on real data</h2>
 </section>
@@ -1923,10 +2095,58 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="you-do-not-always-need-a-curve" class="slide level2 smaller">
+<h2>You do not always need a curve</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Example</th>
+<th>Deterministic part</th>
+<th>Distribution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tadpoles</td>
+<td>Michaelis-Menten curve</td>
+<td>binomial</td>
+</tr>
+<tr class="even">
+<td>Cardinals</td>
+<td>just a mean</td>
+<td>negative binomial</td>
+</tr>
+<tr class="odd">
+<td>Bird masses</td>
+<td>just a mean</td>
+<td>lognormal</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>A curve is only needed when the expected value <strong>changes with a predictor</strong>. With one variable and no predictor, the distribution is the whole model.</p>
+<aside class="notes">
+<p>Worth being explicit, because the recipe slide said “a curve plus a distribution” and two of the three examples had no curve in them.</p>
+<p>The tadpoles had a predictor, the number of tadpoles in the tank, so the expected number killed changes along it. Cardinals and bird masses are single variables: the expected value is the same for every observation, so the deterministic part is just a constant.</p>
+<p>Both are models. One is <code>rbinom(n, size, prob = curve(x))</code>, the other is <code>rnbinom(n, mu = a number, size)</code>.</p>
+<p>Where this comes back: in chapter 6 the constant becomes a parameter to estimate, and the two cases stop looking different at all.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
 <section id="what-the-three-examples-had-in-common" class="slide level2">
 <h2>What the three examples had in common</h2>
 <ol type="1">
-<li><strong>Build the data you expected</strong>, from a curve plus a distribution.</li>
+<li><strong>Build the data your model predicts.</strong></li>
 <li><strong>Compare it to what you actually got.</strong></li>
 <li><strong>Repeat it</strong>, because one dataset is one draw.</li>
 </ol>

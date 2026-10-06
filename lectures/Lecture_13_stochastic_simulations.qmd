@@ -49,12 +49,13 @@ cardinals <- bbs$total_sightings[bbs$Year == 2019 &
 set.seed(101)
 ```
 
-## Today's agenda
+## Today's agenda {.smaller}
 
 - The midterm
 - What a simulation is, and why you would run one
 - Building a simulation: a curve, plus noise
 - Groups, and how to simulate them
+- Choosing the model, the distribution and the numbers
 - Three worked examples on real data
 
 . . .
@@ -580,6 +581,155 @@ Raising k makes everything easier to see, which is the same lesson as the sd
 exercise earlier.
 :::
 
+## Choosing the pieces {.center}
+
+## Three choices, every time
+
+A simulation needs all three before it will run:
+
+1. **The model.** What shape does the average follow?
+2. **The distribution.** How do observations scatter around it?
+3. **The parameters.** What numbers go in?
+
+. . .
+
+You have done the first two already, on real data. Today they get used in the
+other direction.
+
+::: {.notes}
+Worth naming as a checklist, because a simulation will not run until all three
+are chosen. Vagueness you can get away with when describing data becomes
+impossible when you have to generate it.
+
+That is the hidden benefit of simulating: it catches the places where you have
+not actually decided anything.
+
+One slide each, next.
+:::
+
+## 1. The model: what shape? {.smaller}
+
+From chapter 3, Lectures 9 and 10. Ask three questions of the pattern:
+
+- What happens at the **left end**?
+- What happens at the **right end**?
+- What happens **in between**: rise, fall, peak, level off, switch?
+
+. . .
+
+| Shape | Function |
+|---|---|
+| Straight | $a + bx$ |
+| Rises and levels off | Michaelis-Menten, Holling type II |
+| Humped | Ricker, power-Ricker |
+| Falling | negative exponential |
+| Flat then a switch | hockey stick, threshold |
+
+::: {.notes}
+Deliberately the same three questions as the bestiary slide in Lecture 10, and
+the same table in miniature.
+
+Two routes to a choice, both legitimate: the shape the data have, which is the
+phenomenological route, or the mechanism you believe, which is the mechanistic
+one. The tadpole functional response was both.
+
+If there is no predictor, the answer to "what shape" is a flat line: the
+expected value is the same for every observation. That is a perfectly good
+model, and two of the three worked examples later are exactly that case.
+
+For a simulation there is a third route, which is what you want to test. If the
+question is "could I detect a hump", simulate a hump.
+:::
+
+## 2. The distribution: what kind of number? {.smaller}
+
+From chapter 4, Lecture 12. Eliminate, then check:
+
+- **Discrete or continuous?**
+- **What range?** 0 to 1, 0 upward, any number
+- **What process made it?** Out of a known total, a count with no ceiling,
+  a measurement, a waiting time
+
+. . .
+
+Then **use a number, not an impression**:
+
+- Counts: is the variance bigger than the mean? Poisson or negative binomial
+- Continuous and positive: is the mean far from the median? Lognormal or gamma
+
+::: {.notes}
+The elimination steps are from the "how do you choose" slide in Lecture 12, and
+the two checks are the ones they will use on the midterm.
+
+In R this is the choice between rnorm, rbinom, rpois, rnbinom, rlnorm and so on.
+The r functions are the simulation half of the four-letter family.
+
+Say the pairing out loud: the model sets the mean, the distribution sets the
+scatter around it. On the slides so far that is `mean = y_det` inside rnorm, and
+`mu = y_det` inside rnbinom.
+:::
+
+## 3. The parameters: where do the numbers come from? {.smaller}
+
+You have to put numbers in. Four honest sources:
+
+1. **Pilot data.** Even 10 observations give you a rough mean and spread.
+2. **Published studies** on the same system, or a similar one. Methods sections
+   and figures have numbers in them.
+3. **Your own previous data.** The variance from last season is usually the best
+   guess for next season.
+4. **Biological limits.** A proportion is between 0 and 1, a clutch is not 400
+   eggs, a seedling does not weigh a kilogram.
+
+. . .
+
+And when you genuinely do not know: **try a range** and see whether the answer
+changes.
+
+::: {.notes}
+This is the question students ask as soon as they try it on their own system,
+and it has a reputation for being a dark art. It is not.
+
+Source 1 is the most useful and the most ignored. A single afternoon of pilot
+sampling turns a guess into an estimate, and it also finds the problems with your
+protocol while they are cheap to fix.
+
+The fallback matters just as much: if you cannot pin down a number, run the
+simulation across a plausible range of it. If the conclusion holds across the
+range, the uncertainty did not matter. If it flips, you have learned that this
+number is worth measuring before you commit.
+
+Spreading one parameter across a range and watching the answer move is exactly
+what Thursday does with sample size and noise.
+:::
+
+## The one number nobody can give you
+
+**How big an effect would matter?**
+
+A 2% change in growth rate might be real and still not be worth designing a
+study around.
+
+. . .
+
+Simulate the **smallest effect you would care about**, not the biggest one you
+hope for.
+
+::: {.notes}
+The one parameter no dataset can give them, because it is a judgment about the
+biology, not a measurement.
+
+Why it matters practically: a study powered for a huge effect will miss the
+modest one you are likely to have, and designing around your most optimistic
+guess is the most common way power analyses mislead people.
+
+Ask the room for their own systems. If their study found a difference of X,
+would anyone change what they do? That number is the one to simulate.
+
+Thursday's lecture is built on this: power only means anything once you have
+said how big an effect you want to be able to detect.
+:::
+
 ## Three worked examples, on real data {.center}
 
 ## Example 1: the tadpoles, again
@@ -826,9 +976,38 @@ The habit worth naming: when you are not sure whether a feature in your data is
 real, simulate data without it and see how often the feature shows up anyway.
 :::
 
+## You do not always need a curve {.smaller}
+
+| Example | Deterministic part | Distribution |
+|---|---|---|
+| Tadpoles | Michaelis-Menten curve | binomial |
+| Cardinals | just a mean | negative binomial |
+| Bird masses | just a mean | lognormal |
+
+. . .
+
+A curve is only needed when the expected value **changes with a predictor**.
+With one variable and no predictor, the distribution is the whole model.
+
+::: {.notes}
+Worth being explicit, because the recipe slide said "a curve plus a
+distribution" and two of the three examples had no curve in them.
+
+The tadpoles had a predictor, the number of tadpoles in the tank, so the
+expected number killed changes along it. Cardinals and bird masses are single
+variables: the expected value is the same for every observation, so the
+deterministic part is just a constant.
+
+Both are models. One is `rbinom(n, size, prob = curve(x))`, the other is
+`rnbinom(n, mu = a number, size)`.
+
+Where this comes back: in chapter 6 the constant becomes a parameter to
+estimate, and the two cases stop looking different at all.
+:::
+
 ## What the three examples had in common
 
-1. **Build the data you expected**, from a curve plus a distribution.
+1. **Build the data your model predicts.**
 2. **Compare it to what you actually got.**
 3. **Repeat it**, because one dataset is one draw.
 
