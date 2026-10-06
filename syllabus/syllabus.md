@@ -152,7 +152,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | 11 | Sep 29 T | Probability and Stochastic distributions; R functions for probability, distribution, and summary statistics | Read 4.1 – 4.2, 4.4 |
 | 12 | Oct 1 Th | **Assignment 2: Distributions.** Probability and Stochastic distributions; Working with the bestiary of distributions | Skim 4.5 – 4.6 |
 | 13 | Oct 6 T | Stochastic simulation; Midterm explained | Read 5.1 – 5.2 |
-| 14 | Oct 8 Th | Power analysis | Read 5.3; **Assignment 2 Due** |
+| 14 | Oct 8 Th | Power analysis | Read 5.3; **Assignment 2 Due Fri Oct 9, 11:59 pm** |
 | 15 | Oct 13 T | Likelihood: Parameter estimation | Read 6.1 – 6.2 (6.2.2 is optional); **Midterm due** |
 | 16 | Oct 15 Th | Estimating complex functions | 6.3 (6.3.2 optional) |
 | 17 | Oct 20 T | Confidence intervals; Mid-semester check-in | 6.4 (6.4.2 optional); Skim 6.5 |
