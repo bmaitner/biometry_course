@@ -17,6 +17,7 @@ syllabus/syllabus.pdf
 # rather than rendering it, so committing 2.6 MB of it buys nothing.
 assignments/*.html
 assignments/assignment_3/*.html
+midterm/*.html
 
 # Word lock files
 ~$*
