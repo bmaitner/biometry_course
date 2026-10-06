@@ -19,6 +19,11 @@ library(rmarkdown)
                               pattern = "^Midterm_.*[.]md$",
                               full.names = TRUE)
 
+# Answer keys are deliberately NOT rendered here, so a key never ends up sitting
+# next to the student copy in the same format. Render one by hand if you want it.
+
+  midterm_files <- midterm_files[!grepl("_key[.]md$", midterm_files)]
+
   if (length(midterm_files) == 0) {
     stop("No Midterm_*.md files found. Are you running this from the project root?")
   }
