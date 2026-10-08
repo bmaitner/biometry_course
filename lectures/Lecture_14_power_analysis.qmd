@@ -1102,6 +1102,10 @@ and records the fish seen on each survey.
 reef <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Reef_fish/NCRMP_reef_fish_surveys.csv")
 
 reef$protected <- ifelse(reef$PROT == 0, "no", "yes")
+
+# 8 of the 8560 surveys recorded no fish at all. log(0) is -Inf, which would
+# wreck every summary below, so set them aside.
+reef <- reef[reef$total_abundance > 0, ]
 ```
 :::
 
@@ -1118,6 +1122,16 @@ distribution, and figuring that out is part of the exercise.
 
 PROT has three codes; 0 is unprotected and 1 and 2 are two kinds of protection,
 which is why they get collapsed.
+
+The zeros line is given to them because it is a data-cleaning trap rather than
+the skill being practised, and last year it stopped people before they got to
+the statistics. It is still worth thirty seconds out loud: 8 surveys in 8560 saw
+no fish, log(0) is -Inf, and one -Inf turns a mean into -Inf. Dropping 0.1% of
+the data is defensible here, and the rule is that you say you did it rather than
+quietly filtering.
+
+Worth adding that if they had chosen a gamma instead of a lognormal, zeros would
+break that too, for the same reason.
 :::
 
 ## 1. What is the deterministic part? {background-color="#f0f4f8" .smaller}
@@ -1166,8 +1180,15 @@ Fish per survey is positive, continuous, and right skewed.
 | Candidate | Rule it in or out |
 |---|---|
 | Normal | [allows negatives, and the data are skewed]{.fragment fragment-index=1} |
-| Poisson | [these are not whole numbers]{.fragment fragment-index=2} |
+| Poisson | [these are not whole numbers, see below]{.fragment fragment-index=2} |
 | Lognormal or gamma | [positive, continuous, right skewed: both plausible]{.fragment fragment-index=3} |
+
+**"Abundance" sounds like a count. Check before you assume:**
+
+```{r}
+#| eval: false
+head(sort(unique(reef$total_abundance)))     # 0.0  0.5  1.0  1.5  2.0  2.5
+```
 
 Then **check it the way we checked the Poisson**: make it predict something.
 
@@ -1183,6 +1204,17 @@ ____(500, meanlog = ____, sdlog = ____, lower.tail = FALSE)
 
 ::: {.notes}
 Let them fill the right column before revealing it. Two of the three are quick.
+
+The Poisson row needs explaining, because "abundance" sounds like a count and
+students reasonably reach for a count distribution. These numbers are not raw
+tallies: the monitoring program reports fish per standard survey area, averaged
+over the replicate observations that make up a survey, so halves and decimals
+appear. About half the values in the column are not whole numbers.
+
+The habit worth teaching is the one line on the slide: before choosing a
+discrete distribution, look at whether the values are actually whole numbers.
+Counting *things* does not guarantee the recorded variable is an integer, and
+densities, rates and averages all look like counts in a column name.
 
 The last row is the interesting one, because two candidates survive and the data
 will not strongly separate them. That is normal, and Lecture 12's advice applies:
@@ -1279,6 +1311,8 @@ the point of the last slide.
 #| eval: false
 # one study: draw each group from your distribution
 sim_unprot <- ____(n_per_group, meanlog = meanlog_unprot, sdlog = sdlog_unprot)
+
+# adding log(effect) on the log scale multiplies by effect on the fish scale
 sim_prot   <- ____(n_per_group, meanlog = meanlog_unprot + log(effect),
                    sdlog = sdlog_unprot)
 
@@ -1295,6 +1329,10 @@ mean(found)                               # the power
 ```
 :::
 
+Why **add** when the effect is a ratio? Because
+$e^{\,m + \log 1.5} = 1.5\,e^{\,m}$: a shift on the log scale is a
+multiplication on the original scale.
+
 Then vary `n_per_group`, and find where power reaches **0.8**.
 
 ::: {.notes}
@@ -1305,10 +1343,43 @@ The step people get wrong is the analysis: with a skewed response, comparing the
 groups on the log scale is the sensible choice, and it is also the scale they
 simulated on.
 
+Spend a moment on the adding-versus-multiplying point, because students who are
+shaky on logs will read `meanlog + log(effect)` as adding fish. Say it in
+numbers: meanlog is 4.90, log(1.5) is 0.41, so the protected group has meanlog
+5.31, and exp(5.31) is 201 against exp(4.90) = 134. That is 1.5 times as many
+fish, produced by an addition.
+
+The same identity is why the bobwhite decline was a straight line on the log
+scale: multiplying by 0.97 each year is subtracting 0.03 each year in logs.
+
 Circulate. The question to ask anyone who is stuck is "what would you do if these
 were the real data?", because the answer to that is the answer here.
 
 Anyone who finishes early: what if effort is split unevenly, say 30 and 90?
+:::
+
+## If something breaks {background-color="#f0f4f8" .smaller}
+
+Three things that trip people up here:
+
+- **`-Inf` or `NaN` in your summaries.** Something got logged that should not
+  have been, or a zero slipped through.
+- **Simulated numbers in the millions.** `rlnorm()` wants the mean and sd *of the
+  logs*, not of the raw abundances. Check that your `meanlog` is around 5, not
+  around 150.
+- **Power of 1.00 at every sample size.** Your two groups are probably further
+  apart than you meant. Print the ratio you are simulating.
+
+::: {.notes}
+Put this up once most groups are simulating, or point individuals at it. It is
+deliberately a list of symptoms rather than fixes, so they still do the
+diagnosis.
+
+The second one is the big one and it is worth repeating out loud: meanlog near 5
+means a median around 150 fish, because exp(5) is about 150. Anyone whose
+simulated surveys have ten thousand fish has handed rlnorm a raw mean.
+
+The third catches people who set effect to 15 rather than 1.5.
 :::
 
 ## Check yourself {.smaller}
@@ -1323,11 +1394,11 @@ What the real data say:
 
 . . .
 
-Power to detect a **50% difference**: about [0.27 at n = 20, 0.53 at n = 50,
-0.82 at n = 100]{.fragment fragment-index=4}
+Power to detect a **50% difference**: about [0.27 at n = 20, 0.69 at n = 60,
+0.88 at n = 100]{.fragment fragment-index=4}
 
-Power to detect the **23% difference actually observed**: about [0.46 even at
-n = 200]{.fragment fragment-index=5}
+Power to detect the **23% difference actually observed**: about [0.23 at
+n = 60, and still only 0.65 at n = 200]{.fragment fragment-index=5}
 
 ::: {.notes}
 Reveal these one at a time as groups get there, or at the end if you are short of
@@ -1335,9 +1406,16 @@ time.
 
 The last line is the honest and uncomfortable result, and it is the reason this
 exercise is worth doing. The difference these reefs actually show is about 23%,
-and detecting a difference that size reliably needs hundreds of surveys per
-group. A manager with budget for 60 surveys cannot answer this question, and
-knowing that in advance is worth more than running it and getting a shrug.
+and reaching 0.8 for an effect that size takes roughly 400 surveys per group. A
+manager with 120 surveys to spend cannot answer this question, and knowing that
+in advance is worth more than running it and getting a shrug.
+
+The 60 per group they were given lands at about 0.69 for a 50% difference and
+0.23 for the real one.
+
+Expect their numbers to differ in the second decimal. 500 simulations gives a
+power estimate good to about plus or minus 0.02, which is worth saying: the
+simulation has sampling error too.
 
 Two things worth drawing out if there is time:
 

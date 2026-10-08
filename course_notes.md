@@ -310,6 +310,24 @@ told them to type.
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
 
+**Lecture 14's reef exercise was not finished, and that was fine.** Students
+found the open-ended version hard, and Brian judged the struggle productive: the
+deck hands them the five decisions and a skeleton with blanks, but no function
+names. Keep that balance rather than filling it in.
+
+Two changes after teaching it. The setup block now drops the 8 surveys out of
+8560 that recorded no fish, because `log(0)` is `-Inf` and it stopped people
+before they reached any statistics, which is a data-cleaning trap rather than the
+skill being practised. And an "If something breaks" slide lists the three
+symptoms to expect, including handing `rlnorm()` a raw mean instead of a log
+mean, without giving the fixes.
+
+There is now a separate student-facing solutions deck,
+`Lecture_14_reef_exercise_solutions.qmd`, to post after class, plus a gitignored
+`R_scripts/Lecture_14_reef_solution.R`. Worth repeating for other open-ended
+exercises: the solution deck removes the "did I get it right" anxiety without
+removing the struggle.
+
 **Lecture 13 got through all of its material**, in spite of the data-loading
 problem below, and the timing looks about right for the period once the setup
 slide is in. That ends the run of short lectures: 30, 40 and 50 minutes early for

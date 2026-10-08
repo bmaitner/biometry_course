@@ -58,7 +58,8 @@ contains two stations, which are separate surveys a few metres apart.
   REGION_DESCRIPTION     one of the three regions above
   PROT                   protection code, 0, 1 or 2. See the warning below
   MPA_NAME               marine protected area, or "Unprotected"
-  total_abundance        all fish counted, summed over species and length bins
+  total_abundance        all fish recorded, summed over species and length bins.
+                         NOT a whole number: see "Fractional abundances" below
   species_richness       number of species recorded, 0 to 68
 
 There are no missing values in this file.
@@ -72,7 +73,8 @@ zeros kept so that absences are visible.
 
   survey_id    joins to NCRMP_reef_fish_surveys.csv
   SPECIES_CD   species code, joins to NCRMP_reef_fish_species_list.csv
-  abundance    fish counted, summed over length bins
+  abundance    fish recorded, summed over length bins. Also fractional: see
+               "Fractional abundances" below
 
 Deliberately narrow. Join it to the surveys file to get depth, habitat and the
 rest:
@@ -114,3 +116,26 @@ One result worth chasing: underwater visibility is a strong positive predictor o
 species richness. Before concluding anything ecological, ask whether that is
 about the reef or about how far the diver could see. Distinguishing the thing you
 are measuring from the way you measured it is the whole of chapter 1.
+
+
+Fractional abundances
+---------------------
+
+**The abundance columns are not integers, and should not be modelled as counts.**
+
+About 52% of `total_abundance` values and 35% of the positive species-level
+`abundance` values are not whole numbers. The commonest fractional part is 0.5,
+but thirds and other fractions appear too, and the smallest positive values
+include 0.33, 0.41, 0.5 and 0.62.
+
+ERDDAP documents the underlying field, NUM, as "the number of individuals of a
+given species and length observed in a secondary sampling unit", but the values
+delivered are averages or densities across the sampling units that make up a
+survey rather than raw tallies. We did not do that averaging: it arrives that
+way, and summing over species and length bins preserves it.
+
+The practical consequence, which is also why Lecture 14 uses this file: a
+discrete distribution such as the Poisson or negative binomial is wrong for
+these columns, despite the word "abundance". A positive continuous distribution,
+lognormal or gamma, is the right family. `species_richness` is a genuine count
+and can take a discrete distribution.

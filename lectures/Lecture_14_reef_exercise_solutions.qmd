@@ -1,0 +1,214 @@
+---
+title: "Reef exercise: worked solution"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 14"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+set.seed(3)
+```
+
+## How to use this
+
+One possible answer to the reef exercise, with the code filled in.
+
+. . .
+
+**Your answers will differ**, and that is fine. Two places where a different
+choice is just as defensible are flagged as we go.
+
+What matters is that each decision was made for a reason you could state.
+
+::: {.notes}
+Posted after class so students can check their own work rather than wonder.
+:::
+
+## Setting up
+
+```{r}
+reef <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Reef_fish/NCRMP_reef_fish_surveys.csv")
+
+reef$protected <- ifelse(reef$PROT == 0, "no", "yes")
+
+# 8 of 8560 surveys recorded no fish, and log(0) is -Inf
+reef <- reef[reef$total_abundance > 0, ]
+
+unprot <- reef$total_abundance[reef$protected == "no"]
+prot   <- reef$total_abundance[reef$protected == "yes"]
+
+c(unprotected = length(unprot), protected = length(prot))
+```
+
+## 1. The deterministic part {.smaller}
+
+```{r}
+#| fig-height: 2.3
+#| fig-width: 9
+par(mfrow = c(1, 2))
+hist(unprot, breaks = 40, main = "raw", xlab = "fish per survey")
+hist(log(unprot), breaks = 40, main = "logged", xlab = "log fish per survey")
+```
+
+Raw is strongly right skewed, logged is near symmetric. So describe the effect
+as a **ratio**, not a difference.
+
+```{r}
+c(median_unprot = median(unprot), median_prot = median(prot),
+  ratio = median(prot) / median(unprot))
+```
+
+::: {.notes}
+A ratio also travels better: "50% more fish" means the same thing at any reef,
+while "73 more fish per survey" does not.
+:::
+
+## 2. The distribution {.smaller}
+
+Positive, continuous, right skewed, symmetric once logged: **lognormal**.
+Gamma would also have been defensible.
+
+The check, on something we did not fit:
+
+```{r}
+mean(unprot > 500)                                     # observed
+
+plnorm(500, meanlog = mean(log(unprot)),
+       sdlog = sd(log(unprot)), lower.tail = FALSE)    # predicted
+```
+
+Same ballpark. The lognormal slightly **over-predicts** very rich surveys, which
+is worth noticing rather than hiding.
+
+::: {.notes}
+Anyone who chose gamma and checked it the same way has done the exercise
+correctly. The checking is the skill, not the answer.
+:::
+
+## 3. The parameters
+
+```{r}
+meanlog_unprot <- mean(log(unprot))
+sdlog_unprot   <- sd(log(unprot))
+
+meanlog_prot <- mean(log(prot))
+sdlog_prot   <- sd(log(prot))
+
+round(c(meanlog_unprot = meanlog_unprot, sdlog_unprot = sdlog_unprot,
+        meanlog_prot = meanlog_prot, sdlog_prot = sdlog_prot), 2)
+```
+
+The two spreads are nearly identical, so one spread can be used for both groups.
+
+`meanlog` is about 5 because `exp(5)` is about 150 fish. If yours was near 150,
+you handed `rlnorm()` a raw mean.
+
+## 4. The choices
+
+```{r}
+n_per_group <- 60      # 120 surveys, split evenly
+effect <- 1.5          # detect a 50% difference
+```
+
+Neither of these came from the data. The budget is the agency's, and the effect
+size is a judgement about what difference would matter.
+
+::: {.notes}
+An even split is the right default when the two groups have the same spread.
+:::
+
+## 5. Simulate, analyze, repeat {.smaller}
+
+```{r}
+power_reef <- function(n_per_group, effect, nsim = 500,
+                       meanlog = meanlog_unprot, sdlog = sdlog_unprot) {
+
+  found <- numeric(nsim)
+
+  for (i in 1:nsim) {
+
+    sim_unprot <- rlnorm(n_per_group, meanlog = meanlog, sdlog = sdlog)
+    sim_prot   <- rlnorm(n_per_group, meanlog = meanlog + log(effect),
+                         sdlog = sdlog)
+
+    found[i] <- t.test(log(sim_unprot), log(sim_prot))$p.value < 0.05
+
+  }
+
+  mean(found)
+
+}
+
+power_reef(n_per_group = 60, effect = 1.5)
+```
+
+::: {.notes}
+The comparison is on the log scale, which is both where the data are symmetric
+and where the effect is a constant shift. A t-test on raw abundance would also
+run, and would have less power.
+:::
+
+## How many surveys do you need?
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 7
+ns <- c(20, 40, 60, 100, 200, 400)
+p50 <- sapply(ns, power_reef, effect = 1.5)
+p23 <- sapply(ns, power_reef, effect = 1.23)
+plot(ns, p50, type = "b", pch = 16, lwd = 2, ylim = c(0, 1), col = "firebrick",
+     xlab = "surveys per group", ylab = "power")
+lines(ns, p23, type = "b", pch = 16, lwd = 2, col = "steelblue")
+abline(h = 0.8, lty = 2, col = "blue")
+text(20, 0.85, "0.8: the usual target", col = "blue", cex = 0.9, adj = 0)
+legend("right", lwd = 2, pch = 16, col = c("firebrick", "steelblue"), bty = "n",
+       legend = c("50% difference", "23%: what these reefs show"))
+```
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(surveys_per_group = ns,
+                        power_50pct = round(p50, 2),
+                        power_23pct = round(p23, 2)))
+```
+
+## What this tells the manager {.smaller}
+
+- A **50% difference** is detectable with roughly **80 to 100 surveys per
+  group**.
+- The difference these reefs actually show, about **23%**, needs roughly
+  **400 per group**.
+- With the 120 surveys on offer, split evenly, power for the real difference is
+  around **0.2**.
+
+. . .
+
+So: protection may well work, and this survey could not show it.
+**Failing to detect is not evidence of no effect.**
+
+::: {.notes}
+That last line is the third warning from the lecture, met in a real case.
+
+The useful advice to a manager is not "do the survey anyway". It is either find
+more budget, pick a more sensitive response than total abundance, or accept that
+the study answers a different question.
+:::
