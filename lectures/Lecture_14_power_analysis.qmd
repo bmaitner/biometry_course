@@ -1,0 +1,1384 @@
+---
+title: "Power analysis"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 14"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+bbs <- read.csv("../data/BBS/FL_BBS.csv")
+bobwhite <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
+set.seed(2026)
+
+power_design <- function(n_routes, n_years, decline = 0.03, mu0 = 10.8,
+                         size = 1.15, nsim = 500) {
+  mean(replicate(nsim, {
+    yr <- rep(0:(n_years - 1), each = n_routes)
+    cnt <- rnbinom(length(yr), mu = mu0 * (1 - decline)^yr, size = size)
+    m <- lm(log(cnt + 1) ~ yr)
+    summary(m)$coefficients["yr", "Pr(>|t|)"] < 0.05 && coef(m)["yr"] < 0
+  }))
+}
+```
+
+## Today's agenda {.smaller}
+
+- A real design problem: monitoring a declining bird
+- What power is
+- Simulating a monitoring program
+- **You choose the design**
+- What actually drives power
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Chapter 5.3, and Part 3 of the midterm.
+
+The whole lecture is one real problem, worked end to end, with a design decision
+in the middle that they make before seeing the answer.
+:::
+
+## The problem {.center}
+
+## Meet the Northern Bobwhite {.smaller}
+
+:::: {.columns}
+
+::: {.column width="46%"}
+![](figures/northern_bobwhite.jpg)
+
+[*Colinus virginianus*]{style="font-size:0.7em"}<br>
+[Photo: USFWS, public domain]{style="font-size:0.45em; color:#777"}
+:::
+
+::: {.column width="52%"}
+- A ground-nesting quail of **pine savanna, old fields and field edges**
+- Lives in coveys, eats seeds and insects, named for its whistled call
+- One of the **most hunted game birds** in the southeast
+- Needs open, frequently burned understory
+
+. . .
+
+Fire suppression, denser pine plantations and intensive agriculture have taken
+most of that habitat away.
+:::
+
+::::
+
+::: {.notes}
+Thirty seconds of natural history, so the numbers later are about an animal
+rather than a column.
+
+Male and female in the photo: the male has the bold white throat and eyebrow
+stripe, the female the buff version.
+
+Why it is a good monitoring example: it is economically important, so somebody
+will actually pay for the survey, and it is strongly tied to a habitat that
+management can change, so the monitoring could inform a decision. That is the
+difference between a survey and a science project.
+
+Anyone who has spent time in longleaf pine country has probably heard one, even
+if they have not seen one.
+:::
+
+## Northern Bobwhite are disappearing
+
+```{r}
+#| echo: false
+#| fig-height: 3.1
+#| fig-width: 6.4
+yr <- aggregate(total_sightings ~ Year, data = bobwhite, FUN = mean)
+plot(yr$Year, yr$total_sightings, pch = 16, col = "grey25",
+     xlab = "year", ylab = "mean count per route")
+abline(lm(total_sightings ~ Year, data = yr), col = "red", lwd = 3)
+```
+
+Florida Breeding Bird Survey, 1996 to 2019: about **3% fewer each year**.
+
+::: {.notes}
+Real data, the same BBS file from the last two lectures, and a real conservation
+problem. Northern Bobwhite has declined across its range and is a species of
+management concern in Florida.
+
+A 3% annual decline compounds: that is roughly a halving in 23 years.
+
+This decline took 24 years of survey data across dozens of routes to establish
+confidently. That is the fact the rest of the lecture is about.
+:::
+
+## Your job
+
+A state agency wants to monitor bobwhite on managed land.
+
+They can fund about **400 route-visits** in total.
+
+. . .
+
+**How should they spend them?**
+
+- Many routes for a few years?
+- Few routes for many years?
+- Something in between?
+
+. . .
+
+You will choose, and then we will find out who was right.
+
+::: {.notes}
+Set this up as a real decision with a fixed budget, because that is what makes it
+a design problem rather than an arithmetic problem. A route-visit is one route
+surveyed in one year, so 40 routes for 10 years and 20 routes for 20 years cost
+the same.
+
+Tell them the vote is coming. Knowing that a commitment is required changes how
+they listen to the next few slides.
+:::
+
+## What is power? {.center}
+
+## Four outcomes
+
+| | $H_0$ is true | $H_0$ is false |
+|---|---|---|
+| **Reject $H_0$** | false positive, $\alpha$ | correct, **power** |
+| **Do not reject** | correct, $1 - \alpha$ | miss, $\beta$ |
+
+. . .
+
+**Power = the probability of detecting an effect that is really there.**
+
+Here: the chance the monitoring program finds the decline, given that bobwhite
+really are declining.
+
+::: {.notes}
+The table is worth drawing slowly. Alpha is the one everybody knows, 0.05, and
+it is about the world where nothing is happening. Power is about the world where
+something is.
+
+Most studies control alpha carefully and never think about power at all, which
+is how fields end up full of underpowered studies that cannot settle anything.
+
+Power is only defined once you say how big an effect you care about, which is
+the point from Tuesday.
+:::
+
+## Power in a broader sense
+
+Rather than fixating on p-values, ask:
+
+- How does the **amount** of data change my answer?
+- How does the **quality** of the data change my answer?
+- How do I trade cost against what I can learn?
+
+. . .
+
+Other things worth simulating: **bias**, **precision**, **confidence interval
+width**, **coverage**.
+
+::: {.notes}
+Power is the famous one, but the same simulation gives all of these, and some are
+more useful. If the question is "how precisely could we estimate the rate of
+decline", then CI width is the answer, not power.
+
+Coverage is a good diagnostic for a method: simulate 1000 datasets, build a 95%
+interval each time, and check that about 95% of them contain the true value. If
+they do not, the method is broken.
+
+This slide is also a menu for the final project for anyone who wants to go
+further than the midterm.
+:::
+
+## Building the simulation {.center}
+
+## Three things to decide
+
+To simulate a monitoring program we have to say:
+
+1. **How does the population change over time?** The deterministic part.
+2. **How do counts vary around that?** The distribution.
+3. **What numbers go in?** The parameters.
+
+. . .
+
+None of this is guesswork. The BBS data can answer all three.
+
+::: {.notes}
+Same three decisions as Tuesday, now on a real problem. Say that they are being
+made deliberately rather than assumed, because the whole answer depends on them.
+
+If any of the three is badly wrong, the power estimate is worthless. That is the
+honest limitation of every power analysis, and it is why using real data for the
+parameters matters.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+bobwhite <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
+
+nrow(bobwhite)      # should be 1360 route-years
+
+head(bobwhite[, c("Year", "Route", "total_sightings")])
+```
+:::
+
+::: {.notes}
+Two or three minutes. The file is about 15 MB, so start it before talking.
+
+Load it now, because the next four slides use it to decide what to simulate
+rather than asserting the answers.
+
+One row per route per year: 1360 route-years across 24 years.
+
+If anyone still has bbs loaded from Tuesday, they can skip the download.
+:::
+
+## 1. What shape is a decline? {.smaller}
+
+:::: {.columns}
+
+::: {.column width="47%"}
+**Linear: lose the same number**
+
+$$\mu_t = \mu_0 - c\,t$$
+
+Reasonable if the loss is driven by something outside the population: a fixed
+area of habitat cleared each year.
+
+Reaches zero, then goes negative.
+:::
+
+::: {.column width="47%"}
+**Exponential: lose the same fraction**
+
+$$\mu_t = \mu_0\,(1 - d)^{\,t}$$
+
+Reasonable if births and deaths scale with how many birds there are, which is
+how populations usually work.
+
+Approaches zero, never crosses it.
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.4
+#| fig-width: 6.6
+t <- 0:30
+plot(t, 10.8 - 0.324 * t, type = "l", lwd = 3, col = "grey50", ylim = c(0, 12),
+     xlab = "years from now", ylab = "expected count per route")
+lines(t, 10.8 * 0.97^t, lwd = 3, col = "red")
+abline(h = 0, lty = 3)
+legend("topright", lwd = 3, col = c("grey50", "red"), bty = "n", cex = 0.9,
+       legend = c("linear, c = 0.32", "exponential, d = 0.03"))
+```
+
+::: {.notes}
+Both curves start at the same place and lose the same amount in year one, by
+construction: 3% of 10.8 is 0.32. They end up in very different places.
+
+We take the exponential, for the reason in the right column: a population of 10
+birds cannot keep losing 0.32 birds a year forever. The same argument is why
+population biology is written in rates rather than numbers.
+
+Worth saying that the linear version is not silly. If the driver is habitat
+being cleared at a fixed rate, losing a constant number is the better model, and
+over a short window the two are nearly identical anyway, which the figure shows
+for the first few years.
+
+This is the multiplicative idea from Lecture 12, the one that makes things
+lognormal, showing up here as a process rather than a distribution.
+
+In R: `mu0 - c * t` and `mu0 * (1 - d)^t`.
+:::
+
+## Which shape does the data support? {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.7
+#| fig-width: 6.6
+ymeans <- aggregate(total_sightings ~ Year, data = bobwhite, FUN = mean)
+ymeans$t <- ymeans$Year - min(ymeans$Year)
+lin <- lm(total_sightings ~ t, data = ymeans)
+expo <- lm(log(total_sightings) ~ t, data = ymeans)
+plot(ymeans$Year, ymeans$total_sightings, pch = 16, col = "grey30",
+     xlab = "year", ylab = "mean count per route")
+lines(ymeans$Year, predict(lin), col = "grey45", lwd = 3)
+lines(ymeans$Year, exp(predict(expo)), col = "red", lwd = 3)
+legend("topright", lwd = 3, col = c("grey45", "red"), bty = "n", cex = 0.9,
+       legend = c("linear, SS = 28.6", "exponential, SS = 28.1"))
+```
+
+Over 24 years, the data **cannot tell them apart**.
+
+. . .
+
+So choose on what they do **outside** the data: the linear model hits zero in
+2041. We are extrapolating 20 years, so the choice matters.
+
+::: {.notes}
+Fit both to the real yearly means and the residual sums of squares are 28.6 and
+28.1. That is a tie, and it is the honest outcome: 24 years of a gentle decline
+is not enough curvature to distinguish a line from an exponential.
+
+So the fit does not decide it, which is a useful thing for students to see. Two
+other things do:
+
+- **Mechanism.** Losing a constant fraction follows from births and deaths being
+  proportional to abundance. Losing a constant number does not follow from
+  anything, unless an outside process is removing a fixed amount.
+- **Extrapolation.** We are about to simulate 20 years forward. The linear model
+  predicts zero bobwhite in 2041 and negative numbers after that. The exponential
+  predicts about 4.4 birds per route after 40 years.
+
+The general lesson, and it is Bolker's: when two models fit equally well, pick
+the one whose assumptions you believe, especially if you are going to ask it
+questions outside the range of the data.
+:::
+
+## 2. What distribution for the counts? {.smaller}
+
+Counts of birds on a route: whole numbers, no ceiling, and **clumped**, because
+habitat varies from route to route.
+
+| Candidate | Why not |
+|---|---|
+| Normal | counts are whole numbers and cannot be negative |
+| Poisson | requires variance = mean |
+| **Negative binomial** | counts, no ceiling, variance can exceed the mean |
+
+. . .
+
+Normal is out on sight. **Poisson makes a claim we can test.**
+
+::: {.notes}
+The elimination procedure from Lecture 12. Normal goes immediately: these are
+whole numbers and cannot be negative.
+
+Poisson is the interesting one, because it is the obvious choice for counts and
+it stakes a claim: variance equals mean. The next slide checks it against the
+real data instead of taking anyone's word for it.
+:::
+
+## Testing the Poisson claim {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+counts_real <- bobwhite$total_sightings
+
+mean(counts_real)
+var(counts_real)
+
+mean(counts_real >= 40)                            # observed
+
+ppois(39, lambda = mean(counts_real), lower.tail = FALSE)   # Poisson says
+```
+:::
+
+| | observed | Poisson says |
+|---|---|---|
+| variance | [111]{.fragment fragment-index=1} | [11]{.fragment fragment-index=2} |
+| P(count $\geq$ 40) | [0.024]{.fragment fragment-index=1} | [0.000000000007]{.fragment fragment-index=2} |
+
+[A Poisson is **fixed once you know the mean**: its variance *is* the mean, and
+`ppois()` needs nothing else. That is why it has no way to match these data.
+The negative binomial has a second parameter, so it has a chance.]{.fragment fragment-index=3}
+
+::: {.notes}
+Four minutes on the code, then fill the table in with the arrow key, so each
+number arrives after the room has produced it.
+
+- **First press:** the observed column, from their own output.
+- **Second press:** what a Poisson predicts, also on their screen.
+- **Third press:** the sentence underneath.
+
+Worth asking them to guess the Poisson number before the second press. The gap
+between any guess and 7 x 10^-12 is the lesson.
+
+The Poisson is not slightly wrong, it is wrong by ten orders of magnitude on the
+thing that matters. It has one parameter and the data have already used it up on
+the mean.
+
+Do not show the negative binomial yet. It needs a second parameter, which is the
+next slide, and then we come back and run the same test on it.
+
+Read the last row out loud. About one route-year in forty has 40 or more
+bobwhite. A Poisson with this mean says that happens once in 150 billion. The
+negative binomial, with its clumping parameter estimated from these same data,
+says one in forty-three.
+
+That is a model check in the Lecture 13 sense: ask the candidate to predict
+something, then look.
+
+The predictions come from the p functions in Lecture 12's four-letter family.
+`ppois(39, lambda, lower.tail = FALSE)` is on the slide for the Poisson column.
+The negative binomial column is `pnbinom(39, mu = 10.8, size = 1.15,
+lower.tail = FALSE)`, and the 1.15 is the clumping parameter from the next
+slide, so it is worth coming back to this table after they have estimated it.
+
+Nobody is fitting anything yet. The Poisson prediction needs no fitting at all,
+because the mean determines everything about it, which is the point of the
+sentence under the table.
+
+One honest caveat about this file: it only contains rows for routes where the
+species was seen, so there are no true zeros in it. Our simulation will generate
+some, which makes it slightly pessimistic.
+:::
+
+## 3. The parameters come from the data {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+mu0 <- mean(bobwhite$total_sightings)
+v <- var(bobwhite$total_sightings)
+
+size <- mu0^2 / (v - mu0)
+
+round(c(mean = mu0, variance = v, size = size), 2)
+
+mu0 + mu0^2 / size          # the variance this negative binomial implies
+```
+:::
+
+| Parameter | Value | Where it came from |
+|---|---|---|
+| $\mu_0$, starting mean | 10.8 | the data |
+| $k$, clumping | 1.15 | the data, by matching the variance |
+| $d$, annual decline | 0.03 | the published trend, **the effect we want to detect** |
+
+::: {.notes}
+Method of moments: set the distribution's mean and variance equal to the data's,
+then solve for size.
+
+The last line is the check that it worked. A negative binomial with this mean and
+this size has variance mu + mu^2/k, which comes back as 111, the variance we
+started from. That is not a coincidence and it is not evidence either: we chose
+size to make it true. The real test is the next slide.
+
+The table is worth pausing on, because the three parameters have different
+statuses. Two are estimates from survey data. The third, d, is a choice: it is
+the effect we want the program to be able to detect, taken from the published
+trend. Nothing in the data forced it, and if we cared about a 1% decline we would
+need a very different program, which we check later.
+
+That distinction is Tuesday's "one number nobody can give you".
+:::
+
+## Does the negative binomial pass the same test? {background-color="#f0f4f8" .smaller}
+
+The variance matches, but we **made** it match. Try something we did not fit:
+
+::: {.type-it}
+```{r}
+#| eval: false
+pnbinom(39, mu = mu0, size = size, lower.tail = FALSE)
+```
+:::
+
+| | observed | Poisson said | Negative binomial says |
+|---|---|---|---|
+| variance | 111 | 11 | 111, by construction |
+| P(count $\geq$ 40) | 0.024 | 0.000000000007 | [0.023]{.fragment fragment-index=1} |
+
+[Nothing in the fitting used the tail. **That** is a real test, and it
+passes.]{.fragment fragment-index=2}
+
+::: {.notes}
+Three minutes, and the payoff for having estimated `size` on the last slide.
+
+Ask them to predict before the reveal: the Poisson was out by a factor of three
+billion on this row, so what will the negative binomial do?
+
+The answer is 0.023 against 0.024 observed. Nothing in the fitting used how often
+counts exceed 40, so this is a genuine prediction rather than a restatement of
+the input, which is what makes it worth something.
+
+This is the Lecture 13 idea stated carefully: a model check is only informative
+about the parts of the data you did not use to fit it.
+
+So: Poisson rejected, negative binomial survives, and we have the numbers we
+need.
+:::
+
+## The model, in one place {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Math**
+
+Expected count in year $t$:
+
+$$\mu_t = \mu_0\,(1 - d)^{\,t}$$
+
+Counts around it:
+
+$$y_t \sim \text{NegBinomial}(\mu_t,\; k)$$
+
+with $\mu_0 = 10.8$, $d = 0.03$, $k = 1.15$.
+:::
+
+::: {.column width="48%"}
+**R**
+
+```{r}
+#| eval: false
+mu <- mu0 * (1 - d)^year
+
+counts <- rnbinom(n = length(year),
+                  mu = mu,
+                  size = k)
+```
+
+**How we will analyze it**
+
+```{r}
+#| eval: false
+lm(log(counts + 1) ~ year)
+```
+:::
+
+::::
+
+::: {.notes}
+The three decisions assembled. Chapter 3 gives the curve, chapter 4 gives the
+scatter, and the data gave the numbers.
+
+Why log the counts for fitting: a constant fractional decline is a straight line
+on a log scale, so a test of the slope is a test for decline. The +1 is there
+because these counts include zeros and log(0) is undefined.
+
+That transform is a compromise and it is worth admitting: it biases the estimated
+rate slightly toward zero. Chapter 9 fits this properly with a GLM. Nothing today
+turns on the difference.
+
+Next three slides build this up one line at a time.
+:::
+
+## What we are actually choosing {.smaller}
+
+The model is settled. What is **not** settled is the survey itself.
+
+:::: {.columns}
+
+::: {.column width="48%"}
+**Fixed:** the budget
+
+$$\text{routes} \times \text{years} = 400$$
+
+One route surveyed in one year is one visit, and the agency can pay for 400 of
+them.
+:::
+
+::: {.column width="48%"}
+**Yours to choose:** the allocation
+
+- Many routes, few years? **Space**
+- Few routes, many years? **Time**
+:::
+
+::::
+
+. . .
+
+The model says what the birds do. The **design** says where and when you look.
+
+::: {.notes}
+Bring them back to the actual decision before the mechanics start, because the
+last six slides were about bobwhite and distributions and it is easy to lose the
+thread.
+
+Say the separation plainly, because it is the idea the whole lecture turns on:
+mu0, k and d describe the population and are not ours to change. Routes and years
+describe the survey and are entirely ours to change. Power depends on both.
+
+The constraint is what makes it interesting. Without a budget the answer is
+always "collect more data", which is true and useless.
+
+Next three slides build one design, 40 routes for 10 years, and then they vote
+on how to spend the 400 visits.
+:::
+
+## Step 1: the expected counts {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+mu0 <- 10.8
+k <- 1.15
+d <- 0.03
+
+n_routes <- 40
+n_years <- 10
+
+year <- rep(0:(n_years - 1), each = n_routes)
+
+mu <- mu0 * (1 - d)^year
+
+plot(year, mu, ylim = c(0, 12))
+```
+:::
+
+400 route-visits: 40 routes, each surveyed for 10 years. No randomness yet.
+
+::: {.notes}
+Three minutes. This is the deterministic part on its own, which is the same way
+Lecture 13 started.
+
+Point at the year vector: `rep(0:9, each = 40)` gives 40 routes in year 0, 40 in
+year 1, and so on, which is what a monitoring program actually produces.
+
+The plot is a smooth curve because every route in a given year has the same
+expectation. All the differences between routes are about to come from the
+distribution.
+:::
+
+## Step 2: add the noise {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+counts <- rnbinom(n = length(year), mu = mu, size = k)
+
+plot(jitter(year), counts)
+points(year, mu, col = "red", pch = 16)
+```
+:::
+
+That is **one monitoring program**: 400 counts, and the truth in red.
+
+::: {.notes}
+Three minutes. Have them run it several times before moving on.
+
+jitter() spreads the points horizontally so overlapping counts are visible. Worth
+naming, they will want it again.
+
+The reaction to aim for: the red curve is a gentle decline and the black points
+look like a cloud. If you did not know the answer, you would not see it by eye.
+That is the whole problem, and it is why we need the test rather than a look.
+:::
+
+## Step 3: analyze it like real data {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+m <- lm(log(counts + 1) ~ year)
+
+summary(m)$coefficients["year", ]
+```
+:::
+
+Two things to read:
+
+- Is the **slope** negative, as it should be?
+- Is **`Pr(>|t|)`** below 0.05?
+
+::: {.notes}
+Five minutes, and the step students skip when left alone: analyze the fake data
+exactly as you would analyze the real thing.
+
+The true slope is log(0.97) = -0.031, so a correct answer is a small negative
+number. Someone will get a positive one, which is the point of the next slide.
+
+Have a few people call out their p-value. The spread across the room is the
+lesson, and it is free.
+:::
+
+## Four programs, four answers
+
+```{r}
+#| echo: false
+#| fig-height: 3.3
+#| fig-width: 9
+set.seed(11)
+par(mfrow = c(1, 4), mar = c(3.2, 3.2, 2.2, 0.5), mgp = c(1.9, 0.6, 0))
+yrv <- rep(0:9, each = 40)
+for (i in 1:4) {
+  cnt <- rnbinom(length(yrv), mu = 10.8 * 0.97^yrv, size = 1.15)
+  mm <- lm(log(cnt + 1) ~ yrv)
+  p <- summary(mm)$coefficients["yrv", "Pr(>|t|)"]
+  plot(jitter(yrv, 0.6), log(cnt + 1), pch = 16, cex = 0.5,
+       col = rgb(0, 0, 0, 0.35), xlab = "year", ylab = "log(count + 1)",
+       main = sprintf("p = %.3f", p),
+       col.main = if (p < 0.05) "firebrick" else "grey30")
+  abline(mm, col = if (p < 0.05) "firebrick" else "grey40", lwd = 3)
+}
+```
+
+Same truth, same design, four runs. **One detected it. Two slope the wrong way.**
+
+::: {.notes}
+This is the slide to slow down on.
+
+Every one of these programs ran for 10 years on 40 routes while the population
+really was declining at 3% a year. One of them found it. Two of them came back
+suggesting an increase.
+
+That is not a mistake by the analyst, it is what 400 noisy counts can support.
+Anyone who has wondered why monitoring programs disagree has their answer.
+
+It also makes the next step obvious: you cannot judge a design from one run.
+:::
+
+## One study is not enough
+
+Power is the **proportion** of programs that find the decline. So run many:
+
+```{r}
+#| eval: false
+nsim <- 500
+found <- numeric(nsim)
+
+for (i in 1:nsim) {
+
+  counts <- rnbinom(n = length(year), mu = mu, size = k)
+  m <- lm(log(counts + 1) ~ year)
+
+  found[i] <- summary(m)$coefficients["year", "Pr(>|t|)"] < 0.05
+
+}
+
+mean(found)      # this is the power
+```
+
+::: {.notes}
+The for loop from Lecture 7, now with a reason to exist.
+
+Three parts worth naming: create an empty vector, fill one slot per pass,
+summarize at the end. That is the shape of every simulation loop, and it is what
+the midterm skeleton does.
+
+mean() of TRUE and FALSE gives the proportion that are TRUE, which is worth
+pointing out.
+:::
+
+## Reading the output {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 6.8
+set.seed(21)
+yrv <- rep(0:9, each = 40)
+res <- replicate(500, {
+  cnt <- rnbinom(length(yrv), mu = 10.8 * 0.97^yrv, size = 1.15)
+  mm <- lm(log(cnt + 1) ~ yrv)
+  c(coef(mm)["yrv"], summary(mm)$coefficients["yrv", "Pr(>|t|)"])
+})
+pw <- mean(res[2, ] < 0.05 & res[1, ] < 0)
+hist(res[1, ], breaks = 30, col = "grey85", main = "",
+     xlab = "estimated slope of log count on year")
+abline(v = log(0.97), col = "red", lwd = 3)
+```
+
+500 programs. True slope in red. **About a third** landed far enough from zero to
+be called significant.
+
+::: {.notes}
+The loop gives one number, the power, but the distribution behind it is worth
+seeing. It is the same figure as Tuesday's 10-sites-against-40 slide, on a real
+problem.
+
+Three things to point at:
+
+- The estimates are centered near the truth, so the method is roughly unbiased,
+  though the log(x+1) transform pulls it slightly toward zero.
+- A noticeable share are on the wrong side of zero, which is the two wrong-way
+  panels from the last slide.
+- Power is just the proportion of this histogram that clears the significance
+  threshold.
+
+If anyone asks why not report the mean estimate instead: that is a better
+question than it sounds, and precision, the width of this histogram, is often
+more useful than power.
+:::
+
+## Your turn: compute the power of one design {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+year <- rep(0:9, each = 40)       # 40 routes, 10 years
+mu <- 10.8 * (1 - 0.03)^year
+
+found <- numeric(500)
+
+for (i in 1:500) {
+  counts <- rnbinom(n = length(year), mu = mu, size = 1.15)
+  m <- lm(log(counts + 1) ~ year)
+  found[i] <- summary(m)$coefficients["year", "Pr(>|t|)"] < 0.05
+}
+
+mean(found)
+```
+:::
+
+400 route-visits. **Would you fund this program?**
+
+::: {.notes}
+Six minutes. Everyone should land near 0.36, give or take sampling noise.
+
+Then ask the question and let them sit with it. A program that costs 400
+route-visits and has a one in three chance of detecting a decline that is really
+happening is not a good use of public money, and most of them will feel that
+before they can say why.
+
+Nobody should change the design yet. That is the next slide, and the vote has to
+come first.
+:::
+
+## The decision {.center}
+
+## Same budget, four designs {background-color="#f0f4f8"}
+
+All cost **400 route-visits**. Which would you fund?
+
+| | Routes | Years |
+|---|---|---|
+| **A** | 200 | 2 |
+| **B** | 80 | 5 |
+| **C** | 40 | 10 |
+| **D** | 20 | 20 |
+
+**Commit to one before we run it.** Hands up for each.
+
+::: {.notes}
+The commitment matters, so take the vote properly: hands up for A, B, C, D, and
+write the counts on the board. A show of hands they have to hold makes the
+reveal land in a way that a rhetorical question does not.
+
+Ask one person from each camp to say why in a sentence. Common reasoning: more
+routes means a bigger sample and better averages, which is the intuition the
+next slide overturns.
+
+Expect most votes on B and C. In my experience almost nobody picks D, which is
+the right answer.
+:::
+
+## The answer
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 7
+set.seed(14)
+designs <- data.frame(label = c("A\n200 x 2", "B\n80 x 5", "C\n40 x 10", "D\n20 x 20"),
+                      routes = c(200, 80, 40, 20), years = c(2, 5, 10, 20))
+designs$power <- mapply(power_design, designs$routes, designs$years)
+par(mar = c(3.6, 3.6, 0.6, 0.6), mgp = c(2.3, 0.7, 0))
+bp <- barplot(designs$power, names.arg = designs$label, ylim = c(0, 1),
+              col = c("grey80", "grey80", "grey80", "firebrick"),
+              ylab = "power to detect the decline", xlab = "")
+text(bp, designs$power + 0.05, sprintf("%.2f", designs$power), cex = 1.1)
+abline(h = 0.8, lty = 2, col = "blue")
+text(bp[1], 0.85, "0.8: the usual target", col = "blue", cex = 0.95, adj = 0)
+```
+
+Same cost. **5% against 90%.**
+
+::: {.notes}
+The dashed blue line is power = 0.8, the conventional target: a design that
+would catch a real decline four times out of five. Only D clears it.
+
+Worth saying that 0.8 is a convention, not a law. It comes from Cohen, who
+proposed it as a reasonable default, and it amounts to accepting a one in five
+chance of missing a real effect. If missing the decline would be expensive, 0.8
+is not high enough.
+
+Let the numbers sit before explaining. The gap between A and D is the single most
+useful thing in this lecture: identical budget, and one design is almost useless
+while the other is good.
+
+If the room voted mostly B and C, say so, and say that this is the normal
+intuition and it is wrong. That is worth more than being told the rule.
+:::
+
+## Why years beat routes
+
+A trend is a **slope over time**. Slopes are estimated from the **spread of the
+x values**.
+
+. . .
+
+- Adding **years** stretches the x axis: 2 years of change against 20 years of
+  change
+- Adding **routes** only averages the noise at the years you already have
+
+. . .
+
+With 2 years, the population has declined about 6% in total. There is almost
+nothing to detect.
+
+::: {.notes}
+This is the mechanism, and it generalizes well beyond birds. Any time the
+question is about a rate of change, the range of the predictor is what buys you
+precision, and replication at a few values of the predictor is a poor substitute.
+
+Connect to Lecture 13: the "break it" exercise showed that detecting a slope
+depends on the ratio of signal to noise. Here extending the time series grows the
+signal, while adding routes only shrinks the noise a little.
+
+The caution worth adding: this is specific to estimating a trend. If the question
+were "how many bobwhite are there this year", routes would be exactly what you
+want and years would be useless.
+:::
+
+## How long before you would know?
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 6.6
+set.seed(15)
+years <- c(3, 5, 8, 10, 15, 20, 25)
+pw <- sapply(years, function(y) power_design(30, y))
+par(mar = c(3.6, 3.6, 0.6, 0.6), mgp = c(2.3, 0.7, 0))
+plot(years, pw, type = "b", pch = 16, lwd = 2, ylim = c(0, 1),
+     xlab = "years of monitoring (30 routes)", ylab = "power")
+abline(h = 0.8, lty = 2, col = "blue")
+text(3, 0.85, "0.8: the usual target", col = "blue", cex = 0.95, adj = 0)
+```
+
+At 30 routes, a 3% decline needs about **18 years** before you would
+reliably catch it.
+
+::: {.notes}
+The sobering slide, and the honest one. Power is 0.05 at 3 years, 0.24 at 10,
+and 0.68 at 15, so a short program aimed at a gradual decline is mostly wasted
+money.
+
+This is also why the BBS matters: it has been running since 1966, which is why
+anybody knows bobwhite are declining at all.
+
+Ask what they would tell the agency if the agency can only commit to 5 years. A
+good answer: either accept that you are measuring something else, such as current
+abundance, or find a more sensitive response than counts.
+:::
+
+## Your turn: what if the decline is worse? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+year <- rep(0:9, each = 40)   # 40 routes, 10 years
+
+decline <- 0.03               # try 0.01, 0.05, 0.10
+
+found <- numeric(500)
+for (i in 1:500) {
+  counts <- rnbinom(length(year), mu = 10.8 * (1 - decline)^year, size = 1.15)
+  m <- lm(log(counts + 1) ~ year)
+  found[i] <- summary(m)$coefficients["year", "Pr(>|t|)"] < 0.05
+}
+mean(found)
+```
+:::
+
+Which is easier to detect, a slow decline or a fast one?
+
+::: {.notes}
+Six minutes. A 10% annual decline is easy to catch even in 10 years; a 1% decline
+is nearly hopeless at this design.
+
+The lesson to name: power is not a property of a study, it is a property of a
+study **and** an effect size. "Is this study well powered" has no answer until
+somebody says how big an effect matters.
+
+Which is the point from Tuesday: the smallest effect worth detecting is a
+judgment call, and it belongs in the methods section.
+:::
+
+## Three honest warnings {.smaller}
+
+**Power is not a p-value.** It is computed before you have data, from assumptions
+you chose.
+
+. . .
+
+**Post-hoc power is useless.** Computing power from your observed effect after a
+non-significant result tells you nothing new.
+
+. . .
+
+**A significant result from an underpowered study is not reassuring.** When power
+is low, the effects that do reach significance are the overestimates.
+
+::: {.notes}
+The third one is the least known and the most important. With power at 0.2, a
+study only reaches significance when the noise happens to help, so published
+effects from small studies are systematically too big. That is a large part of
+why replications come back smaller.
+
+This connects to Lecture 13's figure: at a small sample size the slope estimates
+were spread from about -0.6 to 2.9, and the significant ones are the far right of
+that distribution.
+
+Post-hoc power is worth naming because reviewers still ask for it.
+:::
+
+## This is the midterm, Part 3
+
+Same machinery, simpler model:
+
+- intercept 2, slope 1, **standard deviation from 1 to 20**
+- at least three sample sizes
+- a figure, and a sentence on what it means
+
+Skeleton: `midterm/midterm_b_example.R`
+
+. . .
+
+**Due Tuesday Oct 13, 11:59 pm.**
+
+::: {.notes}
+The midterm uses a straight line with normal noise rather than counts, so it is
+strictly easier than what they did today.
+
+The nested loop is the one new piece: an outer loop over the thing being varied,
+an inner loop over simulations. Point at the structure in the skeleton.
+:::
+
+## Now one of your own {.center}
+
+::: {.notes}
+The rest of the period. Same job as the bobwhite, different system, and much less
+told to them.
+
+They work in pairs or small groups; you circulate. The slides give the five
+decisions and a skeleton with blanks, so nobody is stuck staring at an empty
+script, but every function name is theirs to recall.
+:::
+
+## Do protected reefs hold more fish? {background-color="#f0f4f8" .smaller}
+
+NOAA surveys reefs across the Florida Keys, inside and outside protected areas,
+and records the fish seen on each survey.
+
+::: {.type-it}
+```{r}
+#| eval: false
+reef <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Reef_fish/NCRMP_reef_fish_surveys.csv")
+
+reef$protected <- ifelse(reef$PROT == 0, "no", "yes")
+```
+:::
+
+**The question:** a manager wants to know whether protection works. How many
+surveys per group would it take to find out?
+
+::: {.notes}
+Same job as the bobwhite, different in two ways that matter: the comparison is
+between two groups rather than across time, and the response is not a count.
+
+`total_abundance` is fish per survey, standardized for effort, so it is a
+positive continuous number rather than a whole one. That changes the
+distribution, and figuring that out is part of the exercise.
+
+PROT has three codes; 0 is unprotected and 1 and 2 are two kinds of protection,
+which is why they get collapsed.
+:::
+
+## 1. What is the deterministic part? {background-color="#f0f4f8" .smaller}
+
+For the bobwhite it was a curve through time. Here there is **no time axis**:
+just two groups with different expected abundance.
+
+So the deterministic part is a pair of means. Your decision:
+
+- Describe the effect as a **difference** (protected minus unprotected), or
+- Describe it as a **ratio** (protected divided by unprotected)?
+
+Plot it both ways before you choose:
+
+::: {.type-it}
+```{r}
+#| eval: false
+unprot <- reef$total_abundance[reef$protected == "no"]
+prot   <- reef$total_abundance[reef$protected == "yes"]
+
+hist(unprot)                 # raw scale
+hist(log(unprot))            # log scale: which looks symmetric?
+
+____                         # now do the same for prot
+```
+:::
+
+::: {.notes}
+A short one, but the decision is real and it sets up everything after it.
+
+What they should find: abundance is positive and right skewed, so a difference
+of means is awkward and a ratio is natural. "Protected reefs hold 50% more fish"
+travels better than "73 more fish per survey", and it does not depend on where
+you sampled.
+
+A ratio on the raw scale is a difference on the log scale, which is the hinge
+between this decision and the next two.
+
+Do not tell them this. Ask what a histogram of each group looks like.
+:::
+
+## 2. Which distribution? {background-color="#f0f4f8" .smaller}
+
+Fish per survey is positive, continuous, and right skewed.
+
+| Candidate | Rule it in or out |
+|---|---|
+| Normal | [allows negatives, and the data are skewed]{.fragment fragment-index=1} |
+| Poisson | [these are not whole numbers]{.fragment fragment-index=2} |
+| Lognormal or gamma | [positive, continuous, right skewed: both plausible]{.fragment fragment-index=3} |
+
+Then **check it the way we checked the Poisson**: make it predict something.
+
+::: {.type-it}
+```{r}
+#| eval: false
+mean(unprot > 500)           # observed: how often is a survey this rich?
+
+____(500, meanlog = ____, sdlog = ____, lower.tail = FALSE)
+#  ^ the p-function for your chosen distribution
+```
+:::
+
+::: {.notes}
+Let them fill the right column before revealing it. Two of the three are quick.
+
+The last row is the interesting one, because two candidates survive and the data
+will not strongly separate them. That is normal, and Lecture 12's advice applies:
+pick one, say why, and note that the other was defensible.
+
+A good check for lognormal: if abundance is lognormal then log(abundance) is
+normal, so a histogram of the logs should look symmetric. That is one line and
+they have done it before, on bird mass.
+
+A stronger check, if anyone wants it: compare the observed proportion above some
+high value against what their fitted distribution predicts, exactly as we did
+with P(count >= 40).
+:::
+
+## 3. The parameters {background-color="#f0f4f8" .smaller}
+
+Estimate these from the data yourselves, on the scale your distribution works
+on:
+
+::: {.type-it}
+```{r}
+#| eval: false
+meanlog_unprot <- ____(log(unprot))     # centre, on the log scale
+sdlog_unprot   <- ____(log(unprot))     # spread, on the log scale
+
+meanlog_prot <- ____
+sdlog_prot   <- ____
+```
+:::
+
+Two questions worth asking of your answers:
+
+- Is the **spread** similar in the two groups? Does that simplify the simulation?
+- What **ratio** do the two centres imply?
+
+::: {.notes}
+They have estimated parameters twice today, so this is deliberately bare.
+
+If they chose lognormal, the parameters are the mean and sd of the logged
+values, which is what rlnorm wants. Anyone who hands rlnorm the raw mean will
+get absurd numbers, and that is a useful mistake to make here rather than on the
+midterm.
+
+The two questions matter. The spreads come out nearly identical, which justifies
+simulating both groups with one spread. The ratio of centres is the effect size
+actually present in these reefs, and it is smaller than people expect.
+:::
+
+## 4. What are you choosing? {background-color="#f0f4f8" .smaller}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+**Fixed:** survey effort. Say the agency can fund **120 surveys** in total.
+:::
+
+::: {.column width="48%"}
+**Yours to choose:**
+
+- How many go in each group
+- Which effect size you want to be able to detect
+:::
+
+::::
+
+::: {.type-it}
+```{r}
+#| eval: false
+n_per_group <- 60        # 120 surveys, split evenly. Your call.
+effect <- 1.5            # the ratio you want to be able to detect. Also your call.
+```
+:::
+
+The second one is not in the data. **You have to decide what difference would
+matter** before power means anything.
+
+::: {.notes}
+The same separation as the bobwhite: the reef biology is not ours to change, the
+survey design is.
+
+Unlike the bobwhite there are two things to choose here, and the second is the
+one from Tuesday that no dataset can give them. A 50% difference in fish
+abundance would change management. A 5% difference probably would not.
+
+If anyone asks what to use: have them run both the difference they care about
+and the difference actually present in the data, and compare. That contrast is
+the point of the last slide.
+:::
+
+## 5. Simulate, analyze, repeat {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# one study: draw each group from your distribution
+sim_unprot <- ____(n_per_group, meanlog = meanlog_unprot, sdlog = sdlog_unprot)
+sim_prot   <- ____(n_per_group, meanlog = meanlog_unprot + log(effect),
+                   sdlog = sdlog_unprot)
+
+# analyze it the way you would analyze the real surveys
+____                                      # compare the two groups, get a p-value
+
+# many studies
+found <- numeric(500)
+for (i in 1:500) {
+  ____                                    # the two draws again
+  found[i] <- ____ < 0.05                 # did this study find the difference?
+}
+mean(found)                               # the power
+```
+:::
+
+Then vary `n_per_group`, and find where power reaches **0.8**.
+
+::: {.notes}
+No function names, on purpose. Everything they need they have used: the r
+functions from Lecture 12, the loop from today, and a two-group comparison.
+
+The step people get wrong is the analysis: with a skewed response, comparing the
+groups on the log scale is the sensible choice, and it is also the scale they
+simulated on.
+
+Circulate. The question to ask anyone who is stuck is "what would you do if these
+were the real data?", because the answer to that is the answer here.
+
+Anyone who finishes early: what if effort is split unevenly, say 30 and 90?
+:::
+
+## Check yourself {.smaller}
+
+Distribution: **lognormal** works well here, gamma is defensible.
+What the real data say:
+
+| | unprotected | protected |
+|---|---|---|
+| median fish per survey | [139]{.fragment fragment-index=1} | [171]{.fragment fragment-index=1} |
+| sd of log abundance | [0.90]{.fragment fragment-index=2} | [0.91]{.fragment fragment-index=2} |
+
+. . .
+
+Power to detect a **50% difference**: about [0.27 at n = 20, 0.53 at n = 50,
+0.82 at n = 100]{.fragment fragment-index=4}
+
+Power to detect the **23% difference actually observed**: about [0.46 even at
+n = 200]{.fragment fragment-index=5}
+
+::: {.notes}
+Reveal these one at a time as groups get there, or at the end if you are short of
+time.
+
+The last line is the honest and uncomfortable result, and it is the reason this
+exercise is worth doing. The difference these reefs actually show is about 23%,
+and detecting a difference that size reliably needs hundreds of surveys per
+group. A manager with budget for 60 surveys cannot answer this question, and
+knowing that in advance is worth more than running it and getting a shrug.
+
+Two things worth drawing out if there is time:
+
+- The sd of log abundance is nearly identical in the two groups, which is a tidy
+  justification for simulating both with the same spread.
+- Protection may well work and still be undetectable at this sample size. Failing
+  to detect is not evidence of no effect, which is the third warning from
+  earlier, met in the wild.
+:::
+
+## Additional practice
+
+On your own, extend the bobwhite simulation:
+
+- What if routes differ in quality, some good and some poor?
+- What if you survey each route twice a year?
+- What if the agency can afford 800 visits?
+
+::: {.notes}
+Take-home, not class time. Each one is a small change to code they already have.
+
+The first is the groups idea from Tuesday applied here: draw each route's own
+mean, then counts within it. It is also the most realistic of the three, because
+real routes do differ.
+
+The second is worth attempting because the answer surprises people: two visits a
+year helps far less than one extra year does, for the same reason years beat
+routes.
+
+Anyone who wants more should put the time into the midterm instead.
+:::
+
+## Before next class
+
+**Assignment 2** is due Friday Oct 9, 11:59 pm
+
+Read Bolker **6.1 to 6.2** (6.2.2 is optional)
+
+Next time: **likelihood**, and the midterm is due
+
+::: {.notes}
+Chapter 6 is the turn from describing and simulating models to fitting them
+properly. It is the heart of the book.
+:::
