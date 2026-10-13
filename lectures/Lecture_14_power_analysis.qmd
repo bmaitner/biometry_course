@@ -41,6 +41,41 @@ bbs <- read.csv("../data/BBS/FL_BBS.csv")
 bobwhite <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
 set.seed(2026)
 
+draw_power <- function(show_alt = TRUE, effect = 2.8) {
+  xs <- seq(-4.5, 7.5, by = 0.01)
+  crit <- qnorm(0.95)
+  par(mar = c(3.4, 1.0, 2.6, 0.6), mgp = c(2.0, 0.6, 0))
+  plot(NULL, xlim = c(-4.5, 7.5), ylim = c(0, 0.44), yaxt = "n", bty = "n",
+       xlab = "result you would get from your study", ylab = "")
+  if (show_alt) {
+    lo <- xs[xs <= crit]
+    polygon(c(min(lo), lo, crit), c(0, dnorm(lo, effect), 0),
+            col = adjustcolor("grey40", 0.6), border = NA)
+    hi <- xs[xs >= crit]
+    polygon(c(crit, hi, max(hi)), c(0, dnorm(hi, effect), 0),
+            col = adjustcolor("seagreen", 0.5), border = NA)
+    lines(xs, dnorm(xs, effect), lwd = 3, col = "seagreen4")
+  }
+  sh <- xs[xs >= crit]
+  polygon(c(crit, sh, max(sh)), c(0, dnorm(sh), 0),
+          col = adjustcolor("firebrick", 0.75), border = NA)
+  lines(xs, dnorm(xs), lwd = 3, col = "grey20")
+  abline(v = crit, lty = 2, lwd = 2)
+  mtext("if there is NO effect", side = 3, at = -1.6, line = 0.3,
+        col = "grey20", font = 2)
+  if (show_alt) mtext("if there IS an effect", side = 3, at = 4.4, line = 0.3,
+                      col = "seagreen4", font = 2)
+  mtext("cutoff", side = 3, at = crit, line = 1.3, cex = 0.9)
+  arrows(2.9, 0.055, 2.1, 0.012, length = 0.08, col = "firebrick4", lwd = 2)
+  text(3.0, 0.065, expression(alpha ~ "= false positive"), col = "firebrick4",
+       adj = 0, cex = 0.95)
+  if (show_alt) {
+    text(0.55, 0.035, expression(beta), col = "grey15", cex = 1.5)
+    text(0.55, 0.085, "missed", col = "grey15", cex = 0.85)
+    text(4.2, 0.17, "power", col = "seagreen4", cex = 1.4, font = 2)
+  }
+}
+
 power_design <- function(n_routes, n_years, decline = 0.03, mu0 = 10.8,
                          size = 1.15, nsim = 500) {
   mean(replicate(nsim, {
@@ -194,6 +229,60 @@ is how fields end up full of underpowered studies that cannot settle anything.
 
 Power is only defined once you say how big an effect you care about, which is
 the point from Tuesday.
+:::
+
+## The world where nothing is happening
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 7.2
+draw_power(show_alt = FALSE)
+```
+
+Set the cutoff so that only **5%** of no-effect studies land beyond it.
+That 5% is $\alpha$, and it is the only thing most papers control.
+
+::: {.notes}
+Start here, because alpha is the half everyone already knows and it fixes the
+cutoff.
+
+Read the axis out loud: it is the result your study would hand you, a slope, a
+difference, whatever you measured. If nothing is going on, results still scatter,
+and 5% of them land in the red by luck alone.
+
+Nothing on this slide says anything about power. There is only one world drawn.
+:::
+
+## Now add the world where something is
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 7.2
+draw_power(show_alt = TRUE)
+```
+
+Same cutoff. **Power** is the green area: the chance a real effect lands beyond
+it. $\beta$ is the grey part you miss.
+
+::: {.notes}
+The second curve is the new idea, and it is where every design decision lives.
+
+Three things to point at:
+
+- The cutoff did not move. Alpha is still 5%.
+- Power plus beta is the whole green curve: you either catch the effect or you
+  miss it.
+- Everything you can change slides the green curve or narrows both curves. A
+  bigger effect pushes it right, more data makes both narrower, which is exactly
+  what the bobwhite designs will do.
+
+Ask what happens to power if you move the cutoff left. Power goes up and so does
+alpha, which is the trade nobody can escape.
+
+This figure is drawn in R rather than borrowed, so there is no licence to worry
+about and the parameters can be changed live if someone asks.
 :::
 
 ## Power in a broader sense

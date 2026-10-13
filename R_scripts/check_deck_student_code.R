@@ -82,3 +82,38 @@ check_all_decks <- function() {
   invisible(vapply(decks, check_deck, logical(1)))
 
 }
+
+# Check a deck's source for stray control characters -----------------------
+#
+# Writing slides with scripts makes it easy to lose a backslash. A LaTeX
+# command such as backslash-alpha, written inside a non-raw Python string,
+# becomes a bell character, and the slide then shows mojibake where the Greek
+# letter should be. This has happened twice, once inside this very comment.
+# Control characters are never intentional in a .qmd, so flag any that appear.
+
+check_deck_characters <- function(path) {
+
+  raw <- readBin(path, "raw", file.size(path))
+
+  bad <- raw[raw < as.raw(9) | (raw > as.raw(13) & raw < as.raw(32))]
+
+  if (length(bad) > 0) {
+    message(sprintf("%s: %d stray control character(s): %s",
+                    basename(path), length(bad),
+                    paste(unique(sprintf("0x%02x", as.integer(bad))),
+                          collapse = " ")))
+    return(invisible(FALSE))
+  }
+
+  invisible(TRUE)
+
+}
+
+check_all_characters <- function() {
+
+  decks <- list.files("lectures", pattern = "[.]qmd$", full.names = TRUE)
+  ok <- vapply(decks, check_deck_characters, logical(1))
+  if (all(ok)) message("no stray control characters in any deck")
+  invisible(ok)
+
+}
