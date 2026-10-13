@@ -1,0 +1,942 @@
+---
+title: "Likelihood"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 15"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+bbs <- read.csv("../data/BBS/FL_BBS.csv")
+bobwhite <- bbs$total_sightings[bbs$Scientific_Name == "Colinus virginianus"]
+routes_2019 <- length(unique(bbs$Route[bbs$Year == 2019]))
+with_bobwhite <- length(unique(bbs$Route[bbs$Year == 2019 &
+                                bbs$Scientific_Name == "Colinus virginianus"]))
+```
+
+## Today's agenda {.smaller}
+
+- The midterm is due tonight
+- Going backwards: from data to parameters
+- What likelihood is
+- Finding the parameters that maximize it
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Chapter 6.1 and 6.2, the heart of the book.
+
+Everything so far has gone in one direction: pick a model, pick parameters,
+produce data. Today it runs the other way, which is what you actually do with
+real data.
+:::
+
+## The midterm is due tonight
+
+**Tuesday Oct 13, 11:59 pm.** Submit on Canvas, or a Github link on Canvas.
+
+- Part 1 text is yours. Any tools you like for the code.
+- Part 3 is Thursday's power analysis, with the skeleton in
+  `midterm/midterm_b_example.R`.
+
+. . .
+
+**Any final questions?**
+
+::: {.notes}
+Short, because it was explained in full in Lecture 13 and the document answers
+most things.
+
+The one worth repeating is the citation line for Part 1: citation() for R and
+citation("packagename") for anything else.
+:::
+
+## Where we are {.smaller}
+
+| Chapter | Question | Direction |
+|---|---|---|
+| 3 | What shape? | |
+| 4 | What distribution? | |
+| 5 | Given parameters, what data would I see? | parameters $\rightarrow$ data |
+| **6** | **Given data, what parameters?** | **data $\rightarrow$ parameters** |
+
+```{r}
+#| echo: false
+#| fig-height: 2.7
+#| fig-width: 9
+set.seed(8)
+par(mfrow = c(1, 2), mar = c(3.2, 3.2, 2.0, 0.6), mgp = c(1.9, 0.6, 0))
+xv <- 1:20; yv <- rnorm(20, 2 + 1 * xv, 2)
+plot(xv, yv, pch = 16, col = "grey35", ylim = c(0, 26), xlab = "x", ylab = "y",
+     main = "Chapter 5: parameters to data")
+abline(a = 2, b = 1, col = "red", lwd = 3)
+text(1, 24.5, "a = 2,  b = 1,  sd = 2", col = "red", adj = 0, font = 2)
+text(1, 21.5, "known", col = "red", adj = 0)
+plot(xv, yv, pch = 16, col = "grey35", ylim = c(0, 26), xlab = "x", ylab = "y",
+     main = "Chapter 6: data to parameters")
+for (bb in c(0.6, 0.8, 1.0, 1.2, 1.4)) {
+  abline(a = 2, b = bb, col = "grey60", lwd = 2, lty = 2)
+}
+text(1, 24.5, "a = ?,  b = ?,  sd = ?", col = "red", adj = 0, font = 2)
+text(1, 21.5, "which line?", col = "red", adj = 0)
+```
+
+::: {.notes}
+Worth drawing the arrow on the board. Simulation runs the model forwards;
+estimation runs it backwards.
+
+Same points in both panels. On the left the line was known and the scatter was
+generated from it, which is exactly what they did on Thursday. On the right only
+the points exist, and the job is to pick the line. The dashed candidates are all
+plausible, which is the whole problem: you need a rule for choosing.
+
+The reason simulation came first: you cannot judge an estimate without knowing
+what the truth was, and simulation is the only place you know.
+:::
+
+## Why bother estimating parameters?
+
+Because the parameter **is** the biological question:
+
+- **A slope:** how fast is this population declining?
+- **A mean:** how many fish does a protected reef hold?
+- **A spread:** how variable is egg size between species?
+- **A probability:** what fraction of sites are occupied?
+
+. . .
+
+A plot shows you the pattern. A parameter lets you **put a number on it, with
+uncertainty**, and compare it to another number.
+
+::: {.notes}
+All four examples are from datasets they have handled this semester, which is
+deliberate: estimation is not a new activity, it is the thing they have been
+circling.
+
+Uncertainty is Thursday's lecture, confidence intervals, and it is the reason
+estimation beats eyeballing.
+:::
+
+## The plan for the next three lectures
+
+1. **Choose a model.** Chapters 3 and 4. *Done.*
+2. **Find the parameters that make the data most likely.** *Today.*
+3. **Decide which model fits best, and how sure you are.** *Thursday and next
+   week.*
+
+::: {.notes}
+Kept from the old deck because it orients the whole chapter.
+
+Step 2 is mechanical once you accept the principle, and the principle is one
+sentence, which is the next slide.
+:::
+
+## What is likelihood? {.center}
+
+## The probability of your data
+
+**Likelihood** = the probability of getting the data you actually got, if a
+particular set of parameters were true.
+
+. . .
+
+Change the parameters, and that probability changes.
+
+**The maximum likelihood estimate is the parameter value that makes your data
+least surprising.**
+
+::: {.notes}
+Say the definition slowly, and note the direction: the data are fixed, because
+you already collected them, and the parameters are what vary.
+
+That is the opposite of a probability calculation, where the parameters are
+fixed and the data vary. Same formula read in the other direction, which is why
+it gets a different name.
+
+The last sentence is the one to repeat. Among all the values the parameter could
+take, the MLE is the one under which your data look most ordinary.
+
+The figure is the definition made visible. Both panels show what results the
+model expects; the only thing that changes is p. Our actual result, 52, sits far
+out in the tail when p = 0.5 and right at the peak when p = 0.732. The height of
+the red bar is the likelihood, and maximizing it means sliding p until that bar
+is as tall as it can be.
+
+The data never move. Only the model does. That is the sentence students need.
+:::
+
+## The same data, two models {.smaller}
+
+**The data:** 71 bird survey routes were run in Florida in 2019. Bobwhite were
+recorded on **52** of them.
+
+**A model:** every route has the same probability $p$ of holding bobwhite. Below,
+what that model expects, for two guesses at $p$.
+
+```{r}
+#| echo: false
+#| fig-height: 2.3
+#| fig-width: 9
+par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.8, 0.6), mgp = c(1.9, 0.6, 0))
+kk <- 0:71; obs <- 52
+for (pp in c(0.5, 0.732)) {
+  d <- dbinom(kk, 71, pp)
+  plot(kk, d, type = "h", lwd = 2, col = "grey80",
+       xlab = "routes with bobwhite, out of 71",
+       ylab = "P(exactly this many)", ylim = c(0, 0.13),
+       main = paste0("if p = ", pp))
+  lines(c(obs, obs), c(0, d[kk == obs]), col = "firebrick", lwd = 3)
+  points(obs, d[kk == obs], pch = 16, col = "firebrick", cex = 1.2)
+  lab <- if (d[kk == obs] < 0.001) format(d[kk == obs], digits = 2,
+                                          scientific = TRUE) else
+         sprintf("%.3f", d[kk == obs])
+  text(obs, d[kk == obs] + 0.015, lab, col = "firebrick", font = 2)
+}
+```
+
+
+Each grey bar is the probability of **one possible result**, 0 to 71 routes; they
+add to 1. Red is the result **we got**.
+
+**That red height is the likelihood:** 0.00004 on the left, 0.106 on the right.
+
+::: {.notes}
+The definition made visible. Both panels show what results the model expects, and
+the only thing that changes between them is p.
+
+Be explicit about what the y axis is, because this is the slide where people
+quietly substitute a p-value. Each bar is the probability of exactly that many
+routes having bobwhite, under the model. Our red bar is the probability of
+exactly 52, which is the likelihood.
+
+It is NOT the probability of 52 or more, which is what a p-value would be, and it
+is not the probability that p = 0.5 is true. Probability of the data given the
+parameter, never the other way round. If someone asks about p-values, say that a
+p-value adds up a tail of these bars and answers a different question, and that
+we are not doing that today.
+
+The data never move. Only the model does. That is the sentence students need, and
+it is the one that makes the next few slides obvious: if the bar gets taller as
+you change p, you are going the right way.
+
+Maximizing likelihood means sliding p until that red bar is as tall as it can be,
+which is literally what the curve two slides from now shows.
+:::
+
+## Refresher: the `d` functions give probabilities {.smaller}
+
+From Lecture 12. Every `d` function takes two things: **the data** and
+**the parameters**.
+
+```{r}
+dbinom(x = 7, size = 10, prob = 0.5)    # P(7 heads in 10 tosses) if p = 0.5
+```
+
+. . .
+
+Which one you hold still decides what you are asking:
+
+```{r}
+#| eval: false
+dbinom(x = 0:10, size = 10, prob = 0.5)              # parameter fixed, data vary
+
+dbinom(x = 7, size = 10, prob = c(0.3, 0.5, 0.7))    # data fixed, parameter varies
+```
+
+. . .
+
+The first asks **what results to expect**. The second asks **which parameter
+best accounts for the result I got**. Your data are already collected and will
+not change, so the parameter is the thing that moves. That second one is
+likelihood.
+
+::: {.notes}
+Two minutes, but worth it, because the whole lecture is built on d functions and
+some will have met them only once.
+
+Run both lines live if you can. The first returns eleven numbers, one per
+possible result, and they add to 1: that is a probability distribution. The
+second returns three numbers, one per candidate value of p, and they do not add
+to anything in particular: that is a likelihood.
+
+That is the conceptual jump of the chapter, and it is purely about which argument
+you let vary. Same function, same arithmetic, different question.
+
+The sentence worth repeating: the data are fixed because you already went out and
+collected them. The parameter is unknown, so it is the thing you move.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+# every route surveyed in 2019, and the ones with bobwhite on them
+routes_2019 <- length(unique(bbs$Route[bbs$Year == 2019]))
+
+with_bobwhite <- length(unique(bbs$Route[bbs$Year == 2019 &
+                       bbs$Scientific_Name == "Colinus virginianus"]))
+
+c(routes = routes_2019, with_bobwhite = with_bobwhite)
+
+# the counts themselves, for the second half of the lecture
+bobwhite <- bbs$total_sightings[bbs$Scientific_Name == "Colinus virginianus"]
+
+length(bobwhite)      # 1360 route-years
+```
+:::
+
+::: {.notes}
+Two or three minutes, 15 MB. Anyone who still has bbs loaded from Thursday can
+skip the download.
+
+Should give 71 routes, 52 with bobwhite, and 1360 route-years of counts.
+
+The count vector is loaded here rather than later so that nothing in the second
+half of the lecture depends on code nobody ran.
+:::
+
+## A question with one parameter
+
+Of **71** Florida routes surveyed in 2019, bobwhite were recorded on **52**.
+
+. . .
+
+If each route has the same probability $p$ of holding bobwhite, **what is $p$?**
+
+. . .
+
+You already know the answer is 52/71. Good: that means you can check whether
+likelihood gives the right answer on a problem where you can see it.
+
+::: {.notes}
+Deliberately a problem where the answer is obvious, because the point is to
+validate the machinery rather than to learn the answer.
+
+The model: each route is a coin flip with probability p, and 52 of 71 came up
+heads. That is a binomial.
+
+Independence between routes is an assumption and it is worth naming out loud,
+because routes near each other share habitat.
+:::
+
+## Try one value {background-color="#f0f4f8" .smaller}
+
+If $p$ were 0.5, how likely is 52 out of 71?
+
+::: {.type-it}
+```{r}
+dbinom(x = 52, size = 71, prob = 0.5)
+```
+:::
+
+. . .
+
+Now try `prob = 0.6`, then `0.73`, then `0.8`. Which gives the biggest number?
+
+::: {.notes}
+Three minutes, and this is the whole idea in one line of code.
+
+The numbers: 0.0000367 at p = 0.5, 0.0069 at 0.6, 0.106 at 0.73, 0.0415 at 0.8.
+
+Two things to draw out. The likelihood at p = 0.5 is tiny, because 52 of 71 would
+be a strange result if routes were coin flips. And the value peaks somewhere near
+0.73, which they can find by hand before any optimizer appears.
+:::
+
+## Try every value
+
+```{r}
+#| echo: false
+#| fig-height: 3.1
+#| fig-width: 7
+p_grid <- seq(0.4, 1, by = 0.001)
+L <- dbinom(with_bobwhite, routes_2019, p_grid)
+plot(p_grid, L, type = "l", lwd = 3, xlab = "p", ylab = "likelihood of our data")
+abline(v = with_bobwhite / routes_2019, col = "red", lwd = 2, lty = 2)
+text(with_bobwhite / routes_2019, max(L) * 0.55,
+     paste0(" 52/71 = ", round(with_bobwhite / routes_2019, 3)), col = "red", adj = 0)
+```
+
+The curve peaks exactly at **52/71 = 0.732**. The machinery agrees with the
+obvious answer.
+
+::: {.notes}
+This is the likelihood curve, and it is the central picture of the chapter.
+
+Two features worth naming: the peak is the estimate, and the width is the
+uncertainty. A sharp peak means the data pin the parameter down; a flat one means
+many values explain the data about equally well. Thursday turns that width into
+a confidence interval.
+
+For a binomial the MLE is provably the sample proportion. Most problems have no
+such formula, which is why the next few slides reach for an optimizer.
+:::
+
+## What if you have more than one observation? {background-color="#f0f4f8" .smaller}
+
+So far, one number: 52 out of 71. The bobwhite **counts** are 1360 numbers.
+
+If the observations are independent, the probability of getting **all** of them
+is each probability **multiplied together**:
+
+::: {.type-it}
+```{r}
+#| eval: false
+dpois(bobwhite[1:5], lambda = 10.8)        # probability of each of the first 5
+
+prod(dpois(bobwhite[1:5], lambda = 10.8))  # all five together
+
+prod(dpois(bobwhite[1:50], lambda = 10.8)) # fifty
+
+prod(dpois(bobwhite, lambda = 10.8))       # all 1360
+```
+:::
+
+**What happened on that last line?**
+
+::: {.notes}
+Five minutes, and the punchline has to be discovered rather than announced.
+
+The numbers: five counts multiply to 2.4e-23, fifty to 1.9e-303, and all 1360 to
+exactly 0. R cannot hold anything smaller than about 2.2e-308, so the answer is
+not merely small, it is gone.
+
+That is a disaster for an optimizer: every parameter value returns zero, so there
+is nothing to climb. The fix is the next slide.
+
+Poisson is a stand-in here, purely to have something to multiply. The right
+distribution for these counts is the one we settled on Thursday, and it comes
+back shortly.
+:::
+
+## Why we use logs {.smaller}
+
+You just watched the product of 1360 probabilities collapse to zero:
+
+$$L = \prod_i P(y_i \mid \text{parameters})$$
+
+. . .
+
+Nothing is wrong with the arithmetic. The number really is that small, and the
+computer cannot hold it. Taking logs turns multiplication into addition:
+
+$$\log L = \sum_i \log P(y_i \mid \text{parameters})$$
+
+. . .
+
+By convention we minimize the **negative** log-likelihood, because optimizers
+minimize.
+
+::: {.notes}
+Three reasons for logs, in order of importance: products of thousands of small
+numbers underflow to zero in floating point, as they just saw, sums are easier to
+differentiate,
+and the log scale makes the surface better behaved for optimizers.
+
+The negative is pure convention: R's optimizers minimize, so we hand them the
+negative and the minimum of the negative is the maximum of the original.
+
+Point at the product and the sum: that is why every d function has a log = TRUE
+argument, which is the next slide.
+:::
+
+## Why the optimizer prefers the log {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 9
+set.seed(5)
+sub <- sample(bobwhite, 50)
+m <- mean(sub)
+lam <- seq(max(0.5, m - 8), m + 8, by = 0.05)
+lik <- sapply(lam, function(l) prod(dpois(sub, l)))
+llik <- sapply(lam, function(l) sum(dpois(sub, l, log = TRUE)))
+par(mfrow = c(1, 2), mar = c(3.4, 4.4, 2.0, 0.6), mgp = c(2.6, 0.6, 0))
+plot(lam, lik, type = "l", lwd = 3, xlab = "lambda", ylab = "likelihood",
+     main = "likelihood (50 counts)")
+abline(v = m, col = "red", lty = 2, lwd = 2)
+plot(lam, llik, type = "l", lwd = 3, xlab = "lambda", ylab = "log-likelihood",
+     main = "log-likelihood (same 50 counts)")
+abline(v = m, col = "red", lty = 2, lwd = 2)
+```
+
+Same data, same peak (red). On the left the curve is flat at zero almost
+everywhere; on the right there is a slope to follow from anywhere.
+
+::: {.notes}
+This is the practical argument, and it is worth more than the underflow one.
+
+An optimizer works by looking at where it is, asking which way is uphill, and
+stepping. On the left, the whole curve lives between 0 and 7e-168, so outside a
+window of about two either side of the peak it is indistinguishable from flat:
+there is nothing to tell the optimizer which way to go.
+
+On the right the log-likelihood has a clear slope everywhere, so a starting guess
+of 4 or 20 still finds its way to the top.
+
+Only 50 counts are used here, so that the likelihood is at least representable.
+With all 1360 the left panel would be exactly zero across the whole range and
+there would be nothing to plot at all.
+
+The peak is in the same place in both, which is the mathematical point: the log
+is a monotonic transformation, so whatever maximizes the likelihood maximizes its
+log. We change the scale, not the answer.
+:::
+
+## A refresher on writing functions {.smaller}
+
+From Lecture 9: name, arguments, body, and the last line is the result.
+
+```{r}
+#| eval: false
+standard_error <- function(x){
+  sd(x) / sqrt(length(x))
+}
+```
+
+. . .
+
+To use an optimizer, you hand it a function to minimize. So we write one that
+takes a parameter and returns a negative log-likelihood:
+
+```{r}
+#| eval: false
+nll_name <- function(parameter){
+  -sum(dsomething(data, parameter, log = TRUE))
+}
+```
+
+::: {.notes}
+Deliberately brief, because they wrote several functions in Lecture 9 and a few
+since.
+
+The shape of an NLL function is worth naming as a pattern, because every one they
+write for the rest of the course looks like this: parameters in, a single number
+out, and a minus sign at the front.
+:::
+
+## The negative log-likelihood, for real {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+binom_nll <- function(p){
+  -dbinom(x = with_bobwhite, size = routes_2019, prob = p, log = TRUE)
+}
+
+binom_nll(0.5)
+binom_nll(0.732)
+```
+:::
+
+Smaller is better: the second is the one that makes our data less surprising.
+
+::: {.notes}
+Five minutes. Note there is no sum here because there is a single observation,
+52 out of 71. The sum appears in the next example.
+
+10.21 against 2.24. Worth connecting back: those are the logs of the 0.0000367
+and 0.106 from earlier, negated.
+:::
+
+## Let R find the minimum {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+fit <- optimize(binom_nll, interval = c(0, 1))
+
+fit$minimum       # the estimate
+fit$objective     # the negative log-likelihood there
+```
+:::
+
+. . .
+
+`optimize()` for one parameter, `optim()` for several.
+
+::: {.notes}
+0.7324 and 2.236. Compare to 52/71 = 0.73239, which is what the formula gives.
+
+Say what the optimizer actually does: it tries values, climbs downhill, and stops
+when it cannot improve. It is a careful version of what they did by hand three
+slides ago, and like anything numerical it can fail, which is why a plot of the
+curve is still worth drawing.
+:::
+
+## Two parameters: back to the counts {.center}
+
+## Thursday's unfinished business {.smaller}
+
+On Thursday we needed a negative binomial for the bobwhite counts, and got its
+clumping parameter by **matching the variance**:
+
+::: {.type-it}
+```{r}
+mu_moment <- mean(bobwhite)
+size_moment <- mu_moment^2 / (var(bobwhite) - mu_moment)
+
+round(c(mu = mu_moment, size = size_moment), 3)
+```
+:::
+
+That was a shortcut. **Maximum likelihood is the principled version**, and it
+uses the whole distribution rather than two summaries.
+
+::: {.notes}
+The thread from Thursday, picked up deliberately: the moment estimate was
+introduced as a stopgap with a promise that chapter 6 would do it properly.
+
+Method of moments matches the mean and the variance and ignores everything else
+about the shape. Likelihood asks which parameters make every observed count, all
+1360 of them, most probable together.
+
+They should expect the two answers to be close but not identical, and they are
+about to see exactly that.
+:::
+
+## The likelihood surface {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.3
+#| fig-width: 6.6
+mus <- seq(9.5, 12.5, length.out = 80)
+sizes <- seq(0.9, 2.0, length.out = 80)
+grid <- outer(mus, sizes, Vectorize(function(m, s)
+  -sum(dnbinom(bobwhite, mu = m, size = s, log = TRUE))))
+contour(mus, sizes, grid, nlevels = 25, xlab = "mu", ylab = "size (clumping)",
+        drawlabels = FALSE, col = "grey55")
+best <- which(grid == min(grid), arr.ind = TRUE)
+points(mus[best[1]], sizes[best[2]], pch = 16, col = "red", cex = 1.6)
+points(mu_moment, size_moment, pch = 17, col = "blue", cex = 1.4)
+legend("topright", pch = c(16, 17), col = c("red", "blue"), bty = "n",
+       legend = c("maximum likelihood", "method of moments"))
+```
+
+With two parameters the likelihood is a **surface**, and the estimate is its
+lowest point on the negative log scale.
+
+::: {.notes}
+The contour lines are negative log-likelihood, so the target is the bottom of the
+bowl rather than the top of a hill.
+
+Point at the shape. The contours are closed ellipses with their axes roughly
+lined up with the parameter axes, which means the two parameters are nearly
+independent here: knowing the mean better would not tell you much more about the
+clumping.
+
+How tightly each is pinned down comes from the curvature, and with 1360
+observations both are tight: the mean is 10.79 give or take 0.27, the clumping
+1.37 give or take 0.06. Beware reading that off the picture by eye, because the
+two axes are on different scales. Turning curvature into an interval properly is
+Thursday.
+
+The two markers are close but not on top of each other, which is the point of the
+next slide.
+:::
+
+## Fitting it {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+nb_nll <- function(mu, size){
+  -sum(dnbinom(bobwhite, mu = mu, size = size, log = TRUE))
+}
+
+fit_nb <- optim(par = c(mu = 10, size = 1),
+                fn = function(p){
+                  nb_nll(p["mu"], p["size"])
+                },
+                method = "BFGS")
+
+round(fit_nb$par, 3)
+```
+:::
+
+| | mu | size |
+|---|---|---|
+| method of moments | 10.78 | **1.155** |
+| maximum likelihood | 10.79 | **1.368** |
+
+::: {.notes}
+Eight minutes, and the first time they fit a two-parameter model to real data.
+
+The means agree to two decimals. The clumping does not, by about 18%, and
+likelihood is the one to trust: moments threw away everything except the mean and
+the variance, and with a long-tailed distribution that is a lot to discard.
+
+Which matters practically: size is what drove the power analysis on Thursday, so
+the choice of estimator changes the study design advice.
+
+If optim complains or returns something absurd, check the starting values. Four
+things to know about optimizers: they need a starting point, they can fail, they
+report whether they converged, and a plot is the sanity check.
+:::
+
+## The same fit, with `mle2` {background-color="#f0f4f8" .smaller}
+
+Bolker's package wraps the same idea in a friendlier interface. **Do the two
+routes agree?**
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(bbmle)
+
+m1 <- mle2(minuslogl = nb_nll,
+           start = list(mu = 10, size = 1),
+           data = list(bobwhite = bobwhite))
+
+coef(m1)
+
+coef(m1) - fit_nb$par        # should be about zero
+```
+:::
+
+::: {.notes}
+Five minutes. The differences come out as zeros, which is the right answer and
+also worth being honest about: mle2 calls optim underneath, so with the same
+starting values it walks the same path. This checks that we wired both up
+correctly, not that two independent algorithms agree.
+
+The stronger version of the check, if anyone wants it: add method = "Nelder-Mead"
+to one of them and compare again. A different search algorithm landing in the
+same place is real reassurance.
+
+Why check at all: an optimizer is a numerical search, not a formula. It can stop
+early, stop in the wrong place, or fail silently, so comparing routes and looking
+at the curve are both cheap insurance. That habit matters more in the final
+project than anything else on this slide.
+
+Chapter 6 uses mle2 throughout, and it has confidence interval methods built in,
+which is Thursday. optim is the thing to understand; mle2 is the convenience.
+:::
+
+## Remember why we rejected the Poisson {.smaller}
+
+On Thursday we tested it against these same counts:
+
+| | observed | Poisson said |
+|---|---|---|
+| variance | 111 | 11 |
+| P(count $\geq$ 40) | 0.024 | 0.000000000007 |
+
+We threw it out on those two rows. **Likelihood lets us put one number on how
+much worse it was.**
+
+::: {.notes}
+The reminder matters, because the next slide compares two models and nobody will
+remember why a Poisson is even in the conversation.
+
+Thursday's argument was a model check: the Poisson predicts a variance equal to
+its mean, and these counts have a variance ten times their mean, so it cannot
+reproduce the spread or the occasional very rich route.
+
+That was a yes-or-no verdict. Likelihood turns it into a measurement, which is
+what the next slide does and what next week builds on.
+:::
+
+## Was the negative binomial worth it? {.smaller}
+
+A Poisson has one parameter, and its best value is just the mean, so there is
+nothing to optimize:
+
+```{r}
+nll_poisson <- -sum(dpois(bobwhite, lambda = mean(bobwhite), log = TRUE))
+nll_negbin <- fit_nb$value
+
+round(c(poisson = nll_poisson, negative_binomial = nll_negbin))
+```
+
+The negative binomial is **thousands** of log-likelihood units better.
+
+. . .
+
+How much better is "better enough"? **That is next week.**
+
+::: {.notes}
+8455 against 4627. Not a close call, which is the right first example of a model
+comparison: when the answer is this obvious you do not need a test.
+
+The honest complication, which is next week's lecture: the negative binomial has
+an extra parameter, so it has an unfair advantage, and model comparison is about
+paying for that advantage. Name the problem and leave it.
+:::
+
+## Your turn: estimate the decline {background-color="#f0f4f8" .smaller}
+
+Thursday we **assumed** a 3% decline. Now estimate it from the counts:
+
+::: {.type-it}
+```{r}
+#| eval: false
+bob <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
+counts <- bob$total_sightings
+year <- bob$Year - min(bob$Year)        # 0, 1, 2, ... 23
+
+trend_nll <- function(mu0, decline, size){
+  mu <- mu0 * (1 - decline)^year        # the mean declines each year
+  # your negative log-likelihood goes here
+  # (hint: you wrote one for these counts a few slides ago)
+}
+
+fit_trend <- optim(par = c(mu0 = 15, decline = 0.03, size = 1),
+                   fn = function(p){
+                     # call your NLL function here, with the three parameters
+                   },
+                   method = "L-BFGS-B",
+                   lower = c(0.1, -0.5, 0.05),
+                   upper = c(100, 0.5, 50))
+
+fit_trend$par
+```
+:::
+
+**What annual decline did you get? Compare it to the 3% we assumed.**
+
+::: {.notes}
+Ten minutes, and it is the capstone: the model they simulated from on Thursday,
+now fitted to the real counts.
+
+Two things to supply, and both are recall rather than fill-in-the-blank. The body
+of trend_nll is one line, the same shape as the nb_nll they wrote earlier:
+-sum(dnbinom(counts, mu = mu, size = size, log = TRUE)). The optim wrapper is
+trend_nll(p["mu0"], p["decline"], p["size"]).
+
+Point anyone who is stuck back at the "Fitting it" slide rather than telling
+them. The two pieces are the same pattern with one extra parameter.
+
+The answer: mu0 about 14.8 birds per route in 1996, decline 0.0291, so 2.9% a
+year, and size 1.43. The 3% we assumed on Thursday came from a published trend,
+and the data agree with it to within a tenth of a percent, which is a satisfying
+place to end.
+
+Why L-BFGS-B and bounds rather than BFGS: without bounds the optimizer wanders
+into negative sizes and declines above 1, which produce NaNs and a screenful of
+warnings. Bounds keep it in the region where the model means something. Worth
+naming as a general habit for constrained parameters.
+
+For anyone who asks whether the trend is "significant": the no-trend fit had an
+NLL of 4627 and this one has 4596, so the trend buys about 31 units. Whether that
+is enough, given it costs a parameter, is exactly next week.
+:::
+
+## Your turn: a different species {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# pick a species, any species
+
+counts <- bbs$total_sightings[bbs$Scientific_Name == "____"]
+
+mean(counts)
+var(counts) / mean(counts)        # still clumped?
+
+nb_nll2 <- function(mu, size){
+  -sum(dnbinom(counts, mu = mu, size = size, log = TRUE))
+}
+
+optim(par = c(mu = mean(counts), size = 1),
+      fn = function(p){
+
+        # call your NLL function here, with the two parameters
+
+      },
+      method = "BFGS")$par
+```
+:::
+
+How does the fitted `size` compare with the moment estimate,
+`mean(counts)^2 / (var(counts) - mean(counts))`?
+
+::: {.notes}
+If there is time, or as practice afterwards. Letting them choose means the room
+produces a dozen different answers, which is better than everyone checking the
+same number.
+
+Finding the species names is part of the exercise: the column is
+bbs$Scientific_Name, and table() or unique() on it will do. They have both.
+
+The starting value for mu comes from the data rather than a fixed number, so the
+code works whichever species they pick. Worth pointing out: a sensible starting
+guess is the difference between an optimizer that converges and one that does
+not.
+
+What they will find, from a few I ran:
+
+- Northern Cardinal: mu 51.2, size 1.95 by moments, 2.55 by likelihood
+- Northern Mockingbird: mu 33.2, size 1.34 by moments, 1.18 by likelihood
+- Common Grackle: mu 22.3, size 0.59 by moments, 0.85 by likelihood
+
+So the two estimators disagree, sometimes in one direction and sometimes the
+other. Do not promise them a pattern. The point is that moments and likelihood
+are answering slightly different questions, and likelihood is the one with the
+better justification.
+
+Anyone who finishes early: try a species with few records, such as Florida
+Scrub-Jay with about 100, and watch the estimate wobble. That is the small-sample
+problem confidence intervals exist for, which is Thursday.
+:::
+
+## What you can now do
+
+- Write down the probability of your data under a model
+- Turn it into a negative log-likelihood
+- Hand that to an optimizer and get **estimates from real data**
+
+. . .
+
+Still missing: **how sure are you?** That is Thursday.
+
+::: {.notes}
+Worth saying that this is the moment the course turns from describing to
+inferring, and that everything after it is refinement.
+:::
+
+## Before next class
+
+Read Bolker **6.3**
+
+Next time: **confidence intervals**, and what the shape of that curve tells you
+
+::: {.notes}
+6.3 is the likelihood surface and the curvature argument, which the contour plot
+previewed.
+:::
