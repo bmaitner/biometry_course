@@ -124,6 +124,35 @@ From midterm feedback, Fall 2025:
 
 ## Infrastructure
 
+- [ ] **Put the course on a github.io site**, once enough lectures exist as
+  HTML. The Quarto decks are self-contained HTML already, so publishing is
+  mostly a matter of turning on GitHub Pages for this repository and adding an
+  index page that links the decks, the syllabus, the assignments and the data
+  READMEs.
+
+  Not yet: as of 2026-10-12 six of the lectures are Quarto (9, 10, 12, 13, 14,
+  15, plus two solution decks) and the rest are still Google Slides exported to
+  pptx and pdf. A site that covers a third of the semester is worse than no site,
+  because students cannot tell which link is current.
+
+  Worth deciding at the same time:
+
+  - Whether the rendered deck HTML stays in the repository, about 4 MB each, or
+    whether Pages builds them from the `.qmd` on push. Building on push keeps the
+    repository small but needs the data files to be reachable at build time.
+  - Whether the site replaces Canvas links or supplements them. Students have
+    been sent Google Slides links all semester, so mid-semester switching would
+    be confusing. Starting the site at the beginning of the next offering avoids
+    that.
+  - Quarto has a `project: type: website` mode that would handle the index,
+    navigation and rendering in one go, which is probably less work than
+    assembling a site by hand.
+
+  Related: the PDF question was looked at on 2026-10-12 and dropped. Quarto can
+  only reach PDF for these decks through LaTeX, which loses the "Type and run"
+  badges and the exercise backgrounds, and the browser route is not something
+  Quarto or R can do on its own. HTML is the format.
+
 - [x] **The midterm is Markdown now**, converted on 2026-10-06, with
   `midterm/render_midterm.R` producing the `.docx` and `.html` the same way the
   assignments and quizzes work. The `.html` is gitignored, the `.docx` is kept
@@ -309,6 +338,32 @@ told them to type.
   Bolker 3.1 makes most of these directly. Some are already in the speaker notes,
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
+
+**Lecture 15 went well, and the redacted exercises are why.** Brian's report
+after teaching it: the blanked-out activities kept students busy, held their
+interest, and visibly excited them when they worked it out.
+
+What "redacted" means here, because the detail matters. The exercises do not
+leave a word missing from an otherwise complete line. They give the structure,
+the data and the comments, and replace the substantive lines with a prompt:
+
+```r
+trend_nll <- function(mu0, decline, size){
+  mu <- mu0 * (1 - decline)^year
+  # your negative log-likelihood goes here
+  # (hint: you wrote one for these counts a few slides ago)
+}
+```
+
+So the student has to retrieve something they wrote twenty minutes ago rather
+than pattern-match a gap. Retrieval is what makes it feel like solving rather
+than transcribing, and it is what produced the reaction. Use this form for
+in-class activities from here on, in preference to `____` blanks.
+
+The other half of it is that the answer is checkable: the decline comes out at
+2.9% a year against the 3% assumed in Lecture 14, so students know immediately
+whether they got it. Pair a redacted exercise with a number they can recognize
+as right.
 
 **Lecture 14's reef exercise was not finished, and that was fine.** Students
 found the open-ended version hard, and Brian judged the struggle productive: the
