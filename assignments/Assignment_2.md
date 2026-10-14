@@ -111,5 +111,11 @@ For each variable, provide:
 - A short written argument, as comments if you are using a .R file, naming the
   distribution and tying it to what you just showed.
 
+If your dataset has a grouping column (sex, site, species, year, treatment),
+check whether the picture changes when you split by it. A variable that matches
+nothing in the bestiary is often two or more groups pooled together, each of
+which is a sensible distribution on its own. Saying that, with a plot, is a
+better answer than forcing a label onto the pooled data.
+
 If a variable does not look like anything in the bestiary, say so and explain
 why. That is a real answer and will be graded as one.
