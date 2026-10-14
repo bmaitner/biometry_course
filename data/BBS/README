@@ -8,3 +8,21 @@
   * Mean annual precipitation
   * Fraction built
   * Human footprint
+
+# Two things to know before modelling with this file
+
+  * **There are no zeros.** A row exists only where a species was detected, so
+    `total_sightings` runs from 1 upward and absences are missing rather than
+    recorded as 0. Counts taken straight from this file are therefore counts
+    *given presence*, which biases means upward and flattens any effect that
+    works by making a species absent. To get the zeros, build the full
+    route-by-year grid yourself: the routes surveyed in a year are
+    `unique(Route[Year == y])`, and any of them missing from a species' rows
+    held none of that species.
+  * **The spatial columns do not change over time.** `frac_built`, `footprint`,
+    `mean_annual_temp`, `mean_annual_precip`, `Latitude` and `Longitude` are each
+    constant within a route across all 24 years: they describe where a route is,
+    not what happened on it. They can explain spatial variation, and cannot
+    explain a trend through time.
+
+  79,991 rows: 112 routes, 1996 to 2019. 1996 has a single route in it.
