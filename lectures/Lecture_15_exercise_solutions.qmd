@@ -1,0 +1,268 @@
+---
+title: "Likelihood exercises: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 15"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+```
+
+## How to use this
+
+The code from Lecture 15, filled in, with the numbers it produces.
+
+. . .
+
+Optimizers are numerical, so your last decimal place may differ from mine.
+Anything beyond that is worth asking about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up
+
+```{r}
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+routes_2019 <- length(unique(bbs$Route[bbs$Year == 2019]))
+
+with_bobwhite <- length(unique(bbs$Route[bbs$Year == 2019 &
+                       bbs$Scientific_Name == "Colinus virginianus"]))
+
+bobwhite <- bbs$total_sightings[bbs$Scientific_Name == "Colinus virginianus"]
+
+c(routes = routes_2019, with_bobwhite = with_bobwhite, counts = length(bobwhite))
+```
+
+## Trying values of `p` {.smaller}
+
+```{r}
+dbinom(x = 52, size = 71, prob = 0.5)
+dbinom(x = 52, size = 71, prob = 0.6)
+dbinom(x = 52, size = 71, prob = 0.73)
+dbinom(x = 52, size = 71, prob = 0.8)
+```
+
+The biggest is at `p = 0.73`, and 52/71 = `r round(52/71, 3)`.
+
+::: {.notes}
+A result of 52 out of 71 is about 2,900 times more likely under p = 0.73 than
+under p = 0.5. That ratio is what likelihood is measuring.
+:::
+
+## Why the product fails {.smaller}
+
+```{r}
+prod(dpois(bobwhite[1:5], lambda = 10.8))
+
+prod(dpois(bobwhite[1:50], lambda = 10.8))
+
+prod(dpois(bobwhite, lambda = 10.8))
+```
+
+The last one is not a small number. It is **zero**: R cannot hold anything below
+about `r signif(.Machine$double.xmin, 3)`.
+
+```{r}
+sum(dpois(bobwhite, lambda = 10.8, log = TRUE))
+```
+
+On the log scale the same quantity is an ordinary number.
+
+## One parameter, fitted {.smaller}
+
+```{r}
+binom_nll <- function(p){
+  -dbinom(x = with_bobwhite, size = routes_2019, prob = p, log = TRUE)
+}
+
+fit <- optimize(binom_nll, interval = c(0, 1))
+
+c(estimate = fit$minimum, nll = fit$objective)
+```
+
+Compare with the formula answer:
+
+```{r}
+with_bobwhite / routes_2019
+```
+
+::: {.notes}
+Agreement to four decimals. For a binomial the MLE is provably the sample
+proportion, which is why this is a good place to check the machinery.
+:::
+
+## Two parameters, fitted {.smaller}
+
+```{r}
+nb_nll <- function(mu, size){
+  -sum(dnbinom(bobwhite, mu = mu, size = size, log = TRUE))
+}
+
+fit_nb <- optim(par = c(mu = 10, size = 1),
+                fn = function(p){
+                  nb_nll(p["mu"], p["size"])
+                },
+                method = "BFGS")
+
+round(fit_nb$par, 3)
+```
+
+```{r}
+#| echo: false
+mu_m <- mean(bobwhite)
+size_m <- mu_m^2 / (var(bobwhite) - mu_m)
+knitr::kable(data.frame(method = c("method of moments", "maximum likelihood"),
+                        mu = round(c(mu_m, fit_nb$par["mu"]), 3),
+                        size = round(c(size_m, fit_nb$par["size"]), 3)))
+```
+
+The means agree. The clumping does not, and likelihood is the one to trust.
+
+## Do the two routes agree? {.smaller}
+
+```{r}
+library(bbmle)
+
+m1 <- mle2(minuslogl = nb_nll,
+           start = list(mu = 10, size = 1),
+           data = list(bobwhite = bobwhite))
+
+coef(m1)
+
+coef(m1) - fit_nb$par
+```
+
+Zero, because `mle2()` calls `optim()` underneath. A stronger check is to change
+the search algorithm:
+
+```{r}
+fit_nm <- optim(par = c(mu = 10, size = 1),
+                fn = function(p){
+                  nb_nll(p["mu"], p["size"])
+                },
+                method = "Nelder-Mead")
+
+round(fit_nm$par - fit_nb$par, 4)
+```
+
+## Estimating the decline {.smaller}
+
+The two pieces you had to supply were the **body of `trend_nll`** and the
+**call to it** inside `optim`:
+
+```{r}
+bob <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
+counts <- bob$total_sightings
+year <- bob$Year - min(bob$Year)
+
+trend_nll <- function(mu0, decline, size){
+  mu <- mu0 * (1 - decline)^year
+  -sum(dnbinom(counts, mu = mu, size = size, log = TRUE))
+}
+
+fit_trend <- optim(par = c(mu0 = 15, decline = 0.03, size = 1),
+                   fn = function(p){
+                     trend_nll(p["mu0"], p["decline"], p["size"])
+                   },
+                   method = "L-BFGS-B",
+                   lower = c(0.1, -0.5, 0.05),
+                   upper = c(100, 0.5, 50))
+
+round(fit_trend$par, 4)
+```
+
+## What that answer means {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 6.6
+ym <- aggregate(total_sightings ~ Year, data = bob, FUN = mean)
+plot(ym$Year, ym$total_sightings, pch = 16, col = "grey30",
+     xlab = "year", ylab = "mean count per route")
+yrs <- 0:max(year)
+lines(min(bob$Year) + yrs,
+      fit_trend$par["mu0"] * (1 - fit_trend$par["decline"])^yrs,
+      col = "red", lwd = 3)
+```
+
+- **`mu0` = 14.8**: expected count per route in 1996
+- **`decline` = 0.029**: about **2.9% fewer each year**, against the 3% we
+  assumed on Thursday
+- **`size` = 1.43**: the clumping, slightly less clumped than the no-trend fit,
+  because some of the spread was really the decline
+
+## Was the trend worth fitting? {.smaller}
+
+```{r}
+c(no_trend = round(fit_nb$value, 1), with_trend = round(fit_trend$value, 1))
+```
+
+The trend improves the fit by about **31** log-likelihood units, and costs one
+extra parameter.
+
+. . .
+
+Whether 31 is worth one parameter is **next week's lecture**. The honest answer
+today is "almost certainly yes, and here is how we will check".
+
+## Whichever species you picked {.smaller}
+
+Northern Cardinal, as one example:
+
+```{r}
+cards <- bbs$total_sightings[bbs$Scientific_Name == "Cardinalis cardinalis"]
+
+nb_nll2 <- function(mu, size){
+  -sum(dnbinom(cards, mu = mu, size = size, log = TRUE))
+}
+
+fit_card <- optim(par = c(mu = 50, size = 1),
+                  fn = function(p){
+                    nb_nll2(p["mu"], p["size"])
+                  },
+                  method = "BFGS")
+
+round(fit_card$par, 3)
+
+round(mean(cards)^2 / (var(cards) - mean(cards)), 3)   # moment estimate of size
+```
+
+The two estimates differ, as they did for the bobwhite. **Which one is larger
+depends on the species:** cardinals give 2.55 against 1.95, but Northern
+Mockingbird gives 1.18 against 1.34, the other way round. There is no rule to
+memorize here, only a reason to prefer likelihood.
+
+## What to take away
+
+1. Likelihood is the probability of your data, read as a function of the
+   parameters.
+2. Logs turn an impossible product into a workable sum.
+3. An optimizer finds the parameters that minimize the negative log-likelihood.
+4. **Check it**: against a formula where one exists, against a second algorithm,
+   and against a plot.
+
+::: {.notes}
+Point 4 is the one that keeps people out of trouble in the final project.
+:::
