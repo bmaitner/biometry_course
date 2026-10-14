@@ -923,7 +923,7 @@ problem confidence intervals exist for, which is Thursday.
 
 . . .
 
-Still missing: **how sure are you?** That is Thursday.
+Still missing: parameters that **depend on something else**. That is Thursday.
 
 ::: {.notes}
 Worth saying that this is the moment the course turns from describing to
@@ -932,11 +932,15 @@ inferring, and that everything after it is refinement.
 
 ## Before next class
 
-Read Bolker **6.3**
+Read Bolker **6.3** (6.3.2 optional)
 
-Next time: **confidence intervals**, and what the shape of that curve tells you
+Next time: fitting a model where the parameter **changes with a covariate**, as
+the decline exercise just did
 
 ::: {.notes}
-6.3 is the likelihood surface and the curvature argument, which the contour plot
-previewed.
+6.3 is estimation for more complex functions: the deterministic function from
+chapter 3 placed inside the distribution from chapter 4.
+
+They have already done one, in the trend exercise, which is where Thursday
+starts. Confidence intervals are 6.4, the Tuesday after.
 :::
