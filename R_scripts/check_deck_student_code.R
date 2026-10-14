@@ -16,8 +16,8 @@
 #
 # Expect two kinds of legitimate failure, which the output labels rather than
 # hides:
-#   - fill-in-the-blank exercises: an empty function body, or ____ marking a
-#     function name or argument the student has to supply
+#   - fill-in-the-blank exercises: an empty function body, ____ marking a piece
+#     the student supplies, or a comment such as "your NLL goes here"
 #   - "use your own data" blocks that reference my_data or your_file.csv
 # Anything else is a real bug: an object used before anything created it.
 
@@ -58,6 +58,7 @@ check_deck <- function(path, verbose = TRUE) {
 
       expected <- grepl("my_data|your_file", code) ||
                   grepl("____", code) ||
+                  grepl("goes here|fill in|your .*here", code, ignore.case = TRUE) ||
                   grepl("\\{\\s*\\n\\s*\\}", code)
 
       label <- if (expected) "expected" else "PROBLEM"
