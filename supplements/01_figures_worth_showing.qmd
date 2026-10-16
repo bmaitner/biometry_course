@@ -1,0 +1,681 @@
+---
+title: "Figures worth showing"
+subtitle: "Supplement 1 &nbsp;&nbsp;|&nbsp;&nbsp; PCB 6455 / BSC 4933: Biometry"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    output-file: 01_figures_worth_showing-slides.html
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 8
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+  html:
+    output-file: 01_figures_worth_showing.html
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+    code-line-numbers: false
+    fig-width: 8
+    fig-height: 4.5
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
+```
+
+## This is optional {.smaller}
+
+A supplement, not a lecture. Nothing here is examinable, nothing here is due,
+and you can work through it whenever it becomes useful.
+
+It assumes Lecture 8 (ggplot2) and nothing after it, except for the last
+section, which uses a model of the kind fitted in Lectures 15 and 16.
+
+**Every code block here is meant to be run.** There is no "watch this one":
+if it is on the page, you can paste it into R and get the figure next to it.
+
+*Last checked: 2026-10-16, with ggplot2 4.0.3, ggridges 0.5.7, ggbump 0.1.99,
+patchwork 1.3.2, glyospalettes 0.2.2, transformerpalettes 0.2.0.*
+
+## What you need {.smaller}
+
+```{r}
+#| eval: false
+install.packages(c("ggplot2", "ggridges", "ggbump", "patchwork",
+                   "viridis", "colorspace"))
+```
+
+Then:
+
+```{r}
+library(ggplot2)
+library(ggridges)
+library(ggbump)
+library(patchwork)
+```
+
+## The data {.smaller}
+
+Three tables from the course repository. They are already tidy, so nothing here
+is about wrangling.
+
+```{r}
+base <- "https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/"
+
+reef <- read.csv(paste0(base, "reef_surveys.csv"))
+ranks <- read.csv(paste0(base, "bbs_species_ranks.csv"))
+occ <- read.csv(paste0(base, "bobwhite_occupancy.csv"))
+
+dim(reef)
+```
+
+`reef` is 8,560 NCRMP reef fish surveys, with depth, species richness and
+habitat. `ranks` is the six commonest Florida birds in each year. `occ` is
+bobwhite occupancy of Breeding Bird Survey routes, one row per year.
+
+# Part 1: Color {background-color="#f0f4f8"}
+
+## The default palette is not a choice {.smaller}
+
+ggplot2 picks colors by walking evenly around a color wheel. That is a
+reasonable default and a poor decision, because it ignores everything about
+your data.
+
+```{r}
+#| fig-height: 3.4
+reef$depth_class <- cut(reef$depth, c(0, 5, 10, 15, 20, 35),
+                        labels = c("0-5 m", "5-10 m", "10-15 m",
+                                   "15-20 m", "20+ m"))
+
+ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(x = "depth", y = "species richness")
+```
+
+## Three kinds of data, three kinds of palette {.smaller}
+
+The single most useful idea in this supplement:
+
+| Your variable | Palette type | Example |
+|---|---|---|
+| unordered groups: habitat, species, treatment | **qualitative**, distinct hues | `scale_fill_viridis_d()` |
+| ordered or continuous: depth, temperature, year | **sequential**, one hue, light to dark | `scale_fill_viridis_c()` |
+| a meaningful midpoint: change, difference, residual | **diverging**, two hues either side of pale | `scale_fill_gradient2()` |
+
+Depth classes above are **ordered**, so the five unrelated hues are actively
+misleading. They suggest five unrelated categories.
+
+## The same plot, honestly colored {.smaller}
+
+```{r}
+#| fig-height: 3.6
+ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "mako", guide = "none") +
+  theme_minimal() +
+  labs(x = "depth", y = "species richness")
+```
+
+The color now carries the same information as the x axis: deeper is darker.
+Since it duplicates the axis, the legend is dropped with `guide = "none"`.
+
+## Why viridis {.smaller}
+
+The viridis palettes are built so that equal steps in the data look like equal
+steps in color. Most palettes are not, which is why the rainbow invents stripes
+that are not in your data.
+
+Three practical consequences:
+
+- **It survives being printed in black and white**, because lightness increases
+  steadily along the scale
+- **It survives color blindness**, for the same reason
+- **It does not create false boundaries**, so a smooth gradient looks smooth
+
+```{r}
+#| echo: false
+#| fig-height: 1.5
+pal <- function(cols, name){
+  n <- length(cols)
+  image(matrix(1:n, ncol = 1), col = cols, axes = FALSE)
+  title(name, cex.main = 0.9, line = 0.3)
+}
+par(mfrow = c(1, 2), mar = c(0.4, 0.4, 1.6, 0.4))
+pal(rainbow(12), "rainbow: stripes you did not ask for")
+pal(viridis::viridis(12), "viridis: even")
+```
+
+## Checking for color blindness {.smaller}
+
+You do not have to guess. `colorspace` simulates how colors look to someone
+with the commonest form of color blindness, which affects roughly 1 in 12 men.
+
+```{r}
+#| fig-height: 3.4
+library(colorspace)
+
+default_hues <- scales::hue_pal()(5)
+mako <- viridis::viridis(5, option = "mako")
+
+swatchplot(list("ggplot default"     = default_hues,
+                "    deuteranopia"   = deutan(default_hues),
+                "viridis mako"       = mako,
+                "    deuteranopia"   = deutan(mako)))
+```
+
+## What that showed {.smaller}
+
+Three of the five default colors collapse into near-identical olive:
+
+```{r}
+rbind(default = default_hues, deuteranopia = deutan(default_hues))[, 1:3]
+```
+
+Those are the red, the yellow-green and the green. In the boxplot two slides
+back, three of the five boxes become the same color.
+
+The mako scale survives, because it never relied on hue to carry the order. It
+used **lightness**, and lightness is unaffected.
+
+**That is the real argument for ordered palettes**: they degrade gracefully.
+A palette that separates groups by hue alone has a single point of failure.
+
+## Checking a whole figure {.smaller}
+
+To check a finished figure rather than a palette, `colorspace` ships an
+interactive viewer. Run this and paste in a saved image:
+
+```{r}
+#| eval: false
+colorspace::cvd_emulator()
+```
+
+A quicker habit, and the one actually worth building: **print it in black and
+white.** If the figure still works in greyscale, it will survive any form of
+color blindness, because you have stopped relying on hue.
+
+## Palettes from outside CRAN {.smaller}
+
+Not everything useful is on CRAN. Packages under development, specialist tools,
+and anything written by someone in your lab usually live on GitHub, and
+`remotes` installs them directly:
+
+```{r}
+#| eval: false
+install.packages("remotes")
+
+remotes::install_github("bmaitner/glyospalettes")
+remotes::install_github("bmaitner/transformerpalettes")
+```
+
+```{r}
+library(glyospalettes)
+library(transformerpalettes)
+```
+
+**One caution worth absorbing:** installing from GitHub runs code written by
+whoever owns that repository, with no review in between. CRAN at least checks
+that a package builds and does not do anything obviously hostile. Install from
+GitHub when you know whose repository it is.
+
+## These are a joke with a serious tool inside {.smaller}
+
+Both packages are color palettes taken from toy lines: the Glyos figures and
+Generation 1 Transformers. They are also the clearest demonstration of Part 1's
+argument, because **a palette designed to look good on a toy is not
+automatically readable on a chart**, and the packages ship the tools to tell the
+difference.
+
+```{r}
+glyos_palette_stats("glyaxia")[, c("n_colours", "min_de", "min_de_deutan",
+                                   "lum_range", "colorblind", "sequential")]
+```
+
+## Reading that output {.smaller}
+
+Every column is a question from Part 1, answered with a number:
+
+| Column | The question it answers |
+|---|---|
+| `min_de` | How far apart are the two **closest** colors? Under about 10, they get confused |
+| `min_de_deutan` | The same, under color blindness. Passing the first and failing this means it separates by hue alone |
+| `lum_range` | How much **lightness** does it span? This is what survives greyscale |
+| `colorblind`, `sequential` | Verdicts, from thresholds on the columns above |
+
+**This is the useful part.** The thresholds are rules of thumb, but the
+quantities are the real criteria, and they apply to any palette from any source.
+
+## Shortlisting {.smaller}
+
+Rather than reading stats for 193 palettes, ask for the ones that pass:
+
+```{r}
+head(glyos_find_palettes("sequential"), 6)
+
+head(tf_find_palettes("colorblind"), 6)
+```
+
+Then look at them, because passing a numeric check is not the same as being a
+good choice.
+
+## Colors that survive your background {.smaller}
+
+The most useful tool in either package. A color that reads on a white slide can
+vanish on a dark one, and `tf_pick()` answers that directly:
+
+```{r}
+tf_pick("optimus_prime", n = 3, style = "light", colorblind = TRUE)
+```
+
+On white it keeps the red, the navy and the near-black, dropping the silver and
+the gold as too pale to see.
+
+## The same palette, a dark background {.smaller}
+
+```{r}
+tf_pick("optimus_prime", n = 3, style = "dark")
+```
+
+Now the navy and the black are gone, and the silver and gold are in.
+
+**Same five colors in, a different three out.** Which colors work is a property
+of the palette *and* the background together, which is why a figure that looked
+fine in RStudio can be unreadable projected on a dark theme.
+
+## Using any palette, from any source {.smaller}
+
+`scale_fill_manual()` takes a vector of colors, so this works for these
+packages, for a journal's house colors, or for hex codes off a website:
+
+```{r}
+#| fig-height: 3.1
+hades <- as.character(glyos_palette("hades", 5, type = "continuous", sort = TRUE))
+
+ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
+  geom_boxplot() +
+  scale_fill_manual(values = hades, guide = "none") +
+  theme_minimal() +
+  labs(x = "depth", y = "species richness")
+```
+
+`type = "continuous"` interpolates a four-color palette to the five we need, and
+`sort = TRUE` orders it dark to light, so an ordered variable gets an ordered
+scale. Part 1's rule, applied to a palette named after a toy.
+
+# Part 2: Showing a distribution per group {background-color="#f0f4f8"}
+
+## The problem {.smaller}
+
+Lecture 12 made the point that a single histogram can hide structure: if two
+groups have different distributions, the pooled histogram is some third shape
+belonging to nobody.
+
+The usual fix is a boxplot, which shows the median and spread but **hides the
+shape**. A bimodal group and a flat group can give identical boxes.
+
+```{r}
+#| fig-height: 2.9
+ggplot(reef, aes(habitat, richness)) +
+  geom_boxplot() +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 6)) +
+  labs(x = NULL, y = "species richness")
+```
+
+## Ridgelines show the shape {.smaller}
+
+```{r}
+#| fig-height: 4.2
+reef$habitat_short <- substr(reef$habitat, 1, 28)
+
+ggplot(reef, aes(x = richness, y = habitat_short, fill = after_stat(x))) +
+  geom_density_ridges_gradient(scale = 2.2, rel_min_height = 0.01) +
+  scale_fill_viridis_c(option = "mako", guide = "none") +
+  theme_ridges(font_size = 9) +
+  labs(x = "species richness", y = NULL)
+```
+
+## What that figure is worth {.smaller}
+
+The boxplot said these habitats differ in median richness. The ridgeline says
+more:
+
+- Some habitats are **tightly peaked**, others spread across the whole range
+- Some are **skewed**, with a long tail of unusually rich surveys
+- The differences between habitats are **small relative to the variation
+  within** each one, which a boxplot tends to understate
+
+That last point is the one that changes conclusions, and it is invisible in a
+plot of medians.
+
+**Use ridgelines when the shape matters.** Use boxplots when you have many
+groups and only the center and spread matter.
+
+# Part 3: Combining panels {background-color="#f0f4f8"}
+
+## patchwork {.smaller}
+
+Save plots as objects, then combine them with `+`, `|` and `/`.
+
+```{r}
+#| fig-height: 3.2
+a <- ggplot(reef, aes(depth, richness)) +
+  geom_point(alpha = 0.06) + theme_minimal() + labs(x = "depth (m)", y = "richness")
+
+b <- ggplot(reef, aes(richness)) +
+  geom_histogram(bins = 30, fill = "#3B6B8F") + theme_minimal() +
+  labs(x = "richness", y = "surveys")
+
+a | b
+```
+
+## Layouts and labels {.smaller}
+
+`|` puts plots side by side, `/` stacks them, and brackets group them.
+`plot_annotation()` adds the panel letters a reviewer will ask for.
+
+```{r}
+#| fig-height: 3.6
+(a | b) / (b | a) +
+  plot_annotation(tag_levels = "A",
+                  title = "Reef fish surveys, four views")
+```
+
+In a talk, build the same figure one panel at a time. In a paper, this is one
+figure instead of four.
+
+# Part 4: Rank over time {background-color="#f0f4f8"}
+
+## The naive version {.smaller}
+
+`ggbump` draws rank changes as smooth curves. Here are the six commonest
+Florida birds in each year since 1997.
+
+```{r}
+#| fig-height: 3.6
+ggplot(ranks, aes(year, rank, colour = common_name)) +
+  geom_bump(linewidth = 1) +
+  geom_point(size = 1.6) +
+  scale_y_reverse(breaks = 1:6) +
+  theme_minimal() +
+  labs(y = "rank", colour = NULL)
+```
+
+## That figure is a mess, and it is instructive {.smaller}
+
+Ten species, ten colors, a legend that forces the reader to look back and forth,
+and so many crossings that no line can be followed.
+
+The problem is not the chart type. It is that the figure is trying to say ten
+things at once.
+
+**A figure should make one point.** Decide what the point is, then make
+everything that is not the point recede.
+
+Here is a point worth making: **the Chimney Swift was the commonest bird in
+Florida in 1997 and never appeared in the top six again.**
+
+## The same data, one point {.smaller}
+
+```{r}
+#| fig-height: 3.3
+highlight <- c("Chimney Swift", "Northern Cardinal")
+ranks$focus <- ifelse(ranks$common_name %in% highlight, ranks$common_name, "other")
+
+ggplot(ranks, aes(year, rank, colour = focus, group = common_name)) +
+  geom_bump(aes(linewidth = focus != "other")) +
+  geom_point(data = subset(ranks, focus != "other"), size = 2.4) +
+  scale_y_reverse(breaks = 1:6) +
+  scale_colour_manual(values = c("Chimney Swift" = "#D81B60",
+                                 "Northern Cardinal" = "#1E88E5",
+                                 "other" = "grey82")) +
+  scale_linewidth_manual(values = c(0.6, 1.6), guide = "none") +
+  theme_minimal() +
+  labs(y = "rank", colour = NULL)
+```
+
+## The technique, which generalizes {.smaller}
+
+Three lines did the work, and they work on any plot type:
+
+1. Make a column that holds the series name for the few you care about and a
+   constant like `"other"` for everything else
+2. `scale_colour_manual()` with real colors for those few and a pale grey for
+   `"other"`
+3. Make the highlighted series thicker
+
+The greyed lines are still there, so the reader can see the context and check
+that nothing has been hidden. They just stop competing.
+
+**This one technique will improve more of your figures than any palette
+choice.**
+
+## Now check the story before you tell it {.smaller}
+
+The figure says the Chimney Swift was number one and then vanished. Both halves
+are true, and the explanation is not the one you would guess.
+
+This check needs the raw survey data rather than the summary, so it is the one
+place here that downloads the full file (15 MB, a few seconds):
+
+```{r}
+bbs <- read.csv(paste0("https://github.com/bmaitner/biometry_course/raw/",
+                       "refs/heads/main/data/BBS/FL_BBS.csv"))
+
+swifts_97 <- bbs$total_sightings[bbs$Scientific_Name == "Chaetura pelagica" &
+                                   bbs$Year == 1997]
+
+sort(swifts_97, decreasing = TRUE)[1:6]
+```
+
+One route recorded **3,166 swifts**. The next highest recorded 54.
+
+## What that means {.smaller}
+
+Chimney Swifts roost communally, pouring into a single chimney by the thousand
+at dusk. One observer, on one morning, on one route, hit a roost.
+
+That single number made the species the commonest bird in Florida for one year
+in this figure. The 1998 "collapse" to 474 birds is not a population crash. It
+is the absence of that chimney.
+
+**Two lessons, and the second is the general one:**
+
+- A **bump chart shows rank and hides magnitude**. Rank 1 and rank 2 may be
+  nearly tied, or differ tenfold, and the chart looks identical
+- **Any dramatic pattern deserves one check before it becomes a sentence.**
+  Sort the raw numbers. It takes thirty seconds and it is the difference
+  between a finding and an embarrassment
+
+# Part 5: Showing a model {background-color="#f0f4f8"}
+
+## The gap this fills {.smaller}
+
+By the end of Chapter 6 you can fit a model and report parameters. A table of
+parameters convinces nobody. A figure showing the fitted model over the data is
+what makes a result believable, and it is the first thing a reviewer looks for.
+
+The recipe has three steps, and it is the same for every model you will fit:
+
+1. **Make a grid** of covariate values to predict at
+2. **Compute the prediction** at each, from the fitted parameters
+3. **Plot the data, then the prediction on top**
+
+## Step 0: fit something {.smaller}
+
+The bobwhite occupancy model from Lecture 16: the probability a route holds
+bobwhite declines logistically with year.
+
+```{r}
+nll <- function(par){
+  p <- plogis(par[1] + par[2] * occ$elapsed)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = p, log = TRUE))
+}
+
+fit <- optim(c(a = 2, b = -0.05), nll, method = "BFGS", hessian = TRUE)
+
+round(fit$par, 4)
+```
+
+## Steps 1 and 2: predict over a grid {.smaller}
+
+```{r}
+pred <- data.frame(elapsed = seq(0, 22, length.out = 100))
+
+pred$fit <- plogis(fit$par[1] + fit$par[2] * pred$elapsed)
+
+head(pred, 3)
+```
+
+The grid is finer than the data on purpose: 100 points draw a smooth curve,
+whereas predicting only at the observed years draws a polygon.
+
+## Step 3: the figure {.smaller}
+
+```{r}
+#| fig-height: 3.4
+occ$prop <- occ$n_occupied / occ$n_routes
+
+ggplot(occ, aes(elapsed, prop)) +
+  geom_point(aes(size = n_routes), alpha = 0.6) +
+  geom_line(data = pred, aes(elapsed, fit), colour = "#D81B60", linewidth = 1.2) +
+  scale_size_continuous(range = c(1, 4), name = "routes") +
+  theme_minimal() +
+  labs(x = "years since 1997", y = "proportion of routes occupied")
+```
+
+Point size carries sample size, so a year based on 64 routes does not look as
+authoritative as one based on 87.
+
+## Adding uncertainty {.smaller}
+
+A curve with no band implies a precision you do not have. `optim(hessian =
+TRUE)` gives you what you need: the curvature of the likelihood surface, which
+is the subject of Lecture 17.
+
+```{r}
+vcov_mat <- solve(fit$hessian)
+
+round(sqrt(diag(vcov_mat)), 4)        # standard errors of a and b
+```
+
+Then simulate parameter pairs from that uncertainty, build one curve per pair,
+and take the middle 95% at each x. This is Lecture 13's simulation idea, used
+for a new purpose.
+
+## The band, in six lines {.smaller}
+
+```{r}
+set.seed(1)
+draws <- MASS::mvrnorm(2000, mu = fit$par, Sigma = vcov_mat)
+
+curves <- apply(draws, 1, function(par){
+  plogis(par[1] + par[2] * pred$elapsed)
+})
+
+pred$lo <- apply(curves, 1, quantile, 0.025)
+pred$hi <- apply(curves, 1, quantile, 0.975)
+```
+
+`curves` is a 100 by 2000 matrix: one row per grid point, one column per
+simulated parameter pair. The quantiles are taken **across** simulations, at
+each grid point.
+
+## The finished figure {.smaller}
+
+```{r}
+#| fig-height: 3.6
+ggplot(occ, aes(elapsed, prop)) +
+  geom_ribbon(data = pred, aes(x = elapsed, ymin = lo, ymax = hi),
+              inherit.aes = FALSE, fill = "#D81B60", alpha = 0.18) +
+  geom_line(data = pred, aes(elapsed, fit), colour = "#D81B60", linewidth = 1.2) +
+  geom_point(aes(size = n_routes), alpha = 0.6) +
+  scale_size_continuous(range = c(1, 4), name = "routes") +
+  theme_minimal() +
+  labs(x = "years since 1997", y = "proportion of routes occupied")
+```
+
+## Read the band, not just the line {.smaller}
+
+The band is **narrowest in the middle** of the data and widens toward both
+ends. That is not a quirk of this dataset, it is what fitting a line does: the
+fitted line pivots around the center of the data, so small changes in slope
+move the ends a lot and the middle hardly at all.
+
+Two consequences worth carrying around:
+
+- **Extrapolation is worse than it looks.** Extend the x axis and the band
+  widens fast
+- **The ends of your data are the weakest part of your model**, which is
+  exactly where people like to read trends off a figure
+
+```{r}
+round(c(width_1997 = diff(c(pred$lo[1], pred$hi[1])),
+        width_2008 = diff(c(pred$lo[50], pred$hi[50])),
+        width_2019 = diff(c(pred$lo[100], pred$hi[100]))), 3)
+```
+
+## The same recipe, any model {.smaller}
+
+Nothing above was specific to a logistic curve or a binomial. For the negative
+binomial count model from Lecture 16, only the middle line changes:
+
+```{r}
+#| eval: false
+# grid
+pred <- data.frame(frac_built = seq(0, 0.5, length.out = 100))
+
+# prediction: the deterministic function, with the fitted parameters
+pred$fit <- fit$par["mu0"] * exp(fit$par["b"] * pred$frac_built)
+
+# plot: data, then prediction on top
+ggplot(counts, aes(frac_built, count)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = pred, aes(frac_built, fit), colour = "#D81B60")
+```
+
+Grid, predict, plot. The model changes; the recipe does not.
+
+# Taking it with you {background-color="#f0f4f8"}
+
+## What this buys you {.smaller}
+
+1. **Match the palette to the data.** Ordered data gets an ordered palette.
+   This is the cheapest improvement available to you.
+2. **Check for color blindness** with `deutan()` on your palette, or just look
+   at the figure in greyscale, before anything goes in a talk.
+3. **Show the shape**, with ridgelines, when the shape is the point.
+4. **Make one point per figure**, and grey out everything that is not it.
+5. **Plot your model over your data**, with a band. Grid, predict, plot.
+
+## Where it fits {.smaller}
+
+- **Assignments 3 and 4**: the model-prediction recipe in Part 5 applies
+  directly to anything you fit
+- **The final project presentation**: Parts 1, 3 and 4. A talk is where a
+  cluttered figure costs you the most, because nobody can pause on it
+- **Your own papers, later**: Part 5 and the color blindness check
+
+## Going further {.smaller}
+
+- **ggplot2 book**, free online: <https://ggplot2-book.org>
+- **R Graph Gallery**, worked examples of nearly every chart type:
+  <https://r-graph-gallery.com>
+- **Fundamentals of Data Visualization**, Claus Wilke, free online and the best
+  single source on *why* a figure works: <https://clauswilke.com/dataviz>
+- **patchwork**: <https://patchwork.data-imaginist.com>
+- **ggridges vignette**: `vignette("introduction", package = "ggridges")`
+
+If you want a figure reviewed, bring it to office hours. That is a faster way
+to improve than reading any of the above.
