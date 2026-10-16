@@ -77,6 +77,47 @@ and with the "Intro to R" strand of the course-splitting idea above. See also
 "Move the R supplement out of class", from Lecture 10, which is the same trade
 applied to the book's R supplements.
 
+### Add an optional track that goes beyond the course
+
+Proposed 2026-10-16. Students who want more than the course covers currently
+have nowhere to go, and some of them clearly want it. The idea is a set of
+optional, self-contained modules, each paired with a worked example and
+something runnable they can adapt.
+
+Candidate topics, from the first pass:
+
+- **Visualization beyond the basics.** Color palettes, and the ggplot extensions
+  worth knowing: `ggridges`, `ggbump`, `patchwork`, `gt` for tables.
+- **Visualizing model predictions.** Already listed under "Content gaps" below,
+  and the single most requested thing after a model is fitted.
+- **Competition and other dynamic models.** Fitting the models the ecology
+  students actually want to fit, which the book does not reach.
+- **Geospatial analysis.** `sf`, rasters, making a map that is not embarrassing.
+- **Package development.** `devtools`, documentation, tests, a repository that
+  someone else can install from.
+- **Finding data, and pulling it with APIs.** The step that blocks final
+  projects, and the one the course currently waves at.
+
+**Why this matters beyond being nice to have:** it is a cheap experiment on the
+course-splitting idea above. The "Advanced R" course in that proposal is a large
+commitment made on a guess about demand. An optional track costs one module at a
+time, and whichever modules get used become its syllabus. If none get used, that
+is an answer too, and it cost a weekend rather than a semester.
+
+These are **not** material to deliver in class. They are decks a student can work
+through alone, during the course or long after it, and they double as the first
+drafts of lectures for a possible "Biometry II".
+
+**Proposed implementation is in `supplements/README.md`**, written 2026-10-16.
+The short version: build them as revealjs decks in the course template, so they
+can walk into a future schedule, and render a scrolling reading version from the
+same source for people working alone. The rule that makes a supplement different
+from a lecture is that it has to work with nobody in the room, so the reasoning
+that normally lives in speaker notes has to be visible. Sort the topics by
+whether they help a student this semester or anchor weeks of a future course:
+figures and data wrangling are the former, geospatial, dynamic models and package
+development are the latter.
+
 ## Course materials
 
 From midterm feedback, Fall 2025:
