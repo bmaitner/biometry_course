@@ -1,0 +1,330 @@
+---
+title: "Complex functions: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 16"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+```
+
+## How to use this
+
+The code from Lecture 16, filled in, with the numbers it produces.
+
+. . .
+
+Optimizers are numerical, so your last decimal place may differ from mine.
+Anything beyond that is worth asking about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up
+
+```{r}
+bbs <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/BBS/FL_BBS.csv")
+
+n_routes_by_year <- tapply(bbs$Route, bbs$Year, function(x){ length(unique(x)) })
+
+bob_all <- bbs[bbs$Scientific_Name == "Colinus virginianus", ]
+n_occ_by_year <- tapply(bob_all$Route, bob_all$Year, function(x){ length(unique(x)) })
+
+occ <- data.frame(year = as.numeric(names(n_routes_by_year)),
+                  n_routes = as.vector(n_routes_by_year),
+                  n_occupied = as.vector(n_occ_by_year))
+
+occ <- occ[occ$n_routes > 10, ]
+occ$elapsed <- occ$year - min(occ$year)
+
+c(rows = nrow(occ), first = min(occ$year), last = max(occ$year))
+```
+
+## The one-number answer {.smaller}
+
+```{r}
+const_nll <- function(p){
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = p, log = TRUE))
+}
+
+const_fit <- optimize(const_nll, interval = c(0, 1))
+
+c(p = const_fit$minimum, nll = const_fit$objective)
+```
+
+Which is exactly the pooled proportion:
+
+```{r}
+sum(occ$n_occupied) / sum(occ$n_routes)
+```
+
+::: {.notes}
+The number to beat was 79.91.
+:::
+
+## Why the straight line failed {.smaller}
+
+The error was not your typing. At the starting values `a = 0.5` and `b = 0.05`,
+the last year gives
+
+```{r}
+0.5 + 0.05 * 22
+```
+
+and a probability of 1.6 is not a probability:
+
+```{r}
+dbinom(52, size = 71, prob = 1.6, log = TRUE)
+```
+
+`optim()` cannot compare `NaN` with anything, so it stops before it starts. Any
+unbounded line will eventually do this. That is what the logit fixes.
+
+## Your turn 1: fitting the decline {.smaller}
+
+The two pieces you had to supply were the **body** and the **call**:
+
+```{r}
+occ_nll <- function(a, b){
+  p <- plogis(a + b * occ$elapsed)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = p, log = TRUE))
+}
+
+fit_occ <- optim(par = c(a = 2, b = -0.05),
+                 fn = function(p){
+                   occ_nll(p["a"], p["b"])
+                 },
+                 method = "BFGS")
+
+round(fit_occ$par, 4)
+round(fit_occ$value, 2)
+```
+
+::: {.notes}
+56.69 against 79.91, so 23 units for one extra parameter.
+:::
+
+## What those two numbers mean {.smaller}
+
+```{r}
+unname(plogis(fit_occ$par["a"]))                          # occupancy in 1997
+unname(plogis(fit_occ$par["a"] + 22 * fit_occ$par["b"]))  # occupancy in 2019
+unname(exp(fit_occ$par["b"]))                             # odds multiplier per year
+```
+
+`b` is a change in **log odds**, not in probability.
+
+- 1997 odds: 0.88 / 0.12 = about 7.5 to 1
+- multiply by 0.94, twenty-two times: `r round(7.5 * exp(fit_occ$par["b"])^22, 2)` to 1
+- which is a probability of about 0.66
+
+. . .
+
+Reporting `b = -0.062` as "a 6% decline in occupancy" is the common mistake. It
+is a 6% decline in the **odds**.
+
+## Checking it by eye {.smaller}
+
+```{r}
+#| fig-height: 3.2
+#| fig-width: 7
+plot(occ$elapsed, occ$n_occupied / occ$n_routes, pch = 16,
+     ylim = c(0, 1), xlab = "years since 1997", ylab = "proportion occupied")
+
+elapsed_seq <- 0:22
+
+lines(elapsed_seq,
+      plogis(fit_occ$par["a"] + fit_occ$par["b"] * elapsed_seq),
+      col = "red", lwd = 3)
+```
+
+## The `mle2()` route, and `glm()` {.smaller}
+
+```{r}
+library(bbmle)
+
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+
+parnames(occ_nll2) <- c("a", "b")
+
+m_occ <- mle2(minuslogl = occ_nll2,
+              start = c(a = 2, b = -0.05),
+              data = list(n_occupied = occ$n_occupied,
+                          n_routes = occ$n_routes,
+                          elapsed = occ$elapsed))
+
+round(coef(m_occ), 4)
+
+round(coef(glm(cbind(n_occupied, n_routes - n_occupied) ~ elapsed,
+               data = occ, family = binomial)), 4)
+```
+
+Three routes, one answer.
+
+## Your turn 2: the habitat effect {.smaller}
+
+```{r}
+y_bob <- bob_all$total_sightings
+u_bob <- bob_all$frac_built
+
+urban_nll <- function(mu0, b, size){
+  mu <- mu0 * exp(b * u_bob)
+  -sum(dnbinom(y_bob, mu = mu, size = size, log = TRUE))
+}
+
+fit_urban <- optim(par = c(mu0 = 12, b = -3, size = 1.4),
+                   fn = function(p){
+                     urban_nll(p["mu0"], p["b"], p["size"])
+                   },
+                   method = "L-BFGS-B",
+                   lower = c(0.1, -20, 0.05),
+                   upper = c(100, 20, 50))
+
+round(fit_urban$par, 3)
+round(fit_urban$value, 1)
+```
+
+## What the model expects {.smaller}
+
+```{r}
+mu0 <- fit_urban$par["mu0"]
+b <- fit_urban$par["b"]
+
+round(mu0 * exp(b * c(0, 0.05, 0.2, 0.5)), 2)      # 0%, 5%, 20%, 50% developed
+
+round(unname(log(2) / abs(b)), 3)                 # development that halves the count
+```
+
+```{r}
+#| echo: false
+#| fig-height: 2.7
+#| fig-width: 7
+br <- cut(u_bob, breaks = c(0, 0.02, 0.05, 0.1, 0.2, 0.4, 1), include.lowest = TRUE)
+mids <- c(0.01, 0.035, 0.075, 0.15, 0.3, 0.6)
+plot(u_bob, y_bob, pch = 16, col = rgb(0, 0, 0, 0.12), ylim = c(0, 40),
+     xlab = "fraction developed", ylab = "bobwhite counted")
+points(mids, tapply(y_bob, br, mean), pch = 17, cex = 1.5, col = "#2166ac")
+uu <- seq(0, 0.5, length.out = 200)
+lines(uu, mu0 * exp(b * uu), col = "red", lwd = 3)
+```
+
+Every 21 percentage points of development costs about half the birds.
+
+## The three count models {.smaller}
+
+```{r}
+year_bob <- bob_all$Year - min(bob_all$Year)
+
+flat <- optimize(function(s){
+  -sum(dnbinom(y_bob, mu = mean(y_bob), size = s, log = TRUE))
+}, interval = c(0.05, 50))
+
+trend <- optim(par = c(mu0 = 15, decline = 0.03, size = 1),
+               fn = function(p){
+                 mu <- p["mu0"] * (1 - p["decline"])^year_bob
+                 -sum(dnbinom(y_bob, mu = mu, size = p["size"], log = TRUE))
+               },
+               method = "L-BFGS-B",
+               lower = c(0.1, -0.5, 0.05), upper = c(100, 0.5, 50))
+
+round(c(flat = flat$objective, year = trend$value, development = fit_urban$value), 1)
+```
+
+Equal parameter counts for the last two, so the lower one simply wins.
+
+. . .
+
+But `frac_built` does not change over the 23 years, so it describes **where** the
+birds are, not **why** they declined.
+
+## Additional practice: reef richness {.smaller}
+
+```{r}
+reef <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Reef_fish/NCRMP_reef_fish_surveys.csv")
+
+depth <- reef$DEPTH
+rich <- reef$species_richness
+
+var(rich) / mean(rich)        # overdispersed, so negative binomial
+```
+
+```{r}
+reef_nll <- function(peak, opt, width, size){
+  mu <- peak * exp(-(depth - opt)^2 / (2 * width^2))
+  -sum(dnbinom(rich, mu = mu, size = size, log = TRUE))
+}
+
+fit_reef <- optim(par = c(peak = 25, opt = 20, width = 15, size = 10),
+                  fn = function(p){
+                    reef_nll(p["peak"], p["opt"], p["width"], p["size"])
+                  },
+                  method = "L-BFGS-B",
+                  lower = c(1, 0, 1, 0.1), upper = c(200, 60, 200, 1000))
+
+round(fit_reef$par, 2)
+```
+
+## Does the curve match the cloud? {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 7
+plot(depth, rich, pch = 16, col = rgb(0, 0, 0, 0.05),
+     xlab = "depth (m)", ylab = "species richness")
+dbr <- cut(depth, breaks = seq(0, 32.5, by = 2.5))
+dmid <- seq(1.25, 31.25, by = 2.5)
+points(dmid, tapply(rich, dbr, mean), pch = 17, cex = 1.4, col = "#2166ac")
+dd <- seq(0, 32, length.out = 200)
+lines(dd, fit_reef$par["peak"] *
+        exp(-(dd - fit_reef$par["opt"])^2 / (2 * fit_reef$par["width"]^2)),
+      col = "red", lwd = 3)
+legend("topright", c("binned means", "fitted curve"), pch = c(17, NA),
+       lty = c(NA, 1), lwd = c(NA, 3), col = c("#2166ac", "red"),
+       bty = "n", cex = 0.8)
+```
+
+```{r}
+flat_reef <- optimize(function(s){
+  -sum(dnbinom(rich, mu = mean(rich), size = s, log = TRUE))
+}, interval = c(0.1, 1000))
+
+round(c(hump = fit_reef$value, flat = flat_reef$objective), 1)
+```
+
+An optimum near **`r round(fit_reef$par["opt"], 0)` m**, but a width of
+**`r round(fit_reef$par["width"], 0)` m**: real, and very gentle.
+
+## What to take away
+
+1. A parameter can be a **function of a covariate**. Nothing else changes.
+2. Constrained parameters get **transformed**, so the optimizer cannot wander
+   anywhere illegal.
+3. Interpret the estimate **on the scale you fitted it**: log odds, or logs.
+4. **Check it**: against a second route to the same fit, and against a plot.
+
+::: {.notes}
+Point 3 is the one that produces wrong sentences in papers.
+:::
