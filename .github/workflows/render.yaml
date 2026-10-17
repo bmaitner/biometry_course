@@ -1,0 +1,101 @@
+# Render everything, weekly, against current package versions.
+#
+# This is the job that earns its keep while nobody is looking. The decks and
+# supplements are rendered from source with the latest CRAN and GitHub packages,
+# so if ggbump changes its API in March, or a palette package is renamed, this
+# goes red in the week it happens rather than in the week it is taught.
+#
+# It runs on macOS as well as Linux on purpose. Most of the class is on Macs,
+# and there is precedent: the var(x) == sd(x)^2 demonstration in Lecture 11
+# behaved differently on Macs, and a student found it rather than the
+# instructor. A Linux-only check would not have caught that.
+#
+# Nothing is committed from here. Rendering is the test.
+#
+# It does NOT use renv::restore(), deliberately: pinned versions would test
+# that the materials worked in October 2026, which is the one thing already
+# known. Drift is the whole point.
+
+name: render
+
+on:
+  schedule:
+    # Mondays, 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::knitr
+            any::rmarkdown
+            any::bbmle
+            any::emdbook
+            any::dplyr
+            any::tibble
+            any::MASS
+            any::ggplot2
+            any::ggridges
+            any::patchwork
+            any::viridis
+            any::colorspace
+            any::scales
+            github::davidsjoberg/ggbump
+            github::bmaitner/glyospalettes
+            github::bmaitner/transformerpalettes
+
+      - name: Render every lecture deck
+        run: |
+          for f in lectures/*.qmd; do
+            echo "::group::$f"
+            quarto render "$f" --to revealjs || exit 1
+            echo "::endgroup::"
+          done
+        shell: bash
+
+      # Supplements render twice, as slides and as a reading version. Each pass
+      # must be separate: rendering both formats in one call silently breaks
+      # embed-resources and produces a deck that only works next to its _files
+      # directory. Verified 2026-10-16.
+      - name: Render every supplement, both ways
+        run: |
+          for f in supplements/*.qmd; do
+            echo "::group::$f"
+            quarto render "$f" --to revealjs || exit 1
+            quarto render "$f" --to html || exit 1
+            echo "::endgroup::"
+          done
+        shell: bash
+
+      # Only useful when something failed: lets you see which slide broke
+      # without reproducing the whole environment locally.
+      - name: Upload rendered output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-${{ matrix.os }}
+          path: |
+            lectures/*.html
+            supplements/*.html
+          retention-days: 7
