@@ -34,8 +34,8 @@ knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
 
 ## This is optional {.smaller}
 
-A supplement, not a lecture. Nothing here is examinable, nothing here is due,
-and you can work through it whenever it becomes useful.
+A supplement, not a lecture. Nothing here will be on an exam, nothing here is
+due, and you can work through it whenever it becomes useful.
 
 It assumes Lecture 8 (ggplot2) and nothing after it, except for the last
 section, which uses a model of the kind fitted in Lectures 15 and 16.
@@ -121,13 +121,16 @@ misleading. They suggest five unrelated categories.
 #| fig-height: 3.6
 ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
   geom_boxplot() +
-  scale_fill_viridis_d(option = "mako", guide = "none") +
+  scale_fill_viridis_d(option = "mako", direction = -1, guide = "none") +
   theme_minimal() +
   labs(x = "depth", y = "species richness")
 ```
 
 The color now carries the same information as the x axis: deeper is darker.
-Since it duplicates the axis, the legend is dropped with `guide = "none"`.
+`direction = -1` is doing real work there, because mako runs dark to light by
+default, which would have put the darkest color on the shallowest water.
+
+Since the color duplicates the axis, the legend is dropped with `guide = "none"`.
 
 ## Why viridis {.smaller}
 
@@ -228,13 +231,14 @@ whoever owns that repository, with no review in between. CRAN at least checks
 that a package builds and does not do anything obviously hostile. Install from
 GitHub when you know whose repository it is.
 
-## These are a joke with a serious tool inside {.smaller}
+## Fun palettes, serious diagnostics {.smaller}
 
-Both packages are color palettes taken from toy lines: the Glyos figures and
-Generation 1 Transformers. They are also the clearest demonstration of Part 1's
-argument, because **a palette designed to look good on a toy is not
-automatically readable on a chart**, and the packages ship the tools to tell the
-difference.
+Both packages take their colors from toy lines: the Glyos figures and Generation
+1 Transformers. The colors are the lighthearted part.
+
+The tools underneath are not. They are the clearest demonstration of Part 1's
+argument, because **a palette chosen to look good on a toy is not automatically
+readable on a chart**, and these ship what you need to tell the difference.
 
 ```{r}
 glyos_palette_stats("glyaxia")[, c("n_colours", "min_de", "min_de_deutan",
@@ -299,7 +303,8 @@ packages, for a journal's house colors, or for hex codes off a website:
 
 ```{r}
 #| fig-height: 3.1
-hades <- as.character(glyos_palette("hades", 5, type = "continuous", sort = TRUE))
+hades <- rev(as.character(glyos_palette("hades", 5, type = "continuous",
+                                        sort = TRUE)))
 
 ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
   geom_boxplot() +
@@ -308,9 +313,116 @@ ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
   labs(x = "depth", y = "species richness")
 ```
 
-`type = "continuous"` interpolates a four-color palette to the five we need, and
-`sort = TRUE` orders it dark to light, so an ordered variable gets an ordered
-scale. Part 1's rule, applied to a palette named after a toy.
+`type = "continuous"` interpolates the four-color palette to the five we need,
+and `sort = TRUE` orders it by lightness. `rev()` then puts the dark end on the
+deep water, matching the mako version earlier.
+
+Getting that direction right is a surprisingly easy thing to get wrong, and the
+figure still looks perfectly professional when it is backward.
+
+## Putting it to work {.smaller}
+
+`tf_pick()` gave us three colors that hold up on a white slide. Here they are
+doing a real job, on how many reef surveys fall in each protection category:
+
+```{r}
+#| fig-height: 2.9
+reef$protection_f <- factor(reef$protection, levels = c(0, 1, 2),
+                            labels = c("Unprotected", "Protected", "Research only"))
+
+prime <- as.character(tf_pick("optimus_prime", n = 3, style = "light",
+                              colorblind = TRUE))
+
+ggplot(reef, aes(protection_f, fill = protection_f)) +
+  geom_bar() +
+  scale_fill_manual(values = prime, guide = "none") +
+  theme_minimal() +
+  labs(x = NULL, y = "surveys",
+       title = "Colorway: Optimus Prime (G1, 1984)")
+```
+
+## Now one from Glyos {.smaller}
+
+```{r}
+#| fig-height: 2.7
+glyaxia <- as.character(glyos_palette("glyaxia", 3))
+
+ggplot(reef, aes(protection_f, richness, fill = protection_f)) +
+  geom_violin(colour = NA) +
+  geom_boxplot(width = 0.1, fill = "white", outlier.size = 0.3) +
+  scale_fill_manual(values = glyaxia, guide = "none") +
+  theme_minimal() +
+  labs(x = NULL, y = "species richness",
+       title = "Colorway: Glyaxia Command (Onell Design, 2014)")
+```
+
+## The object the colors came from {.smaller}
+
+:::: {.columns}
+
+::: {.column width="38%"}
+![](figures/glyaxia_command.jpg){height="290px"}
+
+[Glyan, Glyaxia Command colorway, Onell Design, 2014. Photo: Official Glyos
+Database, <https://database.glyos.com/2014/05/glyan-glyaxia-standard.html>]{style="font-size:0.38em; color:#777"}
+:::
+
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig-height: 2.4
+glyospalettes::glyos_show_palettes(names = "glyaxia")
+```
+
+Yellow and blue plastic, black visor. Those are the five colors in the palette,
+and the three used in the violin plot on the previous slide.
+:::
+
+::::
+
+## One more, from Transformers {.smaller}
+
+:::: {.columns}
+
+::: {.column width="38%"}
+![](figures/megatron_g1.jpg){height="290px"}
+
+[Megatron, Generation 1 toy, 1984. Photo: TFWiki,
+<https://tfwiki.net/wiki/Megatron_(G1)/toys>]{style="font-size:0.38em; color:#777"}
+:::
+
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig-height: 2.4
+transformerpalettes::tf_show_palettes(names = "megatron")
+```
+
+Chromed silver, grey, red, black, and a purple insignia. A perfectly usable
+five-color categorical palette that happens to be a 1984 toy.
+:::
+
+::::
+
+## Finding these yourself {.smaller}
+
+Both packages carry the provenance in their data, so you never have to guess
+which object a palette came from:
+
+```{r}
+glyos_colorways[glyos_colorways$palette == "glyaxia",
+                c("colorway", "year", "source")]
+```
+
+```{r}
+#| eval: false
+tf_characters[tf_characters$palette == "megatron",
+              c("character", "year", "source")]
+```
+
+Naming the colorway in a figure title, as on the previous slides, is a small
+thing that makes a plot memorable in a talk, and it means that six months later
+you know exactly how to reproduce the colors.
 
 # Part 2: Showing a distribution per group {background-color="#f0f4f8"}
 
@@ -332,6 +444,24 @@ ggplot(reef, aes(habitat, richness)) +
   theme(axis.text.y = element_text(size = 6)) +
   labs(x = NULL, y = "species richness")
 ```
+
+## Violins: the shape, without the stacking {.smaller}
+
+A violin is a density, mirrored. It shows what the boxplot hides, in the same
+space the boxplot used:
+
+```{r}
+#| fig-height: 3.2
+ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
+  geom_violin(colour = NA) +
+  geom_boxplot(width = 0.12, fill = "white", outlier.size = 0.3) +
+  scale_fill_viridis_d(option = "mako", direction = -1, guide = "none") +
+  theme_minimal() +
+  labs(x = "depth", y = "species richness")
+```
+
+The white boxplot inside is the standard pairing: the violin carries the shape,
+the box carries the median and quartiles, and you give up neither.
 
 ## Ridgelines show the shape {.smaller}
 
@@ -359,10 +489,298 @@ more:
 That last point is the one that changes conclusions, and it is invisible in a
 plot of medians.
 
-**Use ridgelines when the shape matters.** Use boxplots when you have many
-groups and only the center and spread matter.
+**Use a boxplot when center and spread are all you need, and a violin or a
+ridgeline when the shape is part of the finding.** Which of those two depends
+mostly on how many groups you have, which is the next slide.
 
-# Part 3: Combining panels {background-color="#f0f4f8"}
+## The y axis does not have to be a category {.smaller}
+
+In the habitat plot the vertical axis was just a list of labels, in whatever
+order. When your groups come from a **number**, map the ridges to that number
+and the spacing carries information too:
+
+```{r}
+#| fig-height: 2.9
+brk <- c(0, 3, 6, 10, 15, 22, 32)
+mid <- (head(brk, -1) + tail(brk, -1)) / 2
+reef$band_mid <- mid[as.integer(cut(reef$depth, brk))]
+
+ggplot(subset(reef, !is.na(band_mid)),
+       aes(x = richness, y = -band_mid, group = band_mid, fill = -band_mid)) +
+  geom_density_ridges(scale = 2.2, rel_min_height = 0.01, colour = "white") +
+  scale_y_continuous(breaks = -mid, labels = paste0(mid, " m")) +
+  scale_fill_viridis_c(option = "mako", guide = "none") +
+  theme_ridges(font_size = 9) +
+  labs(x = "species richness", y = "depth")
+```
+
+## What that buys {.smaller}
+
+The figure is now a **cross-section of the reef**. Shallow water is at the top,
+deep water at the bottom, because `y = -band_mid` puts depth where depth
+actually is.
+
+. . .
+
+And the **gaps are real**. The 1.5 m and 4.5 m ridges nearly touch because those
+bands are three metres apart; the 18.5 m and 27 m ridges sit far apart because
+they are. An evenly spaced categorical axis would have thrown that away and
+implied the bands were equally separated.
+
+. . .
+
+The same trick works for **elevation up a mountainside**, distance along a
+transect, or time. Whenever the groups are slices of a continuous thing, let the
+axis say so.
+
+::: {.notes}
+Worth pausing on, because it is the difference between a figure that displays
+groups and one that displays a gradient.
+:::
+
+## Three ways, and when to reach for each {.smaller}
+
+They are the same idea at three levels of detail, and the right choice is mostly
+about how many groups you have:
+
+| Plot | Shows | Reach for it when |
+|---|---|---|
+| **Boxplot** | five numbers | many groups, and center and spread are all you need |
+| **Violin** | the full shape, mirrored | a handful of groups, and the shape matters |
+| **Ridgeline** | the full shape, stacked | many groups, and the shape still matters |
+
+Violins get crowded past about eight groups, which is the point where ridgelines
+take over: stacking them vertically buys room that mirroring does not.
+
+# Part 3: Parts of a whole {background-color="#f0f4f8"}
+
+## Pie charts {.smaller}
+
+A pie is a stacked bar in polar coordinates, which is exactly how you build one:
+
+```{r}
+#| fig-height: 2.8
+prot_counts <- as.data.frame(table(reef$protection_f))
+names(prot_counts) <- c("protection", "n")
+
+ggplot(prot_counts, aes(x = "", y = n, fill = protection)) +
+  geom_col(width = 1, colour = "white") +
+  coord_polar(theta = "y") +
+  scale_fill_manual(values = prime) +
+  theme_void() +
+  labs(fill = NULL)
+```
+
+## And a donut {.smaller}
+
+Same code, with the bar pushed away from the center so the middle is empty:
+
+```{r}
+#| fig-height: 2.8
+ggplot(prot_counts, aes(x = 2, y = n, fill = protection)) +
+  geom_col(width = 1, colour = "white") +
+  coord_polar(theta = "y") +
+  xlim(0.5, 2.5) +
+  scale_fill_manual(values = prime) +
+  theme_void() +
+  labs(fill = NULL)
+```
+
+## What the hole costs, or does not {.smaller}
+
+The standard advice goes: a pie asks you to compare **angles**, people are bad at
+angles, and a donut is worse still because removing the center removes the angle.
+
+. . .
+
+**The evidence does not support that.** Skau and Kosara (2016) built pies and
+donuts that isolated each cue, arc length, center angle and segment area, and
+varied the donut's inner radius from a filled pie down to a thin ring.
+
+- **Angle was the least important cue** in both chart types
+- **Donuts were read about as accurately as pies**
+
+. . .
+
+So if you prefer the look of a donut, the research does not say you are hurting
+your reader. Pick either.
+
+. . .
+
+Worth noticing what just happened: a confident, widely repeated design rule
+turned out to be mostly folklore once somebody ran the experiment. Figure advice
+is full of that, which is a good reason to check the ones you repeat.
+
+## Why a bar chart still wins {.smaller}
+
+Cleveland and McGill ranked how accurately people read different visual
+encodings. Most accurate first:
+
+1. **Position** along a common scale
+2. Position on non-aligned scales
+3. **Length**, direction, angle
+4. **Area**
+5. Volume, curvature
+6. **Shading and color saturation**
+
+. . .
+
+A bar chart puts your numbers at **rank 1**. A pie or donut puts them at 3 and 4.
+That is the real argument, and it has nothing to do with the hole.
+
+[Cleveland, W.S. and McGill, R. (1984). Graphical perception: theory,
+experimentation, and application to the development of graphical methods.
+*Journal of the American Statistical Association* 79(387), 531-554.
+doi:10.1080/01621459.1984.10478080]{style="font-size:0.42em; color:#777"}
+
+## Two things to take from that list {.smaller}
+
+**Color is last.** Everything in Part 1 was about an encoding at the bottom of
+the ranking. That is not an argument against caring about color, it is an
+argument for not asking color to carry the finding on its own. Use it to support
+a position or length encoding, not to replace one.
+
+. . .
+
+**Treat it as a strong guide, not a law.** The ordering began as a hypothesis
+their experiments were designed to test, and later work suggests it collapses to
+fewer tiers depending on the task. It earns its keep as a default, which is
+different from a proof.
+
+. . .
+
+What also survives, for pies specifically: **comparing across two pies is hard**
+in a way comparing two bar charts is not, and **both fail with many categories**,
+which is the next slide.
+
+## Where it falls apart {.smaller}
+
+The same chart, on the 21 habitat categories in this dataset:
+
+```{r}
+#| fig-height: 3.0
+hab_counts <- as.data.frame(table(reef$habitat))
+names(hab_counts) <- c("habitat", "n")
+
+ggplot(hab_counts, aes(x = "", y = n, fill = habitat)) +
+  geom_col(width = 1, colour = "white") +
+  coord_polar(theta = "y") +
+  theme_void() +
+  theme(legend.position = "none")
+```
+
+And that is **before** the legend, which would need 21 entries to tell you which
+sliver is which.
+
+## The same data, as bars {.smaller}
+
+```{r}
+#| fig-height: 3.2
+hab_counts$habitat <- substr(hab_counts$habitat, 1, 34)
+
+ggplot(hab_counts, aes(x = n, y = reorder(habitat, n))) +
+  geom_col(fill = "#3B6B8F") +
+  theme_minimal(base_size = 8) +
+  labs(x = "surveys", y = NULL)
+```
+
+Sorted, labeled directly, no legend, and you can read any value off the axis.
+
+## The rule {.smaller}
+
+**A pie is defensible when** you have two or three categories, they genuinely
+sum to a whole, and you only need the reader to see "about half" or "about a
+quarter".
+
+. . .
+
+**It is not defensible when** there are more than about five categories, when
+slices need to be compared precisely, or when you want the reader to compare
+across two pies. Those are all bar chart jobs.
+
+. . .
+
+The protection pie above is at the edge of acceptable. The habitat one is not,
+and no palette would have saved it.
+
+# Part 4: What the research actually says {background-color="#f0f4f8"}
+
+## Has that 1984 ranking held up? {.smaller}
+
+Broadly, yes. Heer and Bostock re-ran the experiments with crowdsourced
+participants and recovered an ordering close to the original, while extending it
+to rectangular areas (treemaps, cartograms) and circular ones (bubble charts).
+
+. . .
+
+So the hierarchy is not 1980s folklore. It replicates.
+
+. . .
+
+What has changed is the **question**. "Which chart type is best?" turned out to
+be narrower than people treated it as.
+
+[Heer, J. and Bostock, M. (2010). Crowdsourcing graphical perception: using
+Mechanical Turk to assess visualization design. *CHI '10*, 203-212.
+doi:10.1145/1753326.1753357]{style="font-size:0.42em; color:#777"}
+
+## Effectiveness depends on the task {.smaller}
+
+Saket, Endert and Demiralp compared five everyday chart types, table, line, bar,
+scatterplot and pie, across **ten different analysis tasks** on real datasets.
+
+. . .
+
+Effectiveness shifted meaningfully from task to task, and several chart types
+were competitive on many of them. There was no single winner.
+
+. . .
+
+So the question worth asking is not "what is the best chart" but **"what do I
+want the reader to do with it?"** Read one value. Compare two groups. Find the
+maximum. Spot a cluster. Judge a trend. Those have different answers.
+
+Cleveland and McGill answered one of those questions, comparing magnitudes,
+very well. It was never meant to answer all of them.
+
+[Saket, B., Endert, A. and Demiralp, C. (2019). Task-based effectiveness of
+basic visualizations. *IEEE Transactions on Visualization and Computer
+Graphics*. arXiv:1709.08546]{style="font-size:0.42em; color:#777"}
+
+## The newer question: what the reader concludes {.smaller}
+
+The older work asked whether a reader can **decode** a number from a chart. The
+newer work asks what they **take away**, which is not the same thing and is
+often not what the designer intended.
+
+That covers how uncertainty is shown, how a title frames the conclusion, how
+axis choices steer the eye, and how people reason about risk.
+
+. . .
+
+One concrete finding, for anyone presenting rates: use **absolute** rather than
+relative rates, and give probabilities as **counts** ("3 out of 10") rather than
+percentages.
+
+## Where to read the current state {.smaller}
+
+If you read one thing, read this review. It is written for non-specialists and
+pulls together visual perception, graph comprehension and uncertainty, which
+mostly had not been talking to each other.
+
+[Franconeri, S.L., Padilla, L.M., Shah, P., Zacks, J.M. and Hullman, J. (2021).
+The science of visual data communication: what works. *Psychological Science in
+the Public Interest* 22(3), 110-161.
+doi:10.1177/15291006211051956]{style="font-size:0.5em"}
+
+. . .
+
+**The honest summary of all of it:** put the numbers you most want compared into
+position or length, be suspicious of confident design rules including the ones
+on these slides, and remember that the reader's conclusion is the output you
+actually care about.
+
+# Part 5: Combining panels {background-color="#f0f4f8"}
 
 ## patchwork {.smaller}
 
@@ -395,7 +813,7 @@ a | b
 In a talk, build the same figure one panel at a time. In a paper, this is one
 figure instead of four.
 
-# Part 4: Rank over time {background-color="#f0f4f8"}
+# Part 6: Rank over time {background-color="#f0f4f8"}
 
 ## The naive version {.smaller}
 
@@ -498,7 +916,7 @@ is the absence of that chimney.
   Sort the raw numbers. It takes thirty seconds and it is the difference
   between a finding and an embarrassment
 
-# Part 5: Showing a model {background-color="#f0f4f8"}
+# Part 7: Showing a model {background-color="#f0f4f8"}
 
 ## The gap this fills {.smaller}
 
@@ -655,9 +1073,12 @@ Grid, predict, plot. The model changes; the recipe does not.
    This is the cheapest improvement available to you.
 2. **Check for color blindness** with `deutan()` on your palette, or just look
    at the figure in greyscale, before anything goes in a talk.
-3. **Show the shape**, with ridgelines, when the shape is the point.
+3. **Show the shape** when the shape is the point: a violin for a few groups,
+   ridgelines for many. A boxplot hides it.
 4. **Make one point per figure**, and grey out everything that is not it.
-5. **Plot your model over your data**, with a band. Grid, predict, plot.
+5. **Reach for a bar chart** when slices need comparing. Pie or donut matters
+   much less than people say.
+6. **Plot your model over your data**, with a band. Grid, predict, plot.
 
 ## Where it fits {.smaller}
 
@@ -667,7 +1088,7 @@ Grid, predict, plot. The model changes; the recipe does not.
   cluttered figure costs you the most, because nobody can pause on it
 - **Your own papers, later**: Part 5 and the color blindness check
 
-## Going further {.smaller}
+## Going further: learning {.smaller}
 
 - **ggplot2 book**, free online: <https://ggplot2-book.org>
 - **R Graph Gallery**, worked examples of nearly every chart type:
@@ -677,5 +1098,19 @@ Grid, predict, plot. The model changes; the recipe does not.
 - **patchwork**: <https://patchwork.data-imaginist.com>
 - **ggridges vignette**: `vignette("introduction", package = "ggridges")`
 
-If you want a figure reviewed, bring it to office hours. That is a faster way
-to improve than reading any of the above.
+## Going further: the evidence {.smaller}
+
+- **Franconeri et al. (2021)**, the review from Part 4, and the best place to
+  start: <https://doi.org/10.1177/15291006211051956>
+- **Cleveland and McGill (1984)**, the original ranking:
+  <https://doi.org/10.1080/01621459.1984.10478080>
+- **Heer and Bostock (2010)**, the replication:
+  <https://doi.org/10.1145/1753326.1753357>
+- **Saket et al. (2019)**, effectiveness by task: <https://arxiv.org/abs/1709.08546>
+- **Skau and Kosara (2016)**, pies and donuts:
+  <https://doi.org/10.1111/cgf.12888>
+
+. . .
+
+If you want a figure reviewed, bring it to office hours. That is a faster way to
+improve than reading any of the above.

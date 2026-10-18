@@ -1,0 +1,782 @@
+---
+title: "Getting help"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 26"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+bw <- read.csv("../data/class_examples/bobwhite_counts.csv")
+bad_fit <- lm(count ~ frac_built, data = bw)
+
+nb_fit <- optim(par = c(mu0 = 12, b = -3, size = 1.4),
+                fn = function(p){
+                  mu <- p["mu0"] * exp(p["b"] * bw$frac_built)
+                  -sum(dnbinom(bw$count, mu = mu, size = p["size"], log = TRUE))
+                },
+                method = "L-BFGS-B",
+                lower = c(0.1, -20, 0.05), upper = c(100, 20, 50))
+```
+
+## Today's agenda {.smaller}
+
+- The final project, explained
+- Debugging: what to do when your code breaks
+- Where to go for help, from people and from machines
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Reading was R4DS chapter 8, on getting help, plus the Merow et al. paper on AI
+and scientific coding.
+
+Three unrelated things in one class, held together loosely by "what do you do
+when you are stuck". The final project section is the one they came for.
+:::
+
+## Assignment 4 is due Friday
+
+**Friday, November 20, 11:59 pm.** Submit on Canvas.
+
+. . .
+
+Everything after today is the final project.
+
+::: {.notes}
+Worth saying plainly that the remaining classes are project work, reproducibility
+and code sharing, so this is the last new statistical material.
+:::
+
+## The final project {.center}
+
+## Three parts {.smaller}
+
+| Part | Format | Builds on |
+|---|---|---|
+| **Code** | `.R` or `.Rmd`, or a GitHub link | every assignment so far |
+| **Writing** | a document | your midterm Part 1 |
+| **Presentation** | about 5 minutes | the whole thing |
+
+. . .
+
+**Due at the presentation**, during the scheduled final exam block.
+Exact day and time to be confirmed.
+
+::: {.notes}
+Check the registrar's assigned exam slot before this class and fill in the date.
+The course meets T/Th 2:00 to 3:50, which is not a pattern on the USF standard
+matrix, so the slot is assigned rather than predictable. Finals week is Dec 5
+to 10.
+
+The design principle to state out loud: nothing here is new work. Every piece is
+an extension of something they have already submitted and had feedback on.
+:::
+
+## Part 1: the code {.smaller}
+
+A **full analysis**, not a fragment:
+
+- loading the data
+- any transformations, and the reason for them
+- the code behind any modeling decision you made
+- the model itself
+- the figures
+
+. . .
+
+**Fully reproducible and well documented.** Someone else should be able to run
+it and get your results.
+
+::: {.notes}
+"Reproducible" has a specific meaning here, and it is the one from Assignment 2:
+someone else, on another machine, with your code and your data, gets your
+numbers.
+
+The most common failure is an absolute path to their own Desktop. The second is
+data that only exists on their laptop.
+:::
+
+## Part 2: the writing {.smaller}
+
+An updated draft of your midterm writing, same three sections:
+
+- **Introduction**: the question, and why it matters
+- **Methods**: the data, and what you did to it
+- **Results**: including the results of a **statistical model**, not just plots
+
+. . .
+
+Figures should be better than the midterm's. You know ggplot2 now.
+
+::: {.notes}
+The upgrade from the midterm is the model. At midterm they were plotting; now
+they fit something and report it.
+
+Remind them that the text is theirs: the syllabus allows AI for code, not for
+the writing in this section. That comes up again at the end of today.
+:::
+
+## Part 3: the presentation {.smaller}
+
+About **five minutes**, during the final exam block.
+
+A format that works:
+
+- Title slide
+- Background, 1 to 2 slides: what is your question, why does it matter
+- Methods, 1 to 2 slides
+- Results, 1 to 2 slides
+- What you would do next
+
+::: {.notes}
+Five minutes is short. The commonest mistake is three slides of background and
+no results.
+:::
+
+## Presenting well {.smaller}
+
+- **Minimize text.** Roughly seven lines, seven words each, as an upper bound
+- **Practice the timing**, out loud, with a clock
+- **Going long costs points**, because it takes time from the next speaker
+
+. . .
+
+Your figures are the presentation. If a figure needs a paragraph of explanation,
+fix the figure.
+
+::: {.notes}
+The 7x7 rule is a ceiling and not a target. Most good slides have less.
+
+If anyone wants to go further on figures, the figures supplement covers
+palettes, combining panels, and plotting model predictions.
+:::
+
+## Any questions about the project? {.center}
+
+## Debugging {.center}
+
+Something you have all been doing already.
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(tidyverse)
+
+traits <- readRDS(url("https://tinyurl.com/amniotetraits"))
+
+dim(traits)
+```
+:::
+
+::: {.notes}
+The amniote life-history database, about 21,000 species.
+
+If readRDS complains, the usual cause is a missing url() wrapper: readRDS reads
+a local file by default.
+:::
+
+## When something breaks {.smaller}
+
+A workflow, roughly in order of effort:
+
+1. **Re-read the code.** Most errors are typing
+2. **Run it line by line** to find where it actually breaks
+3. **Read the error message**, properly, all of it
+4. **Search the error message**, with "R" and the package name
+5. **Search a description** of what you are trying to do
+6. Ask a person, with a **reprex**
+7. Open an issue on the package's GitHub
+8. Read the package's source and fix it yourself
+
+::: {.notes}
+Steps 1 to 3 solve most things and people skip them. The instinct to paste an
+error into a search box, or now into a chatbot, before reading it is strong.
+
+Steps 7 and 8 sound intimidating and are not. Package authors are usually
+pleased someone cared enough to report a bug well.
+:::
+
+## The usual suspects {.smaller}
+
+When the error is not obvious, check these before anything else:
+
+- **Commas, quotes and parentheses.** Especially nested ones
+- **Variable names.** `adult_svl` and `adult_svl_cm` are different columns
+- **`NA`s**, which propagate silently through means and sums
+- **Class.** A number read in as a factor behaves nothing like a number
+- **Rows against columns.** `traits[4, ]` and `traits[, 4]` are very different
+
+::: {.notes}
+That last one catches people constantly and the error message never says
+"you meant columns".
+:::
+
+## Your turn: four broken lines {background-color="#f0f4f8" .smaller}
+
+Each of these is broken **on purpose**. Run them, read the errors, fix them.
+
+::: {.type-it}
+```{r}
+#| eval: false
+# all four of these are broken on purpose
+
+# 1
+traits |>
+  group_by(class) |>
+  summarise(mean_mass = mean(adult_body_mass_g))
+
+# 2
+data.frame(scientific_name = paste(traits[4, ], traits[5, ]))
+
+# 3
+traits |>
+  group_by(class) |>
+  summarise(SD_svl = sd(adult_svl_cm))
+
+# 4
+traits >
+  mutate(svl_mass_ratio = adult_svl_cm / adult_body_mass_g)
+```
+:::
+
+::: {.notes}
+Ten minutes. Let them work before giving answers.
+
+Note that 1 and 3 do not error at all, which is the point of including them.
+:::
+
+## What was wrong {.smaller}
+
+| | Symptom | Cause |
+|---|---|---|
+| 1 | every mean is `NA` | `adult_body_mass_g` has 4,645 `NA`s; needs `na.rm = TRUE` |
+| 2 | `"Aves Aves"` | `traits[4, ]` is **row** 4, not the genus column |
+| 3 | every `sd` is `NA` | same `NA` problem, not a name problem |
+| 4 | `object 'adult_svl_cm' not found` | `>` is not a pipe, so `mutate()` ran with no data |
+
+. . .
+
+**Three of the four never raised an error.** Code that runs is not code that
+works, and that is the theme of the rest of today.
+
+::: {.notes}
+This is the hinge of the lecture. Set it up deliberately, because the AI section
+at the end is the same lesson with higher stakes.
+
+For 2, the fix is paste(traits$genus, traits$species).
+
+Number 4 is the one to dwell on, because its error message actively misleads.
+It names a column, so the instinct is to go hunting for a typo in the column
+name. The column is fine. The bug is three characters earlier: `>` is not a
+pipe, so mutate() was evaluated on its own, with no data attached, and the
+column genuinely does not exist outside the data frame.
+
+The lesson: an error message tells you where R gave up, not where you went
+wrong.
+:::
+
+## Harder: errors inside loops {.smaller}
+
+Debugging is harder inside `for()`, `while()` and `apply()`, because the thing
+that breaks is on iteration 4,417 and you cannot see it.
+
+Techniques:
+
+- `message()` inside the loop, to print where you are
+- Set `i` by hand and run the **body** line by line
+- Re-run **only the iterations that failed**
+- Have the loop record what it did, not just what it produced
+
+::: {.notes}
+The deepest habit to transmit: a loop that writes down what it is doing is
+debuggable, and one that only returns a result is not.
+:::
+
+## A loop worth fixing {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# broken on purpose: run it, then work out why the answer is wrong
+annual_fecundity <- NULL
+
+for (i in 1:20) {
+  species_i <- paste(traits$genus[i], traits$species[i])
+  offspring_per_clutch <- traits$litter_or_clutch_size_n[i]
+  clutches_per_year <- traits$litters_or_clutches_per_y[i]
+
+  if (is.na(offspring_per_clutch) & is.na(clutches_per_year)) {
+    next
+  }
+
+  out <- data.frame(species = species_i,
+                    annual_offspring = offspring_per_clutch * clutches_per_year)
+
+  annual_fecundity <- bind_rows(annual_fecundity, out)
+}
+
+annual_fecundity
+```
+:::
+
+::: {.notes}
+Two bugs, and neither raises an error.
+
+The `&` should be `|`: as written, a species is skipped only when BOTH values
+are missing, so rows with one missing value sail through and produce NA.
+
+The loop also indexes traits by row while iterating over what the original code
+called unique species, which is a mismatch worth pointing at. Here it is capped
+at 20 rows to keep it quick.
+
+Ask what the output would look like if you only ever checked that it ran.
+:::
+
+## Asking a person {.center}
+
+## Search well {.smaller}
+
+- Include **"R"** and the **package name**
+- Paste the **error message**, but strip out your own object names
+- If that fails, search a **description** of the goal rather than the error
+
+. . .
+
+Stack Overflow is quieter than it was, and more questions now go to chatbots
+first. It is still the best archive of hard R problems that someone already
+solved.
+
+::: {.notes}
+Honest framing rather than nostalgia. A lot of the value of Stack Overflow now
+is as a corpus, including the corpus the chatbots learned from.
+:::
+
+## reprex {background-color="#f0f4f8" .smaller}
+
+A **repr**oducible **ex**ample: the smallest complete thing that shows your
+problem.
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(reprex)
+
+reprex({
+  traits <- readRDS(url("https://tinyurl.com/amniotetraits"))
+  traits |>
+    ggplot(mapping = aes(x = adult_body_mass_g, y = adult_svl_cm)) +
+    geom_point() +
+    scale_x_log10() +
+    scale_y_log10()
+})
+```
+:::
+
+Run it and read the output.
+
+::: {.notes}
+It runs in a clean session, which is the whole point: it will fail on the
+missing library(tidyverse) call, exactly as it would on a stranger's machine.
+
+That is the lesson. Their code works because of things loaded hours ago that
+they have forgotten about.
+:::
+
+## What makes an example reproducible {.smaller}
+
+- It includes the `library()` calls
+- It includes the **data**, or a few rows of it, or a link
+- It is as **small** as possible while still breaking
+- It is self-contained: no objects from your session
+
+. . .
+
+If your example is not reproducible, people may be unkind about it. If it is
+reproducible, they may be unkind anyway, but you will usually get an answer.
+
+::: {.notes}
+Making a reprex solves the problem surprisingly often, because shrinking it to
+the minimum is itself a diagnostic.
+:::
+
+## Asking for a favor {.smaller}
+
+When you post a question or open an issue:
+
+- **Be very nice.** You are asking a stranger to work for free
+- Supply a reprex
+- **Assume it is your error**, because it usually is
+- Say what you already tried
+
+. . .
+
+For a package bug, open a **GitHub issue** on that package rather than posting
+to a forum. That is where the person who can fix it reads.
+
+::: {.notes}
+"Assume it is your error" is both good manners and good odds.
+:::
+
+## AI and coding {.center}
+
+## The landscape in 2026 {.smaller}
+
+It is no longer one chatbot in a browser tab. Four different things, which
+people all call "using AI":
+
+| Mode | Examples | What arrives in your project |
+|---|---|---|
+| **Autocomplete** | Copilot in VS Code, RStudio, Positron | a few lines at a time, as you type |
+| **Chat** | Claude, ChatGPT, Gemini | whatever you paste back |
+| **Agent** | Claude Code, Copilot agent mode | files it edited and code it ran |
+| **Review** | Copilot on a pull request | comments only, no code |
+
+::: {.notes}
+Worth naming these separately because the advice differs for each, and because
+students will have used at least one without thinking of it as "AI".
+
+Review is the safest: it only ever suggests. Agents are the most dangerous for a
+beginner, because code enters the project without passing through your eyes.
+:::
+
+## What it is genuinely good at {.smaller}
+
+- **Explaining an error message** you do not recognize
+- **Translating between dialects**: base R to tidyverse and back
+- **Boilerplate** you have written fifty times: themes, file loops, axis labels
+- **Regular expressions**, which nobody enjoys
+- Finding the **name of a function** you half-remember
+- A first draft of **comments and documentation**
+
+::: {.notes}
+Notice what these have in common: in every case you can tell immediately whether
+the answer is right, because you know what you wanted.
+:::
+
+## What it is bad at {.smaller}
+
+- **Your data.** It has never seen it and will assume it is tidy and complete
+- **Statistical judgment.** It will pick a model that matches the words in your
+  question, not the structure of your data
+- **Recent changes.** Packages move; training data has a cutoff
+- **Saying "I don't know."** It will produce something either way
+
+. . .
+
+Hallucinated functions still happen, especially for small ecology packages, but
+those are the **easy** failures: the code errors and you find out immediately.
+
+::: {.notes}
+Deliberately updating the older framing here. The current models invent fewer
+functions than the 2023 ones did, and that improvement makes the remaining
+failure mode more dangerous rather than less, because the obvious errors are
+what used to make people check.
+:::
+
+## The failure that matters here {.smaller}
+
+In a statistics course, the dangerous output is not code that breaks.
+
+**It is code that runs, returns a plausible number, and is wrong.**
+
+. . .
+
+Debugging will never catch it. Nothing is broken. Only knowing the statistics
+catches it, which is what this whole course has been for.
+
+::: {.notes}
+State this slowly. It is the single most important slide in the AI section and
+it is the reason the earlier debugging exercise included two bugs that raised no
+error.
+:::
+
+## A worked example {background-color="#f0f4f8" .smaller}
+
+Ask for "a test of whether bobwhite abundance declines with development" and you
+can very reasonably get this:
+
+::: {.type-it}
+```{r}
+#| eval: false
+bw <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+model <- lm(count ~ frac_built, data = bw)
+
+summary(model)
+```
+:::
+
+```{r}
+#| echo: false
+knitr::kable(round(coef(summary(bad_fit)), 4))
+```
+
+Significant, negative, and it would pass any code review.
+
+::: {.notes}
+This is a real answer to a real question on real course data, and it is wrong.
+
+Ask the room what they would write in a results section from that table. Someone
+will say "abundance declines significantly with development, p < 0.001". That
+sentence is what we are about to take apart.
+:::
+
+## Three checks you already know {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# 1. does it predict things that cannot exist?
+predict(model, newdata = data.frame(frac_built = c(0, 0.5, 0.8)))
+
+# 2. are the counts even close to normal? (Lecture 12)
+var(bw$count) / mean(bw$count)
+
+# 3. how much does it actually explain?
+summary(model)$r.squared
+```
+:::
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(
+  check = c("predicted count at 50% developed",
+            "predicted count at 80% developed",
+            "variance / mean",
+            "r squared"),
+  value = c(round(predict(bad_fit, newdata = data.frame(frac_built = 0.5)), 2),
+            round(predict(bad_fit, newdata = data.frame(frac_built = 0.8)), 2),
+            round(var(bw$count) / mean(bw$count), 2),
+            round(summary(bad_fit)$r.squared, 3))))
+```
+
+::: {.notes}
+Every one of these is something they have done this semester.
+
+Negative quail is the one that lands. The model is not slightly off, it is
+describing an impossible world, for the same reason the straight line for
+occupancy failed in Lecture 16: a line is unbounded and counts are not.
+
+The variance to mean ratio of 10 says the spread is ten times what a Poisson
+would give, so normal errors with constant variance are not close either.
+
+And r squared of 0.04 means a highly significant result that explains four
+percent of the variation. Significance is not effect size.
+:::
+
+## What it should have been {.smaller}
+
+The model from Lecture 16: a negative binomial, with a mean that declines
+exponentially so it can never go below zero.
+
+```{r}
+#| echo: false
+#| fig-height: 3.1
+uu <- seq(0, 0.9, length.out = 200)
+plot(bw$frac_built, bw$count, pch = 16, col = rgb(0, 0, 0, 0.12),
+     xlim = c(0, 0.9), ylim = c(-15, 40),
+     xlab = "fraction developed", ylab = "bobwhite counted")
+abline(h = 0, col = "grey60", lty = 3)
+lines(uu, coef(bad_fit)[1] + coef(bad_fit)[2] * uu, col = "#D81B60", lwd = 3)
+lines(uu, nb_fit$par["mu0"] * exp(nb_fit$par["b"] * uu), col = "#1E88E5", lwd = 3)
+legend("topright", c("lm: straight line", "negative binomial"),
+       col = c("#D81B60", "#1E88E5"), lwd = 3, bty = "n", cex = 0.85)
+```
+
+::: {.notes}
+The pink line crosses zero at about 49% developed and keeps going. The blue one
+approaches zero and never reaches it.
+
+Worth saying: the AI was not stupid here. lm() is the right answer to a slightly
+different question, asked about a different kind of data. It had no way to know
+the response was an overdispersed count, because it never saw the data. You did.
+:::
+
+## How careful should you be? {.smaller}
+
+It depends on what you are trying to learn.
+
+. . .
+
+**If you already know how to write it**, AI is a time saver, and you can review
+what it gives you because you could have written it yourself.
+
+. . .
+
+**If you are still learning to write it**, writing it yourself *is* the
+exercise. Skipping it means you will not be able to debug what you accepted, and
+debugging is most of the job.
+
+. . .
+
+**Right now, in this course, you are mostly in the second group.** That is
+deliberate, and it is temporary.
+
+::: {.notes}
+This is the honest version of the advice and it respects them.
+
+The test to give them: could you have written this yourself, and can you explain
+every line? If no to either, you have borrowed something you cannot maintain.
+
+Say explicitly that this is not a permanent prohibition. Experienced people use
+these tools heavily and review the output, which they can do because they spent
+years learning what wrong code looks like.
+:::
+
+## What the course allows {.smaller}
+
+From the syllabus, and it has not changed:
+
+- **Code**: AI is allowed, on assignments, the midterm and the final project
+- **Writing**: the text in your Part 1 and your final write-up is **yours**.
+  No AI, no plagiarism
+- **Any use must be cited**
+
+. . .
+
+If you are unsure whether something is permitted, ask. That is always cheaper
+than the alternative.
+
+::: {.notes}
+Worth reading the policy out, because "cite it" is the part everyone forgets and
+it is the part that turns a grey area into a non-issue.
+:::
+
+## How to cite it {.smaller}
+
+Same principle as citing R and your packages. In your methods:
+
+> Portions of the analysis code were drafted with [tool and version], then
+> reviewed, tested and edited by the author.
+
+. . .
+
+And in the code itself, where it matters:
+
+```{r}
+#| eval: false
+# first draft of this loop from Claude, checked against a manual
+# calculation for the first three species
+```
+
+. . .
+
+Many journals now require the same disclosure. You are practicing a real norm,
+not a classroom one.
+
+::: {.notes}
+Pair this with the usual citation() reminder for R and packages, which they
+already did for the midterm.
+
+The in-code comment is the more useful habit of the two. Six months later it
+tells you which parts you understood deeply and which you accepted on trust, and
+that is exactly where bugs live.
+:::
+
+## Two things not to paste {.smaller}
+
+- **Unpublished data** that is not yours to share, including a collaborator's or
+  a lab's. A chat window is a third party
+- **Anything under an agreement**: permits, embargoed data, human subjects data
+
+. . .
+
+Sending a few rows of a public dataset is fine. Uploading your advisor's
+unpublished field data to a website is a conversation you do not want to have.
+
+::: {.notes}
+Short, practical, and it comes up in real labs.
+
+If anyone asks about the energy and water cost of all this, or about models
+being trained on other people's code without credit: both are real, both are
+genuinely debated, and neither is settled. Worth naming rather than pretending
+it is only a productivity question.
+:::
+
+## Your turn: break something {background-color="#f0f4f8" .smaller}
+
+If you use an AI tool, ask it for an analysis you already know the answer to.
+
+Suggestions, all from this course:
+
+- "Fit a model of bobwhite counts against year"
+- "Test whether reef fish richness differs with depth"
+- "Is this distribution overdispersed?"
+
+. . .
+
+**Then check it the way we just did.** Does it predict impossible values? Does
+the distribution match the data? Would you have written this?
+
+::: {.notes}
+Ten minutes if there is time, or sent home with them.
+
+Asking for something they know the answer to is the point: it is the only way to
+calibrate how much to trust the tool on something they do not.
+
+Some will get a perfectly good answer, which is worth saying out loud. The goal
+is calibration, not a demonstration that it always fails.
+:::
+
+## Take-away {.smaller}
+
+1. **Read the error**, then run it line by line, then search it
+2. **Code that runs is not code that works**
+3. A **reprex** is how you ask a human, and it often answers itself
+4. AI is good at things you can **check at a glance**, and unreliable at
+   things that need to know your data
+5. **Cite what you use**, including the tools
+
+::: {.notes}
+Point 2 is the one connecting the debugging half to the AI half, and it is worth
+saying it is the same lesson twice.
+:::
+
+## Before next class
+
+Read *R for Data Science* chapter 6: <https://r4ds.hadley.nz/workflow-scripts.html>
+
+Next time: **reproducibility**, and making your project run on someone else's
+machine
+
+May be a quiz.
+
+::: {.notes}
+Assignment 4 is due Friday, November 20.
+:::
