@@ -31,7 +31,14 @@ source("R_scripts/check_deck_student_code.R")
 
 failures <- character(0)
 
-message("--- control characters ---")
+# First, because a missing package makes the deck check report nonsense:
+# "object not found" twenty blocks after the library() call that failed.
+message("--- packages the student path needs ---")
+if (!check_deck_packages()) {
+  failures <- c(failures, "a package the student code needs is not installed")
+}
+
+message("\n--- control characters ---")
 if (!all(check_all_characters())) {
   failures <- c(failures, "stray control characters in a deck")
 }

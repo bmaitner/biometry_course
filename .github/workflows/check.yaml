@@ -34,21 +34,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
 
-      # Only what the checks need. Deliberately not renv::restore(), because
-      # the lockfile includes sf and terra for the data-download scripts, and
-      # building those pulls in GDAL and PROJ for no benefit here.
+      # What the student path needs, which is NOT what renv::dependencies()
+      # reports. The type-and-run blocks carry `eval: false` so the deck does
+      # not run student code at render time, and renv skips chunks it will not
+      # evaluate, so it never sees Lecture 26's tidyverse and reprex. The
+      # checker runs those blocks, so it needs them.
+      #
+      # Keep this list in step with Rscript -e 'source(
+      #   "R_scripts/check_deck_student_code.R"); deck_packages()'
+      # plus dplyr and tibble for make_class_examples.R. The first step below
+      # fails with the missing names if it drifts again.
+      #
+      # Not renv::restore(): the lockfile pulls sf and terra for the data
+      # download scripts, and building those means GDAL and PROJ for no gain.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
+            any::tidyverse
             any::bbmle
-            any::dplyr
-            any::tibble
+            any::emdbook
+            any::reprex
 
       # Same script you can run locally with:
       #   Rscript R_scripts/ci_checks.R

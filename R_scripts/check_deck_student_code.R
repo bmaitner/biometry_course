@@ -174,3 +174,63 @@ check_all_characters <- function() {
   invisible(ok)
 
 }
+
+# What packages does the student path need? ---------------------------------
+#
+# Not the same question as what renv::dependencies() answers. The type-and-run
+# blocks carry `#| eval: false`, because the deck must not run student code at
+# render time, and renv skips chunks it will not evaluate. So renv reports that
+# Lecture 26 needs nothing but knitr, while a student following it needs
+# tidyverse and reprex.
+#
+# This scans the blocks the checker actually executes, which is the only
+# definition that matters for CI. Added 2026-10-18, after the check workflow
+# failed on packages its hand-written list had never heard of.
+
+deck_packages <- function(dir = "lectures") {
+
+  decks <- list.files(dir, pattern = "[.]qmd$", full.names = TRUE)
+  pattern <- "(?s)::: \\{\\.type-it\\}\\s*```\\{r\\}\\n(.*?)```"
+
+  pkgs <- character(0)
+
+  for (path in decks) {
+
+    src <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    hits <- regmatches(src, gregexpr(pattern, src, perl = TRUE))[[1]]
+    if (length(hits) == 0) next
+
+    code <- paste(hits, collapse = "\n")
+
+    # library(x) and require(x)
+    m <- regmatches(code, gregexpr("(?:library|require)[(]([A-Za-z.][A-Za-z._0-9]*)",
+                                   code, perl = TRUE))[[1]]
+    pkgs <- c(pkgs, sub("^(?:library|require)[(]", "", m))
+
+    # x::y
+    m2 <- regmatches(code, gregexpr("([A-Za-z.][A-Za-z._0-9]*)::", code, perl = TRUE))[[1]]
+    pkgs <- c(pkgs, sub("::$", "", m2))
+  }
+
+  sort(unique(pkgs))
+}
+
+# Fail early, and say exactly what to install, rather than letting the deck
+# checker report a confusing "object not found" twenty blocks later.
+
+check_deck_packages <- function(dir = "lectures") {
+
+  needed <- deck_packages(dir)
+  missing <- needed[!needed %in% rownames(installed.packages())]
+
+  if (length(missing) > 0) {
+    message("student code needs packages that are not installed:")
+    for (m in missing) message("  - ", m)
+    message("install them, or add them to .github/workflows/check.yaml")
+    return(invisible(FALSE))
+  }
+
+  message("all ", length(needed), " packages the student path needs are installed")
+  invisible(TRUE)
+
+}
