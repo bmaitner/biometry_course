@@ -47,6 +47,42 @@ Verified 2026-10-19. Students install nothing; it runs in the browser.
 - **Not every NetLogo primitive runs in NetLogo Web.** Each model has to be
   loaded and checked, not assumed.
 
+**Verified for Model 3, 2026-10-19**, in both mechanisms, with no console
+errors: on desktop NetLogo 7.0.4 headless, on NetLogo Web latest (`/web`), and
+on the pinned build (`/versions/2.15.0.html`). The pinned build also renders
+inside an iframe, and none of the three URL forms sends a frame-blocking header.
+`random-gamma`, the `while` loop and the recursive plot pens all survive the
+browser. At default speed a run takes about a minute, which suits watching it;
+the speed slider goes faster.
+
+The embed to use in the supplement is the pinned one:
+
+```html
+<iframe src="https://netlogoweb.org/versions/2.15.0.html?url=https://raw.githubusercontent.com/bmaitner/biometry_course/main/supplements/models/same_field_two_ways.nlogox"
+        width="1100" height="560"></iframe>
+```
+
+## Running a model headlessly on Windows
+
+`netlogo-headless.bat` breaks when `JAVA_HOME` contains a space, which it always
+does under Program Files. Call the bundled Java directly instead:
+
+```bash
+"C:/Program Files/NetLogo 7.0.4/runtime/bin/java.exe" \
+  -XX:MaxRAMPercentage=50 -Dfile.encoding=UTF-8 \
+  --add-exports=java.base/java.lang=ALL-UNNAMED \
+  --add-exports=java.desktop/sun.awt=ALL-UNNAMED \
+  --add-exports=java.desktop/sun.java2d=ALL-UNNAMED \
+  -classpath "C:/Program Files/NetLogo 7.0.4/app/netlogo-7.0.4.jar" \
+  org.nlogo.headless.Main \
+  --model supplements/models/same_field_two_ways.nlogox \
+  --experiment verify --table - --threads 1
+```
+
+Each model carries a `verify` experiment whose expected results are recorded
+under that model below, so a change that breaks the biology shows up as a number
+that moved.
+
 ## The pairing with R
 
 NetLogo and R do different jobs here, and the supplement alternates:
@@ -165,8 +201,13 @@ separate the mechanisms, the shape carries a weak signal, and with real sample
 sizes and both mechanisms acting at once, telling them apart needs different
 data rather than a better fit.
 
-**R counterpart:** simulate both, fit `dnbinom` to each, show the fits are
-indistinguishable.
+**Expected `verify` results** (5 reps, mean 3 per quadrat): variance / mean
+near 1.0 for covey size 1 and for habitat variation 0; near 6.8 for covey size
+12; near 3.9 for habitat variation 1, against 4.0 from theory. Covey size 12 is
+matched by habitat variation **1.4**.
+
+**R counterpart:** simulate both, fit `dnbinom` to each, and compare the fitted
+zero class with the observed one, which is where the two mechanisms differ.
 
 ---
 
