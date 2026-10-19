@@ -79,6 +79,7 @@ enough depth to anchor weeks of a future course. A few are both.
 | Topic | Useful this semester | Spine of a Biometry II |
 |---|---|---|
 | Figures worth showing: palettes, `ggridges`, `ggbump`, `patchwork`, model predictions | **High** | Medium |
+| Where distributions come from: simulating the generating process | **High** | Medium |
 | Getting messy data into shape | **High** | Medium |
 | Finding data, and pulling it with APIs | Medium, mistimed this year | Medium |
 | Geospatial: `sf`, rasters, making a decent map | Low | **High** |
@@ -105,7 +106,14 @@ and plotting model predictions with an uncertainty band.
 - It is the cheapest to write and the hardest to get wrong
 - There is demonstrated appetite, which is where the palette question came from
 
-**Second: "Getting messy data into shape."** Newly obvious: the Lecture 16 setup
+**Second: "Where distributions come from."** Specified 2026-10-19, not built.
+Agent-based simulations of the processes that generate each distribution, run in
+the browser through NetLogo Web with no install, each paired with the same
+process in six lines of R. Fills a gap in Lecture 12, which teaches which
+distribution to use but never the mechanism that produces it. Specs and the
+verified embedding mechanics are in `models/README.md`.
+
+**Third: "Getting messy data into shape."** Newly obvious: the Lecture 16 setup
 took ten lines of `tapply()` and a `data.frame()` build, and that was with clean
 data and a worked example on the screen. On their own data, with no example, this
 is the step that stalls people.

@@ -165,6 +165,31 @@ From midterm feedback, Fall 2025:
 
 ## Infrastructure
 
+- [ ] **Cut a release and mint a Zenodo DOI for this repository, at the end of
+  the semester.** Deferred deliberately on 2026-10-19: better to archive a
+  finished semester than a half-taught one.
+
+  The problem it fixes: the DOI badge in `README.md`,
+  `10.5281/zenodo.17923198`, archives **`bmaitner/Statistical_ecology_course`**,
+  the predecessor repository, at its v1.2025 release. It does not archive this
+  repository, and `biometry_course` has no releases at all. Anyone citing the
+  course from that badge cites a December 2025 snapshot that predates lectures
+  9, 10, 12 to 16 and 26, the figures supplement, `data/class_examples`, and the
+  automated checks.
+
+  Order matters when you do it: enable the Zenodo GitHub integration **first**,
+  then publish the tag. Zenodo only archives releases published after it starts
+  watching, so a release cut before the switch is flipped is invisible to it.
+
+  Until then, the badge in the README points at the predecessor's archive.
+  Relabeling it in the meantime was considered and **declined** on 2026-10-19:
+  low stakes, and the real DOI in December resolves it anyway. No need to raise
+  it again before then.
+
+- [ ] **Set the repository homepage** once the github.io site exists. The
+  description was filled in on 2026-10-19; homepage was left empty rather than
+  pointed at the predecessor's DOI.
+
 - [ ] **Put the course on a github.io site**, once enough lectures exist as
   HTML. The Quarto decks are self-contained HTML already, so publishing is
   mostly a matter of turning on GitHub Pages for this repository and adding an

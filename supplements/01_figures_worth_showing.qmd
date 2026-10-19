@@ -1065,6 +1065,366 @@ ggplot(counts, aes(frac_built, count)) +
 
 Grid, predict, plot. The model changes; the recipe does not.
 
+# Part 8: The frame around the data {background-color="#f0f4f8"}
+
+## Everything that is not your data {.smaller}
+
+A **theme** controls the frame: panel background, grid lines, axis text, tick
+marks, legend position, borders, margins. It cannot change a single plotted
+value, which is what makes it safe to experiment with.
+
+Every figure in this supplement called `theme_minimal()`, and `theme_void()`
+showed up in Part 3 without comment. Both were choices, and both are worth
+making on purpose.
+
+The payoff is not that a figure looks nicer. It is that a theme removes ink that
+is not carrying information, which leaves more attention for the ink that is.
+
+## The built-in themes {.smaller}
+
+| Theme | What you get | Reach for it when |
+|---|---|---|
+| `theme_grey()` | the default: grey panel, white grid | never on purpose |
+| `theme_bw()` | white panel, grid, black border | a journal figure |
+| `theme_minimal()` | white panel, grid, no border | a slide |
+| `theme_classic()` | axis lines, no grid | one clean panel |
+| `theme_void()` | nothing but the data | pies, maps |
+
+There are also `theme_linedraw()`, `theme_light()` and `theme_dark()`, which you
+will rarely need. They all take the same arguments, so swapping one for another
+is a one-word edit. Try two before you settle.
+
+## Four of them, same data {.smaller}
+
+```{r}
+#| fig-height: 3.9
+pts <- ggplot(reef, aes(depth, richness)) +
+  geom_point(alpha = 0.05) +
+  labs(x = "depth (m)", y = "richness")
+
+(pts + theme_grey()    + labs(title = "theme_grey") |
+ pts + theme_bw()      + labs(title = "theme_bw")) /
+(pts + theme_minimal() + labs(title = "theme_minimal") |
+ pts + theme_classic() + labs(title = "theme_classic"))
+```
+
+## What that comparison shows {.smaller}
+
+`pts` is one object. Adding a theme to it returns a modified copy, so those are
+the same figure dressed four ways and nothing about the data moved.
+
+. . .
+
+**`theme_grey()` is the reason your figures look like homework.** The grey panel
+is darker than the points on it, so the background competes with the data.
+
+. . .
+
+**`theme_bw()` and `theme_classic()` differ in what they keep.** A border tells
+the reader where the panel ends, which matters when panels sit side by side.
+Axis lines alone are cleaner, and get ambiguous in a multi-panel figure.
+
+. . .
+
+**`theme_minimal()` is the slide default** because a projector loses
+low-contrast detail, and a grid with no border is the least ink that still lets
+someone read a value off the axis.
+
+## theme_void: no frame at all {.smaller}
+
+```{r}
+#| fig-height: 3.0
+pie_raw <- ggplot(prot_counts, aes(x = "", y = n, fill = protection)) +
+  geom_col(width = 1, colour = "white") +
+  coord_polar(theta = "y") +
+  scale_fill_manual(values = prime) +
+  labs(x = NULL, y = NULL, fill = NULL)
+
+(pie_raw + theme_minimal() + labs(title = "theme_minimal")) |
+  (pie_raw + theme_void() + labs(title = "theme_void"))
+```
+
+On the left, the axis numbers are cumulative counts and the grid lines are arcs.
+Neither means anything to a reader, which is why Part 3 used `theme_void()`.
+
+## base_size {.smaller}
+
+```{r}
+#| fig-height: 3.2
+(pts + theme_minimal(base_size = 8) + labs(title = "base_size = 8")) |
+  (pts + theme_minimal(base_size = 17) + labs(title = "base_size = 17"))
+```
+
+The font size everything else is scaled from. The default, 11, is sized for a
+printed page: use roughly 14 to 18 on a slide, and 8 to 10 for one panel of a grid.
+
+## Setting it once: theme_set() {.smaller}
+
+Set the default at the top of a script, and every plot after it uses it:
+
+```{r}
+#| fig-height: 2.8
+theme_set(theme_minimal(base_size = 13))
+
+ggplot(reef, aes(protection_f, richness)) +
+  geom_boxplot(fill = "#B9CBD8") +
+  labs(x = NULL, y = "species richness")
+```
+
+There is no theme call in that plot, which is the point.
+
+## theme_set() lasts the session {.smaller}
+
+It holds until you restart R or set something else. To go back to the ggplot2
+default:
+
+```{r}
+theme_set(theme_grey())    # undo it, so the rest of this file is unaffected
+```
+
+For a manuscript, this is how every figure ends up matching without you checking
+each one: `theme_set()` in the first lines of the script, and no theme calls
+after that.
+
+`theme_update()` is the gentler version. It changes one piece of the current
+default instead of replacing the whole theme.
+
+## Theme elements {.smaller}
+
+To change one piece of a theme, `theme()` takes a named argument per element,
+and the value is an `element_*()` function describing how to draw it:
+
+| Function | For |
+|---|---|
+| `element_text()` | anything made of words: titles, axis labels, legend text |
+| `element_line()` | grid lines, tick marks, axis lines |
+| `element_rect()` | panels, plot background, legend boxes |
+| `element_blank()` | delete it entirely |
+
+Element names are a hierarchy: `axis.text.x` inherits from `axis.text`, which
+inherits from `text`. So setting the short name changes every piece under it:
+
+```{r}
+#| eval: false
+theme(text = element_text(family = "serif"))   # every piece of text at once
+```
+
+`?theme` lists all ninety or so names, of which you will use a dozen.
+
+## Changing one thing {.smaller}
+
+```{r}
+#| fig-height: 2.8
+ggplot(reef, aes(depth_class, richness, fill = depth_class)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "mako", direction = -1, guide = "none") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.minor   = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.title         = element_text(face = "bold")) +
+  labs(x = "depth", y = "species richness")
+```
+
+`theme()` comes **after** `theme_minimal()`. Later layers win, so the other order
+silently throws your changes away.
+
+## Why those two lines went {.smaller}
+
+**`panel.grid.minor`** draws lines at values with no label, so nobody can read
+anything off them.
+
+. . .
+
+**`panel.grid.major.x`** draws vertical lines on a **categorical** axis. They
+line up with category names rather than numbers, so they measure nothing.
+
+. . .
+
+That is the test for any piece of the frame: **does the reader use it to read
+the data?** If not, `element_blank()` it.
+
+## Moving the legend {.smaller}
+
+```{r}
+#| fig-height: 2.7
+ggplot(reef, aes(depth, richness, colour = protection_f)) +
+  geom_point(alpha = 0.08) +
+  scale_colour_manual(values = prime) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, size = 2.5))) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position        = "inside",
+        legend.position.inside = c(0.84, 0.86),
+        legend.background      = element_rect(fill = "white", colour = NA)) +
+  labs(x = "depth (m)", y = "species richness", colour = NULL)
+```
+
+`override.aes` makes the legend keys solid even though the points are faint.
+`legend.position` also takes `"bottom"`, `"top"` and `"none"`.
+
+## The gap between the bars and the axis {.smaller}
+
+```{r}
+#| fig-height: 2.8
+bars <- ggplot(prot_counts, aes(protection, n, fill = protection)) +
+  geom_col() +
+  scale_fill_manual(values = prime, guide = "none") +
+  theme_minimal(base_size = 12) +
+  labs(x = NULL, y = "surveys")
+
+bars
+```
+
+Look at the bottoms of the bars. They **float above the x axis** instead of
+sitting on it.
+
+## Why the gap is there {.smaller}
+
+ggplot2 pads every continuous scale by **5% of the data range at each end**
+before anything is drawn. You did not ask for it, and no argument in
+`geom_col()` controls it.
+
+. . .
+
+For points and lines that padding is right. A point at exactly the maximum would
+otherwise be drawn half outside the panel and get clipped.
+
+. . .
+
+For bars it is wrong, because a bar's baseline is **a real value, zero**. Padding
+below zero puts blank space where the reader expects the axis, so the bars no
+longer touch the baseline they are measured from. It is a small thing, and it is
+what makes an otherwise fine bar chart look slightly off without anyone being
+able to say why.
+
+## expand, and expansion() {.smaller}
+
+```{r}
+#| fig-height: 2.8
+bars + scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
+```
+
+Nothing below, the usual 5% above: the bars sit on the axis, and the tallest
+still has headroom.
+
+## How expansion() works {.smaller}
+
+The padding lives on the **scale**, not the geom, which is why the fix is a
+`scale_y_continuous()` call. `expansion()` builds it out of two kinds:
+
+- **`mult`**, a proportion of the data range
+- **`add`**, in the units of the data
+
+Each takes one number for both ends, or `c(lower, upper)`. So
+`expansion(mult = c(0, 0.05))` reads as **0% below, 5% above**.
+
+. . .
+
+The headroom matters more than it looks. Take it away too and the tallest bar
+runs into the top of the panel, which reads as a value that was cut off.
+
+## Horizontal bars: fix x, not y {.smaller}
+
+```{r}
+#| fig-height: 3.2
+ggplot(hab_counts, aes(x = n, y = reorder(habitat, n))) +
+  geom_col(fill = "#3B6B8F") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
+  theme_minimal(base_size = 8) +
+  labs(x = "surveys", y = NULL)
+```
+
+Change the scale the bars **grow along**. The one they sit on is fine left alone.
+
+## Flush is not always right {.smaller}
+
+```{r}
+#| fig-height: 2.8
+occ_pts <- ggplot(occ, aes(elapsed, prop)) +
+  geom_point(size = 3) +
+  labs(x = "years since 1997", y = "proportion occupied")
+
+(occ_pts + scale_x_continuous(expand = expansion(0, 0)) +
+           scale_y_continuous(expand = expansion(0, 0)) +
+           theme_minimal() + labs(title = "expansion(0, 0)")) |
+  (occ_pts + theme_minimal() + labs(title = "the default"))
+```
+
+On the left, the first, last and lowest years are each cut in half by the border.
+
+## The four cases you will need {.smaller}
+
+**The rule:** drop the padding on the side where zero is a baseline the geom is
+drawn from. Keep it wherever the extreme value is a data point, as it is for the
+bobwhite years.
+
+| What you want | Code |
+|---|---|
+| bars flush to the axis, headroom above | `expansion(mult = c(0, 0.05))` |
+| flush at both ends: a filled area, a raster, a map | `expansion(0, 0)` |
+| a fixed pad, in data units | `expansion(add = c(0, 2))` |
+| the default back | leave `expand` out |
+
+. . .
+
+You will also meet `expand = c(0, 0)` in older code. That is the
+pre-`expansion()` syntax, where the two numbers are the multiplicative and the
+additive padding, so `c(0, 0)` does mean none. It is worth not writing, because
+`c(0, 0.05)` in that syntax means something quite different from
+`expansion(0, 0.05)`.
+
+## ylim() is not expansion {.smaller}
+
+```{r}
+#| fig-height: 2.8
+box <- ggplot(reef, aes(protection_f, richness)) +
+  geom_boxplot(fill = "#B9CBD8") +
+  theme_minimal(base_size = 10) +
+  labs(x = NULL, y = "richness")
+
+(box + ylim(0, 20) + labs(title = "ylim()")) |
+  (box + coord_cartesian(ylim = c(0, 20)) + labs(title = "coord_cartesian()"))
+```
+
+Same data, same y range, and two different sets of boxplots.
+
+## What ylim() did {.smaller}
+
+`ylim()`, and `scale_y_continuous(limits = )` with it, **throws away rows
+outside the range** before anything is computed.
+
+. . .
+
+Over half the surveys (4,662 of 8,560) have richness above 20, so the left
+boxplots are built from what is left, and the unprotected median falls from 24
+to 14. ggplot2 mentions this only in a warning about "removed rows", which is
+easy to scroll past.
+
+. . .
+
+**`coord_cartesian()` zooms** the finished figure and keeps all the data. That
+is almost always the one you meant.
+
+. . .
+
+**Expansion does neither.** It changes the padding only, never the limits and
+never the data.
+
+## Putting it together {.smaller}
+
+```{r}
+#| fig-height: 2.5
+ggplot(prot_counts, aes(n, reorder(protection, n))) +
+  geom_col(fill = "#3B6B8F", width = 0.7) +
+  geom_text(aes(label = n), hjust = -0.15, size = 3.2) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor   = element_blank()) +
+  labs(x = "surveys", y = NULL)
+```
+
+Flush bars, 12% headroom so the labels fit, and no grid lines that measure nothing.
+
 # Taking it with you {background-color="#f0f4f8"}
 
 ## What this buys you {.smaller}
@@ -1079,6 +1439,9 @@ Grid, predict, plot. The model changes; the recipe does not.
 5. **Reach for a bar chart** when slices need comparing. Pie or donut matters
    much less than people say.
 6. **Plot your model over your data**, with a band. Grid, predict, plot.
+7. **Choose the frame on purpose.** Pick a theme, set `base_size` for where the
+   figure will be shown, and sit bars on their axis with
+   `expansion(mult = c(0, 0.05))`.
 
 ## Where it fits {.smaller}
 
@@ -1087,6 +1450,8 @@ Grid, predict, plot. The model changes; the recipe does not.
 - **The final project presentation**: Parts 1, 3 and 4. A talk is where a
   cluttered figure costs you the most, because nobody can pause on it
 - **Your own papers, later**: Part 5 and the color blindness check
+- **Every figure you make**: Part 8. `theme_set()` at the top of a script is
+  one line, and it makes every figure after it match
 
 ## Going further: learning {.smaller}
 
