@@ -1,0 +1,261 @@
+---
+title: "Confidence intervals: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 17"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+```
+
+## How to use this
+
+The code from Lecture 17, filled in, with the numbers it produces.
+
+. . .
+
+Optimizers are numerical, so your last decimal place may differ from mine.
+Anything beyond that is worth asking about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+
+occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+nll_2019 <- function(p){
+  -dbinom(52, size = 71, prob = p, log = TRUE)
+}
+
+p_vec <- seq(0.55, 0.90, by = 0.001)
+nll_vec <- nll_2019(p_vec)
+
+c(occupancy_rows = nrow(occ), count_rows = nrow(counts))
+```
+
+## Finding the interval {.smaller}
+
+```{r}
+best <- min(nll_vec)
+
+range(p_vec[nll_vec <= best + 1.92])
+```
+
+. . .
+
+Read from the inside out: `nll_vec <= best + 1.92` is a TRUE or FALSE for every
+candidate; `p_vec[...]` keeps the candidates that were TRUE; `range()` returns
+the smallest and the largest.
+
+. . .
+
+Not symmetric around 0.732: about 0.109 below and 0.093 above. The curve is
+steeper on the side nearer 1.
+
+## The shortcut {.smaller}
+
+```{r}
+p_hat <- 52 / 71
+se <- sqrt(p_hat * (1 - p_hat) / 71)
+p_hat + c(-1.96, 1.96) * se
+```
+
+Close to the curve's answer. Now the pewee, 3 of 71:
+
+```{r}
+p_hat <- 3 / 71
+se <- sqrt(p_hat * (1 - p_hat) / 71)
+p_hat + c(-1.96, 1.96) * se
+```
+
+A **negative** lower limit, for a probability.
+
+## The profile {.smaller}
+
+```{r}
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+
+occ_data <- list(n_occupied = occ$n_occupied,
+                 n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05),
+              data = occ_data)
+
+b_vec <- seq(-0.10, -0.03, by = 0.005)
+prof_nll <- numeric(length(b_vec))
+
+for (i in seq_along(b_vec)) {
+  fit_i <- mle2(minuslogl = occ_nll2,
+                start = c(a = 2, b = -0.05),
+                fixed = list(b = b_vec[i]),
+                data = occ_data)
+  prof_nll[i] <- fit_i@min
+}
+```
+
+## The slice, and both together {.smaller}
+
+```{r}
+#| fig-height: 2.8
+a_hat <- coef(m_occ)["a"]
+slice_nll <- numeric(length(b_vec))
+
+for (i in seq_along(b_vec)) {
+  slice_nll[i] <- occ_nll2(c(a_hat, b_vec[i]), occ$n_occupied,
+                           occ$n_routes, occ$elapsed)
+}
+
+plot(b_vec, prof_nll - m_occ@min, type = "b", ylim = c(0, 10),
+     xlab = "b", ylab = "NLL above the minimum")
+abline(h = 1.92, lty = 2)
+points(b_vec, slice_nll - m_occ@min, type = "b", col = "red")
+```
+
+## Why the slice is narrower {.smaller}
+
+The slice crosses 1.92 much closer to the best $b$, so its interval is less than
+half as wide.
+
+. . .
+
+It holds $a$ at one value. But $a$ and $b$ are strongly correlated (about
+−0.89): a curve that starts higher has to fall faster. The profile lets $a$
+adjust at every $b$, so it finds a lower NLL there and accepts a wider range of
+$b$.
+
+. . .
+
+The slice is not wrong about the surface. It is answering a different question,
+"how plausible is this $b$ **if $a$ is known exactly**?", and nobody knows $a$
+exactly.
+
+## `confint()` {.smaller}
+
+```{r}
+confint(m_occ)
+confint(m_occ, method = "quad")
+```
+
+## Back-transforming {.smaller}
+
+```{r}
+exp(confint(m_occ)["b", ])
+1 - exp(confint(m_occ)["b", ])
+```
+
+The odds of occupancy fall by between about 4.3% and 7.7% a year. Zero is not in
+the interval for $b$, so a flat line is ruled out.
+
+## Development {.smaller}
+
+```{r}
+urban_nll2 <- function(params, y, u){
+  mu <- params[1] * exp(params[2] * u)
+  -sum(dnbinom(y, mu = mu, size = params[3], log = TRUE))
+}
+parnames(urban_nll2) <- c("mu0", "b", "size")
+
+m_urban <- mle2(minuslogl = urban_nll2,
+                start = c(mu0 = 12, b = -3, size = 1.4),
+                data = list(y = counts$count, u = counts$frac_built),
+                method = "L-BFGS-B",
+                lower = c(mu0 = 0.1, b = -20, size = 0.05),
+                upper = c(mu0 = 100, b = 20, size = 50))
+
+confint(m_urban)
+log(2) / abs(confint(m_urban)["b", ])
+```
+
+Counts halve with every 18% to 26% of development. The steeper end of $b$ gives
+the shorter halving distance, so the two ends swap places.
+
+## Additional practice: coverage {.smaller}
+
+```{r}
+interval_from_curve <- function(k, n, p_vec){
+  nll <- -dbinom(k, size = n, prob = p_vec, log = TRUE)
+  range(p_vec[nll <= min(nll) + 1.92])
+}
+
+set.seed(17)
+p_grid <- seq(0.001, 0.999, by = 0.001)
+lower <- numeric(100)
+upper <- numeric(100)
+
+for (i in 1:100) {
+  k <- rbinom(1, size = 71, prob = 0.73)
+  ci <- interval_from_curve(k, 71, p_grid)
+  lower[i] <- ci[1]
+  upper[i] <- ci[2]
+}
+
+mean(lower < 0.73 & upper > 0.73)
+```
+
+About 0.95, give or take a few, from 100 tries.
+
+## Step 5: a rare species, with the shortcut {.smaller}
+
+```{r}
+set.seed(17)
+lower <- numeric(1000)
+upper <- numeric(1000)
+
+for (i in 1:1000) {
+  k <- rbinom(1, size = 71, prob = 0.03)
+  p_hat <- k / 71
+  se <- sqrt(p_hat * (1 - p_hat) / 71)
+  lower[i] <- p_hat - 1.96 * se
+  upper[i] <- p_hat + 1.96 * se
+}
+
+mean(lower < 0.03 & upper > 0.03)    # how often it catches the truth
+mean(upper <= 0.03)                  # missed by being entirely too low
+mean(lower < 0)                      # proposed a negative probability
+```
+
+## What step 5 shows {.smaller}
+
+The shortcut is meant to catch the truth 95% of the time. With a rare species it
+falls well short, and its misses are lopsided: almost all of them sit entirely
+below the truth.
+
+. . .
+
+The worst case is **zero** sightings, which happens about one survey in nine
+here. Then $\hat{p} = 0$, the standard error is 0, and the "interval" is the
+single point 0: complete certainty, from no data.
+
+. . .
+
+The interval from the likelihood curve has neither problem. It fails least in
+exactly the situation where people most need it: when the species is rare.
