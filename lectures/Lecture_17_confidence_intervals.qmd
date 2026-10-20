@@ -1,0 +1,1316 @@
+---
+title: "Confidence intervals"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 17"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+library(bbmle)
+
+occ <- read.csv("../data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("../data/class_examples/bobwhite_counts.csv")
+
+cutoff <- qchisq(0.95, df = 1) / 2
+
+f3 <- function(x){ sprintf("%.3f", x) }    # three decimals, keeping trailing zeros
+
+# one parameter: 52 of 71 routes in 2019
+nll_2019 <- function(p){
+  -dbinom(52, size = 71, prob = p, log = TRUE)
+}
+p_vec <- seq(0.55, 0.90, by = 0.001)
+nll_vec <- nll_2019(p_vec)
+best_2019 <- min(nll_vec)
+ci_2019 <- range(p_vec[nll_vec <= best_2019 + cutoff])
+p_hat <- 52 / 71
+se_2019 <- sqrt(p_hat * (1 - p_hat) / 71)
+wald_2019 <- p_hat + c(-1.96, 1.96) * se_2019
+
+# a rare bird: 3 of 71
+nll_rare <- function(p){
+  -dbinom(3, size = 71, prob = p, log = TRUE)
+}
+p_rare <- seq(0.0005, 0.16, by = 0.0005)
+nll_rare_vec <- nll_rare(p_rare)
+ci_rare <- range(p_rare[nll_rare_vec <= min(nll_rare_vec) + cutoff])
+p_hat_rare <- 3 / 71
+se_rare <- sqrt(p_hat_rare * (1 - p_hat_rare) / 71)
+wald_rare <- p_hat_rare + c(-1.96, 1.96) * se_rare
+
+# two parameters: the logistic occupancy model from Thursday
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+occ_data <- list(n_occupied = occ$n_occupied, n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05), data = occ_data)
+a_hat <- coef(m_occ)["a"]
+b_hat <- coef(m_occ)["b"]
+
+b_vec <- seq(-0.10, -0.03, by = 0.005)
+prof_fits <- lapply(b_vec, function(b){
+  mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05),
+       fixed = list(b = b), data = occ_data)
+})
+prof_nll <- sapply(prof_fits, function(f){ f@min })
+prof_a <- sapply(prof_fits, function(f){ coef(f)["a"] })
+slice_nll <- sapply(b_vec, function(b){
+  occ_nll2(c(a_hat, b), occ$n_occupied, occ$n_routes, occ$elapsed)
+})
+
+# fine versions for drawing and for the interval endpoints
+b_fine <- seq(-0.10, -0.03, by = 0.0005)
+prof_fine <- sapply(b_fine, function(b){
+  mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05),
+       fixed = list(b = b), data = occ_data)@min
+}) - m_occ@min
+slice_fine <- sapply(b_fine, function(b){
+  occ_nll2(c(a_hat, b), occ$n_occupied, occ$n_routes, occ$elapsed)
+}) - m_occ@min
+slice_ci <- range(b_fine[slice_fine <= cutoff])
+
+ci_occ <- confint(m_occ)
+ci_occ_quad <- confint(m_occ, method = "quad")
+corr_ab <- cov2cor(vcov(m_occ))["a", "b"]
+
+# a band around the occupancy curve, for the Lecture 21 preview
+set.seed(21)
+draws <- MASS::mvrnorm(2000, mu = coef(m_occ), Sigma = vcov(m_occ))
+e_band <- seq(0, 22, length.out = 100)
+curves <- apply(draws, 1, function(d){ plogis(d[1] + d[2] * e_band) })
+band <- apply(curves, 1, quantile, probs = c(0.025, 0.975))
+
+# abundance against development
+urban_nll2 <- function(params, y, u){
+  mu <- params[1] * exp(params[2] * u)
+  -sum(dnbinom(y, mu = mu, size = params[3], log = TRUE))
+}
+parnames(urban_nll2) <- c("mu0", "b", "size")
+m_urban <- mle2(minuslogl = urban_nll2,
+                start = c(mu0 = 12, b = -3, size = 1.4),
+                data = list(y = counts$count, u = counts$frac_built),
+                method = "L-BFGS-B",
+                lower = c(mu0 = 0.1, b = -20, size = 0.05),
+                upper = c(mu0 = 100, b = 20, size = 50))
+ci_urban <- confint(m_urban)
+
+# coverage: 100 imaginary 2019 surveys with the truth known
+profile_ci <- function(k, n){
+  ph <- k / n
+  g <- function(p){
+    -dbinom(k, n, p, log = TRUE) + dbinom(k, n, ph, log = TRUE) - cutoff
+  }
+  lo <- if (k == 0) { 0 } else { uniroot(g, c(1e-10, ph))$root }
+  hi <- if (k == n) { 1 } else { uniroot(g, c(ph, 1 - 1e-10))$root }
+  c(lo, hi)
+}
+set.seed(2026)
+sim_k <- rbinom(100, size = 71, prob = 0.73)
+sim_ci <- t(sapply(sim_k, profile_ci, n = 71))
+sim_hit <- sim_ci[, 1] < 0.73 & sim_ci[, 2] > 0.73
+set.seed(1)
+long_k <- rbinom(10000, size = 71, prob = 0.73)
+long_ci <- t(sapply(long_k, profile_ci, n = 71))
+long_cover <- mean(long_ci[, 1] < 0.73 & long_ci[, 2] > 0.73)
+```
+
+## Today's agenda {.smaller}
+
+- **Check-in**: how the course is going, ten minutes
+- **Two from the quiz**: why the minus sign, and the two halves of a model
+- Every number so far has been a single best guess. **How sure are we?**
+- One parameter: where an interval comes from, and why 1.92
+- Two parameters: **profiles**, and the shortcut that lies
+- Intervals on Thursday's bobwhite fits
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Bolker 6.4 and the start of 6.5. The machinery does not grow today: every
+interval comes from the same negative log-likelihood they have been writing for
+a week, read in a new way.
+
+Do the check-in first, while people are fresh and before the code starts, or it
+gets squeezed out at the end.
+:::
+
+# Mid-semester check-in
+
+## How is it going? {.smaller}
+
+Half the semester is done.
+
+1. **Anything that is working** and should stay
+2. **Anything that should change**
+3. **The pace**: too fast, about right, or too slow?
+4. Anything you wish there were **more** of: examples, practice problems,
+   assignments, office hours?
+
+::: {.notes}
+Asked out loud, about five minutes. Give the silence after each question a few
+seconds longer than feels comfortable; the second answer is usually the useful
+one.
+
+Worth saying what will happen to the answers: "I will tell you on Thursday what I
+am changing." Then do it, even if the answer is "not much, and here is why". A
+check-in that disappears is worse than none.
+
+Things worth listening for, given the semester so far: pacing in the likelihood
+lectures, whether the type-and-run code is too much or too little, whether the
+quizzes feel fair, and whether people are keeping up with the reading.
+:::
+
+## Optional extras: what would you use? {.smaller}
+
+I am writing **optional supplements** for things the course does not have time
+for. Self-paced, nothing graded. The first is up: *Figures worth showing*, in
+`supplements/`.
+
+:::: {.columns}
+
+::: {.column width="55%"}
+A. Where distributions come from<br>
+B. Getting messy data into shape<br>
+C. Finding data, and APIs<br>
+D. Maps and geospatial data
+:::
+
+::: {.column width="45%"}
+E. Competition and dynamic models<br>
+F. Writing your own R package<br>
+G. Reproducible pipelines
+:::
+
+::::
+
+A few questions:
+
+- **Which (if any) are most useful?**
+- **Which would make you sign up for a second biometry course?**
+- **Any other requests?**
+
+::: {.notes}
+The first two questions really are different, and the second is the more
+valuable answer: it is a draft syllabus for a possible Biometry II. Ask them
+separately, and a show of hands for each letter is enough.
+
+The third is for anything not on the list. Write down whatever comes up, since a
+topic several people ask for unprompted outranks one they only vote for.
+
+A and B are the ones planned next. If the room says otherwise, the order
+changes.
+
+Point at Supplement 01 while it is on screen: color palettes, ridgelines, and
+plotting model predictions. Final project presentations are graded partly on
+communication, so it is worth their time before December.
+:::
+
+# Two from the quiz
+
+## Why the **negative**? {.smaller}
+
+Same curve, same information. The only difference is the sign.
+
+```{r}
+#| echo: false
+#| fig-height: 2.7
+#| fig-width: 8.4
+p_sign <- seq(0.02, 0.99, length.out = 400)
+ll_sign <- dbinom(52, 71, p_sign, log = TRUE)
+
+par(mfrow = c(1, 2), mar = c(3.4, 3.6, 1.8, 0.6), mgp = c(2.2, 0.6, 0))
+
+plot(p_sign, ll_sign, type = "l", lwd = 3, col = "#b2182b", ylim = c(-60, 5),
+     xlab = "p", ylab = "log-likelihood", bty = "l")
+arrows(0.45, -18, 0.08, -48, lwd = 2.5, col = "grey35", length = 0.12)
+text(0.55, -10, "downhill", col = "grey35", cex = 1.0)
+text(0.62, -40, "optimize() stops\nat p = 0.00007", col = "#b2182b", cex = 0.95)
+mtext("no minus sign", side = 3, line = 0.4, cex = 1.1)
+
+plot(p_sign, -ll_sign, type = "l", lwd = 3, col = "#1b7837", ylim = c(-5, 60),
+     xlab = "p", ylab = "negative log-likelihood", bty = "l")
+arrows(0.35, 30, 0.66, 6, lwd = 2.5, col = "grey35", length = 0.12)
+text(0.26, 38, "downhill", col = "grey35", cex = 1.0)
+points(0.7324, min(-ll_sign), pch = 16, cex = 1.8, col = "#1b7837")
+text(0.72, 16, "p = 0.732", col = "#1b7837", cex = 0.95)
+mtext("with the minus sign", side = 3, line = 0.4, cex = 1.1)
+```
+
+. . .
+
+`optimize()` and `optim()` **walk downhill**. The minus is what puts the answer
+we want at the bottom, where they are looking.
+
+::: {.notes}
+From the quiz: most of the class said the minus was about turning products into
+sums, or about keeping the numbers from underflowing. Both true, both the log's
+doing, neither the minus.
+
+Draw the eye along the grey arrows. Left: downhill runs away from the peak and
+off the edge of the plot, so an optimizer handed the plain log-likelihood walks
+away from the answer. Right: the same curve flipped, and downhill now ends at
+0.732.
+
+The red curve is worth a sentence on its own. Its peak is at 0.732, in exactly
+the same place as the green curve's bottom, which is the point: flipping the sign
+moves nothing except which end the optimizer is hunting for.
+:::
+
+## What happens without it {background-color="#f0f4f8" .smaller}
+
+52 of 71 routes held bobwhite in 2019. Leave the minus off:
+
+```{r}
+ll <- function(p){ dbinom(52, size = 71, prob = p, log = TRUE) }    # no minus
+
+optimize(ll, interval = c(0, 1))$minimum
+```
+
+. . .
+
+**p is essentially zero**: the fit says bobwhite are on none of the routes, when
+they were on 52 of them. No error. No warning. Just a wrong answer.
+
+. . .
+
+```{r}
+nll <- function(p){ -dbinom(52, size = 71, prob = p, log = TRUE) }  # minus
+
+optimize(nll, interval = c(0, 1))$minimum
+```
+
+. . .
+
+`optimize()` has a `maximum = TRUE`, so here you could go either way. **`optim()`
+and `mle2()` do not.** They minimize, always, which is why we always write the
+negative.
+
+::: {.notes}
+Run both out loud if there is time, or just read the output off the slide.
+
+The lesson under the lesson is the one worth saying plainly: a sign error in a
+likelihood does not crash. It returns a number, with the same confident
+formatting as a right answer. Checking that a fitted parameter is somewhere near
+what the data obviously say is not fussiness, it is the only thing standing
+between them and a silent mistake. This comes back on Thursday with model
+selection, where a wrong sign makes the worse model look better.
+
+If someone asks why 0.00007 and not exactly 0: the optimizer stops when it stops
+making progress, and at p that small the log-likelihood is already running off to
+negative infinity.
+:::
+
+## A model is two things {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 8.4
+p_of <- function(e){ plogis(a_hat + b_hat * e) }
+e_line <- seq(0, 22, length.out = 200)
+
+par(mfrow = c(1, 2), mar = c(3.4, 3.6, 1.8, 0.6), mgp = c(2.2, 0.6, 0))
+
+plot(occ$year, occ$n_occupied / occ$n_routes, pch = 16, col = "#4292c6", cex = 1.1,
+     xlab = "year", ylab = "fraction of routes with bobwhite",
+     ylim = c(0.52, 1), xlim = c(1996.5, 2022), bty = "l")
+lines(1997 + e_line, p_of(e_line), lwd = 3, col = "#08519c")
+mtext("the line: the average", side = 3, line = 0.4, cex = 1.1)
+
+plot(occ$year, occ$n_occupied / occ$n_routes, pch = 16, col = "grey80", cex = 1.1,
+     xlab = "year", ylab = "fraction of routes with bobwhite",
+     ylim = c(0.52, 1), xlim = c(1996.5, 2022), bty = "l")
+for (e in c(1, 11, 21)) {
+  k <- 0:75
+  d <- dbinom(k, 75, p_of(e))
+  keep <- d > 4e-4
+  xx <- 1997 + e + (2.8 / max(d)) * d[keep]
+  yy <- k[keep] / 75
+  segments(1997 + e, yy, xx, yy, col = "#d4b9da", lwd = 1.6)
+  lines(xx, yy, col = "#762a83", lwd = 2)
+  points(1997 + e, p_of(e), pch = 16, cex = 1.3, col = "#08519c")
+}
+lines(1997 + e_line, p_of(e_line), lwd = 3, col = "#08519c")
+mtext("at each year, a whole distribution", side = 3, line = 0.4, cex = 1.1)
+```
+
+. . .
+
+The **deterministic function** is the line: the average you expect in a given
+year. The **distribution** is the purple shape standing on it: how far one real
+survey lands from that average.
+
+::: {.notes}
+From the quiz: question 3 asked which of the two describes the average, and the
+room split. The picture is the answer, and it is worth leaving up while they
+look at it.
+
+Walk the right panel one year at a time. In 2018 the line sits at 0.67. That is
+not a prediction that 67% of routes will hold bobwhite; it is the center of a
+distribution, and the purple shape says which other fractions are plausible. The
+grey points are the years we actually got, one draw each.
+
+Then connect the two panels: every grey point in the left panel came from a
+purple shape like one of these, standing on the line at its own year. That is
+the whole of chapters 3 and 4 in one picture, and the sentence to hang on to is
+Bolker's: the function says what you expect, the distribution says how far from
+it you land.
+
+Why these shapes get narrower toward the top: the binomial has less room to
+scatter as p approaches 1. Mention it only if asked.
+:::
+
+## Both halves are in the code you wrote {.smaller}
+
+Thursday's occupancy model, with the two halves labeled:
+
+```{r}
+#| eval: false
+occ_nll <- function(params, n_occupied, n_routes, elapsed){
+
+  p <- plogis(params[1] + params[2] * elapsed)   # the function: the average
+
+  -sum(dbinom(n_occupied,                        # the distribution: the scatter
+              size = n_routes,
+              prob = p,
+              log = TRUE))
+}
+```
+
+::: {.notes}
+This is the slide that makes the two previous ones stick, because it is their own
+code from Thursday with nothing changed but the comments.
+
+Every model for the rest of the semester has these two lines. The first one is
+where chapter 3 lives, the second is where chapter 4 lives, and fitting is
+chapter 6 asking which parameter values make the data most likely.
+:::
+
+# How sure are we?
+
+## Where we are {.smaller}
+
+| Section | Question | When |
+|---|---|---|
+| 6.1 - 6.2 | What parameter values make my data most likely? | Last Tuesday |
+| 6.3 | What if the parameter depends on a covariate? | Last Thursday |
+| **6.4 - 6.5** | **How sure am I about that parameter?** | **Today** |
+| 6.6 | Which of two models is better? | This Thursday |
+
+. . .
+
+Same negative log-likelihood. **Today we read its shape**, not just its lowest
+point.
+
+::: {.notes}
+The table they saw on Thursday, one row further down.
+
+The sentence under it is the whole lecture in advance: a curve that rises steeply
+from its minimum pins the parameter down; a curve that is nearly flat does not.
+Everything else today is making that precise.
+:::
+
+## 6% a year, give or take what? {.smaller}
+
+Thursday's occupancy fit gave $b = -0.062$: the odds that a route holds bobwhite
+fall about **6% a year**.
+
+. . .
+
+Suppose the truth were 6% give or take 1%. Or give or take 10%.
+
+. . .
+
+| If the range is | Then |
+|---|---|
+| falling 5% to 7% a year | a clear, steady decline, worth acting on |
+| anything from rising 4% to falling 16% | it might be **increasing**; we do not know |
+
+**Same best guess. Opposite conclusions.** The range is what tells them apart.
+
+::: {.notes}
+Motivation before machinery, which is the order Bolker uses too.
+
+Make it concrete for a manager: the first row justifies spending money on
+bobwhite habitat; the second says go and collect more data first. A point
+estimate with no interval cannot tell those apart, and that is why journals ask
+for intervals.
+
+Ask the room which one they think it is before going on. Most will guess the
+first, because the decline was visible in the plot. They are right, and by the
+end of class they will be able to say so with a number.
+:::
+
+## What is a confidence interval? {.smaller}
+
+A **range of parameter values consistent with the data**, reported instead of a
+single best guess.
+
+. . .
+
+You have seen them in polls: "48% support, **plus or minus 3 points**" is a
+confidence interval of 45% to 51%.
+
+. . .
+
+:::: {.columns}
+
+::: {.column width="48%"}
+Three parts:
+
+- the **estimate**, the best guess
+- a **lower** and an **upper limit**
+- a **confidence level**, usually 95%
+
+**Narrow:** the data pin the value down. **Wide:** they don't.
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 4.4
+par(mar = c(3.6, 0.6, 0.6, 0.6), cex.axis = 1.2, cex.lab = 1.2)
+plot(NA, xlim = c(-6, 18), ylim = c(0.4, 2.6), yaxt = "n", bty = "n",
+     xlab = "yearly decline in the odds (%)", ylab = "")
+abline(v = 0, lty = 2, col = "grey55")
+text(0, 2.55, "no change", cex = 1.1, col = "grey40")
+segments(c(5, -4), c(2, 1), c(7, 16), c(2, 1), lwd = 4,
+         col = c("#762a83", "#1b7837"))
+points(c(6, 6), c(2, 1), pch = 16, cex = 2, col = c("#762a83", "#1b7837"))
+text(c(6, 6), c(2, 1) - 0.35, c("5% to 7%", "-4% to 16%"), cex = 1.2)
+```
+:::
+
+::::
+
+. . .
+
+Today's question is where the two limits come from. Short answer: **they are the
+values the data cannot rule out.**
+
+::: {.notes}
+A definition before any machinery, because "confidence interval" is a phrase
+they have heard far more often than they have had it explained.
+
+The figure is the previous slide's two scenarios, drawn the way they will see
+intervals in papers: a dot for the estimate, a bar for the range. The dashed line
+is zero, no change. The purple interval sits entirely to one side of it, so the
+data rule out "no change"; the green one straddles it, so they do not. That
+reading, "does the interval cross the no-effect line?", is the most common use of
+a confidence interval in the literature, and it comes back at the end of today.
+
+On the confidence level: keep it vague here on purpose. 95% describes how often
+the method that builds intervals catches the true value, over many repeated
+studies. It is not a 95% chance that this particular interval holds the truth.
+That distinction is the "What 95% means" slide near the end, with a picture, which
+is where it lands best. If someone asks now, say it is coming.
+
+The poll is real-world framing only, and the margin of error there is the
+plus-or-minus-1.96-standard-errors kind, which is the shortcut we meet later.
+:::
+
+## Start with one parameter {.smaller}
+
+Back to the simplest version: **52 of the 71 routes** surveyed in 2019 held
+bobwhite.
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+#| fig-width: 7.4
+plot(p_vec, nll_vec, type = "l", lwd = 3, col = "#762a83",
+     xlab = "p, the probability a route holds bobwhite",
+     ylab = "negative log-likelihood")
+points(p_hat, best_2019, pch = 16, cex = 1.5, col = "red")
+text(p_hat, best_2019 + 0.9, "best: 52 / 71 = 0.73", col = "red", cex = 0.85)
+```
+
+The best value is 0.73. **But 0.72 is barely worse. How far from the bottom is
+too far?**
+
+::: {.notes}
+The curve from Lecture 15, deliberately. Nothing new on this slide except the
+question.
+
+Point at the bottom. 0.72 and 0.74 are almost exactly as likely as 0.73, so it
+would be silly to claim we know it is 0.73 and not 0.72. Out at 0.55 the curve is
+far higher, and those values really are implausible. Somewhere in between is a
+line, and the question is where to draw it.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(bbmle)
+
+occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+nll_2019 <- function(p){
+  -dbinom(52, size = 71, prob = p, log = TRUE)
+}
+
+p_vec <- seq(0.55, 0.90, by = 0.001)    # candidate values of p
+nll_vec <- nll_2019(p_vec)               # dbinom takes all of them at once
+
+plot(p_vec, nll_vec, type = "l", xlab = "p", ylab = "negative log-likelihood")
+```
+:::
+
+::: {.notes}
+Two downloads, and both are the tables from data/class_examples, already built:
+occ is Thursday's 23 rows, and counts is the 1,360 bobwhite route-years. Nobody
+has to rebuild them with tapply this time, which is where Thursday's time went.
+
+The last two lines are the curve on the previous slide. nll_2019 is only one
+line, but it is worth reading it out: the data are fixed at 52 of 71, and p is the
+thing being varied. That is what a likelihood is.
+
+dbinom happily takes a vector of probabilities and returns a vector of answers,
+so no loop is needed for a single parameter.
+:::
+
+## Drawing the line {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 7.4
+plot(p_vec, nll_vec - best_2019, type = "l", lwd = 3, col = "#762a83",
+     ylim = c(0, 8), xlab = "p",
+     ylab = "NLL above the minimum")
+abline(h = cutoff, lty = 2, col = "grey40")
+rect(ci_2019[1], -1, ci_2019[2], cutoff, col = rgb(0.46, 0.16, 0.51, 0.15),
+     border = NA)
+text(0.87, cutoff + 0.45, "1.92", col = "grey30", cex = 0.9)
+abline(v = ci_2019, col = "#762a83", lty = 3)
+points(p_hat, 0, pch = 16, cex = 1.5, col = "red")
+text(p_hat, 0.7, "best: 0.73", col = "red", cex = 0.85)
+```
+
+Keep every value of $p$ whose NLL is **within 1.92** of the minimum: the values
+the data cannot rule out. That range is the **95% confidence interval**.
+
+::: {.notes}
+Same curve, shifted down so the minimum sits at zero. That is the only change,
+and it makes the rule easy to read: anything under the dashed line is in.
+
+The next slide says where 1.92 comes from. Give them the rule first and the
+reason second, because the rule is what they will use and the reason is what
+makes it trustworthy.
+:::
+
+## Where 1.92 comes from {.smaller}
+
+Compare the best value with any other value $p_0$:
+
+$$\text{deviance} = 2 \times \big(\text{NLL}(p_0) - \text{NLL}_{\text{best}}\big)$$
+
+. . .
+
+If $p_0$ **is the true value**, that deviance follows a known distribution: a
+**chi-squared with 1 degree of freedom**. One degree of freedom because we fixed
+one parameter.
+
+. . .
+
+::: {.type-it}
+```{r}
+#| eval: false
+qchisq(0.95, df = 1)       # deviance the true value exceeds only 5% of the time
+qchisq(0.95, df = 1) / 2   # the same threshold, in NLL units
+```
+:::
+
+. . .
+
+Values within `r round(cutoff, 2)` cannot be ruled out. Values beyond it can, at
+the 5% level. That is a **likelihood ratio test** run on every candidate value at
+once.
+
+::: {.notes}
+The result is Wilks's theorem, and the book states it without proof, which is the
+right call for this course too.
+
+The doubling is a historical convention: the chi-squared describes twice the
+difference, so we halve the threshold to compare with the NLL directly. 3.84 and
+1.92 are the same rule written two ways, and they will see both in papers.
+
+Callback to Thursday: the trend model beat the one-number model by 23 units, and
+the notes promised a threshold of 1.92. This is that threshold. Thursday's
+lecture on model comparison is the same test pointed at whole models instead of
+single parameter values.
+
+"Likelihood ratio" because a difference in log-likelihoods is the log of a ratio
+of likelihoods.
+:::
+
+## Find the interval {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+best <- min(nll_vec)                  # the bottom of the curve
+
+in_range <- nll_vec <= best + 1.92    # TRUE for every p within 1.92 of it
+
+range(p_vec[in_range])                # the smallest and largest p that passed
+```
+:::
+
+. . .
+
+**Check:** you should get about **`r f3(ci_2019[1])` to
+`r f3(ci_2019[2])`**.
+
+. . .
+
+Is the interval **symmetric** around 0.73?
+
+::: {.notes}
+Given in full: the logic is the point here, not the syntax. Read it from the
+middle out. The comparison makes a TRUE or FALSE for every candidate p, the
+square brackets keep the ones that were TRUE, which is the subsetting from
+Lecture 7, and range() returns the two ends.
+
+Symmetry: 0.732 minus 0.623 is 0.109 below, and 0.825 minus 0.732 is 0.093
+above. It leans away from 1, because the curve gets steeper as p approaches 1:
+there is less room up there, so the data rule values out faster. Remember the
+asymmetry, because the shortcut on the next slide cannot produce it.
+:::
+
+## The shortcut, and when it breaks {background-color="#f0f4f8" .smaller}
+
+The interval you have seen in every stats class: **estimate ± 1.96 standard errors**.
+
+::: {.type-it}
+```{r}
+#| eval: false
+p_hat <- 52 / 71
+se <- sqrt(p_hat * (1 - p_hat) / 71)    # standard error of a proportion
+p_hat + c(-1.96, 1.96) * se
+```
+:::
+
+. . .
+
+| | from the curve | ± 1.96 SE |
+|---|---|---|
+| bobwhite, 52 of 71 | `r f3(ci_2019[1])` to `r f3(ci_2019[2])` | `r f3(wald_2019[1])` to `r f3(wald_2019[2])` |
+| Eastern Wood-Pewee, 3 of 71 | `r f3(ci_rare[1])` to `r f3(ci_rare[2])` | **`r f3(wald_rare[1])`** to `r f3(wald_rare[2])` |
+
+. . .
+
+Change the 52 to 3 and try it. **A negative probability.**
+
+::: {.notes}
+The pewee is real: in 2019, Eastern Wood-Pewee turned up on exactly 3 of the 71
+Florida routes.
+
+For bobwhite the two methods nearly agree, and that is the usual case with plenty
+of data and an estimate away from the edges. For a rare species, the shortcut
+produces a lower limit below zero, which is not a cautious answer but an
+impossible one.
+
+Have them actually edit and rerun it. Seeing R print a negative number for a
+probability is more persuasive than the table.
+
+This is the same lesson as Thursday's straight line for occupancy: a method that
+ignores the edges of the legal range works until the data sit near an edge.
+:::
+
+## Why the shortcut breaks {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 8.4
+par(mfrow = c(1, 2), mar = c(3.4, 3.4, 1.8, 0.6), mgp = c(2.1, 0.6, 0))
+quad <- function(p, ph, se){ (p - ph)^2 / (2 * se^2) }
+plot(p_vec, nll_vec - best_2019, type = "l", lwd = 3, col = "#762a83",
+     ylim = c(0, 6), xlab = "p", ylab = "NLL above the minimum",
+     main = "bobwhite, 52 of 71")
+lines(p_vec, quad(p_vec, p_hat, se_2019), lwd = 2, lty = 2, col = "#1b7837")
+abline(h = cutoff, col = "grey70", lty = 3)
+legend("top", c("the real curve", "the parabola ± SE assumes"),
+       col = c("#762a83", "#1b7837"), lwd = c(3, 2), lty = c(1, 2), bty = "n",
+       cex = 0.7)
+p_wide <- seq(-0.03, 0.16, by = 0.0005)
+plot(p_rare, nll_rare_vec - min(nll_rare_vec), type = "l", lwd = 3,
+     col = "#762a83", ylim = c(0, 6), xlim = c(-0.03, 0.16), xlab = "p",
+     ylab = "NLL above the minimum", main = "pewee, 3 of 71")
+lines(p_wide, quad(p_wide, p_hat_rare, se_rare), lwd = 2, lty = 2,
+      col = "#1b7837")
+abline(v = 0, col = "grey40")
+abline(h = cutoff, col = "grey70", lty = 3)
+```
+
+The standard error **pretends the curve is a parabola**. Symmetric, and blind to
+the edge at zero.
+
+::: {.notes}
+This is Bolker 6.5, the quadratic approximation, and it is all they need from it.
+
+A standard error comes from how sharply the curve bends at its very bottom. Bend
+gives a parabola, and a parabola is symmetric and extends forever in both
+directions. Where the real curve is close to a parabola, on the left, the two
+intervals agree. Where it is not, on the right, they disagree, and the parabola
+happily crosses zero.
+
+The rule to give them: standard errors are a convenience. When they matter, or
+when the estimate is near an edge, use the curve.
+:::
+
+## Two parameters {.center}
+
+Thursday's occupancy curve has **two**: where it starts, $a$, and how fast it
+falls, $b$.
+
+How sure are we about $b$?
+
+## Get set up, again {background-color="#f0f4f8" .smaller}
+
+Thursday's fit, with `mle2()`:
+
+::: {.type-it}
+```{r}
+#| eval: false
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+
+occ_data <- list(n_occupied = occ$n_occupied,
+                 n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05),
+              data = occ_data)
+coef(m_occ)
+m_occ@min      # the lowest NLL it found
+```
+:::
+
+**Check:** $a$ = `r f3(a_hat)`, $b$ = `r round(b_hat, 4)`, NLL
+`r round(m_occ@min, 2)`, as on Thursday.
+
+::: {.notes}
+Same function as the end of Thursday. The one change is that the data list now
+has a name, occ_data, because we are about to pass it to mle2 fifteen times.
+
+m_occ@min: mle2 returns an S4 object, and the at sign pulls out one of its slots.
+They do not need to know more than that this is the NLL at the best fit. It is
+the same number as -logLik(m_occ), if they prefer that.
+:::
+
+## The surface {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+#| fig-width: 7.4
+a_grid <- seq(1.6, 2.45, length.out = 90)
+b_grid <- seq(-0.10, -0.03, length.out = 90)
+surf <- outer(b_grid, a_grid, Vectorize(function(b, a){
+  occ_nll2(c(a, b), occ$n_occupied, occ$n_routes, occ$elapsed)
+})) - m_occ@min
+contour(b_grid, a_grid, surf, levels = c(0.5, 1, 2, 4, 8, 16, 32),
+        xlab = "b, the yearly change in log odds",
+        ylab = "a, log odds in 1997", col = "grey55", labcex = 0.7)
+points(b_hat, a_hat, pch = 16, col = "red", cex = 1.6)
+```
+
+A **tilted** valley. Correlation between the estimates: **`r round(corr_ab, 2)`**.
+
+::: {.notes}
+Compare with the negative binomial surface in Lecture 15, whose contours were
+ellipses lined up with the axes. This one is tilted, and the tilt is the story of
+the next few slides.
+
+Why tilted, in biology: a curve that starts higher in 1997 has to fall faster to
+pass through the same 2019 values. So a larger a goes with a more negative b, and
+the data can trade one off against the other along the floor of the valley.
+That trade-off is what a correlation of -0.89 means.
+
+Contour labels are NLL above the minimum.
+:::
+
+## Slices and profiles {.smaller}
+
+To ask about $b$ alone, walk across the surface along $b$. **What do we do with
+$a$?**
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**A slice**
+
+Hold $a$ at its best value. Compute the NLL.
+
+Cheap. No optimizer.
+:::
+
+::: {.column width="50%"}
+**A profile**
+
+At each $b$, **re-fit $a$**. Keep the best NLL.
+
+One optimization per value of $b$.
+:::
+
+::::
+
+```{r}
+#| echo: false
+#| fig-height: 2.7
+#| fig-width: 7.4
+contour(b_grid, a_grid, surf, levels = c(0.5, 1, 2, 4, 8, 16, 32),
+        xlab = "b", ylab = "a", col = "grey75", drawlabels = FALSE)
+abline(h = a_hat, col = "#1b7837", lwd = 3)
+lines(b_vec, prof_a, col = "#762a83", lwd = 3)
+points(b_hat, a_hat, pch = 16, col = "red", cex = 1.4)
+legend("topright", c("slice: a held fixed", "profile: a re-fitted"),
+       col = c("#1b7837", "#762a83"), lwd = 3, bty = "n", cex = 0.8)
+```
+
+::: {.notes}
+Bolker draws exactly this picture in 6.4, and it is worth lingering on.
+
+The slice walks straight across the valley, so it climbs out of it quickly. The
+profile walks along the floor of the valley, because at every b it lets a move to
+wherever is best. The profile is what we want: it asks "how plausible is this b,
+if a is free to be whatever suits it?", which is the honest question when we do
+not know a either.
+
+Ask them to predict which will give the narrower interval before the next slides.
+:::
+
+## Your turn, part 1: the profile {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+b_vec <- seq(-0.10, -0.03, by = 0.005)
+prof_nll <- numeric(length(b_vec))       # to hold the answers
+
+for (i in seq_along(b_vec)) {
+  fit_i <- mle2(minuslogl = occ_nll2,
+                start = c(a = 2, b = -0.05),
+                fixed = list(b = b_vec[i]),    # b held here; a is re-fitted
+                data = occ_data)
+  prof_nll[i] <- fit_i@min
+}
+
+plot(b_vec, prof_nll - m_occ@min, type = "b", ylim = c(0, 10),
+     xlab = "b", ylab = "NLL above the minimum")
+abline(h = 1.92, lty = 2)
+```
+:::
+
+::: {.notes}
+Given in full, because the new part is the fixed argument and the loop structure,
+not anything they have to work out. The next slide is the one they write.
+
+fixed = list(b = ...) tells mle2 to leave b alone and optimize everything else,
+which here is only a. With more parameters it would re-fit all the others, which
+is why profiles are the thing that scales.
+
+Fifteen fits; it takes a second or two.
+:::
+
+## Your turn, part 2: the slice {background-color="#f0f4f8" .smaller}
+
+Now the slice, on the **same plot**: hold $a$ at its best value instead of
+re-fitting it.
+
+::: {.type-it}
+```{r}
+#| eval: false
+a_hat <- coef(m_occ)["a"]
+slice_nll <- numeric(length(b_vec))
+
+for (i in seq_along(b_vec)) {
+  # the NLL with a set to a_hat and b set to b_vec[i]
+  # (no optimizer: nothing is being fitted. occ_nll2 wants
+  #  a vector of both parameters, then the three data columns)
+}
+
+points(b_vec, slice_nll - m_occ@min, type = "b", col = "red")
+```
+:::
+
+**Which curve gives the narrower interval? Why?**
+
+::: {.notes}
+Five to eight minutes. The missing line is
+
+  slice_nll[i] <- occ_nll2(c(a_hat, b_vec[i]), occ$n_occupied,
+                           occ$n_routes, occ$elapsed)
+
+The common mistake is passing occ_data as a single argument. occ_nll2 takes the
+three columns separately, which is what the hint is pointing at; mle2 unpacks the
+list for them, but a direct call does not.
+
+Several points of the slice fall off the top of the plot, which is part of the
+answer: it rises much faster.
+:::
+
+## The slice is overconfident {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 7.4
+plot(b_fine, prof_fine, type = "l", lwd = 3, col = "#762a83", ylim = c(0, 10),
+     xlab = "b", ylab = "NLL above the minimum")
+lines(b_fine, slice_fine, lwd = 3, col = "#1b7837")
+abline(h = cutoff, lty = 2, col = "grey40")
+legend("top", c("profile", "slice"), col = c("#762a83", "#1b7837"), lwd = 3,
+       bty = "n", cex = 0.85, horiz = TRUE)
+```
+
+| | 95% interval for $b$ | width |
+|---|---|---|
+| slice | `r f3(slice_ci[1])` to `r f3(slice_ci[2])` | `r f3(diff(slice_ci))` |
+| **profile** | **`r f3(ci_occ["b", 1])` to `r f3(ci_occ["b", 2])`** | **`r f3(diff(ci_occ["b", ]))`** |
+
+The slice **pretends we know $a$ exactly**. We don't, so its interval is too
+narrow by more than half.
+
+::: {.notes}
+This is the point of the whole two-parameter section. A slice is only honest when
+the parameters are uncorrelated: when the valley runs along the axes, holding one
+fixed costs nothing. Here the correlation is -0.89, and holding a fixed throws
+away all the uncertainty that a and b share.
+
+The profile is always at or below the slice, because it is allowed to optimize a
+and the slice is not. A profile can never be worse than a slice through the
+same point.
+
+The general rule worth writing down: never report an interval from a slice.
+:::
+
+## The one-line version {background-color="#f0f4f8" .smaller}
+
+`mle2` will build every profile for you:
+
+::: {.type-it}
+```{r}
+#| eval: false
+confint(m_occ)                    # profile intervals for every parameter
+confint(m_occ, method = "quad")   # the ± 1.96 SE shortcut, for comparison
+```
+:::
+
+. . .
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(
+  method = c("profile (`confint`)", "± 1.96 SE (`quad`)"),
+  b_lower = round(c(ci_occ["b", 1], ci_occ_quad["b", 1]), 4),
+  b_upper = round(c(ci_occ["b", 2], ci_occ_quad["b", 2]), 4)))
+```
+
+Nearly identical **here**: 1,730 route-surveys make the surface close to a
+parabola. When they disagree, believe the profile.
+
+::: {.notes}
+confint on an mle2 fit profiles every parameter, the same thing their loop just
+did, but with a smarter choice of b values and interpolation to find the exact
+crossing of 1.92.
+
+plot(profile(m_occ)) draws the profiles, but bbmle plots the signed square root of
+the deviance rather than the NLL, so a perfect parabola becomes a straight-sided V.
+Worth knowing if anyone tries it, not worth the class time.
+
+summary(m_occ) also prints a standard error and a p-value for each parameter.
+Those come from the parabola, so they inherit its weaknesses.
+:::
+
+## What the interval means {.smaller}
+
+The interval is on the **log odds** scale. Back-transform the **endpoints**, as on
+Thursday:
+
+::: {.type-it}
+```{r}
+#| eval: false
+exp(confint(m_occ)["b", ])        # yearly multiplier on the odds
+```
+:::
+
+. . .
+
+The odds of occupancy are multiplied by
+**`r f3(exp(ci_occ["b", 1]))` to `r f3(exp(ci_occ["b", 2]))`** each
+year.
+
+So they fall by between **`r round(100 * (1 - exp(ci_occ["b", 2])), 1)`% and
+`r round(100 * (1 - exp(ci_occ["b", 1])), 1)`% a year**, best guess
+`r round(100 * (1 - exp(b_hat)), 1)`%.
+
+. . .
+
+**Zero is not in the interval for $b$.** So a flat line, $b = 0$, is ruled out at
+the 5% level: an interval and a test are the same calculation.
+
+::: {.notes}
+Back to the slide that opened the section. The answer is the first row of that
+table, not the second: a clear, steady decline. Say so explicitly, because it
+closes the loop.
+
+Transform the endpoints, never the standard error. exp() of an endpoint is an
+endpoint; exp() of a standard error is meaningless. Note that the interval for
+the percentage decline is slightly lopsided around 6%, because exp() bends it.
+
+The link to the test: b = 0 sits far outside the interval, which is the same
+statement as "the trend model beat the flat model by much more than 1.92 units".
+Thursday makes that the main event.
+:::
+
+## How sure about development? {background-color="#f0f4f8" .smaller}
+
+Thursday's abundance model, now with `mle2` so `confint()` works:
+
+::: {.type-it}
+```{r}
+#| eval: false
+urban_nll2 <- function(params, y, u){
+  mu <- params[1] * exp(params[2] * u)
+  -sum(dnbinom(y, mu = mu, size = params[3], log = TRUE))
+}
+parnames(urban_nll2) <- c("mu0", "b", "size")
+
+m_urban <- mle2(minuslogl = urban_nll2,
+                start = c(mu0 = 12, b = -3, size = 1.4),
+                data = list(y = counts$count, u = counts$frac_built),
+                method = "L-BFGS-B",
+                lower = c(mu0 = 0.1, b = -20, size = 0.05),
+                upper = c(mu0 = 100, b = 20, size = 50))
+
+confint(m_urban)
+```
+:::
+
+**Is zero inside the interval for `b`?**
+
+::: {.notes}
+Five minutes, mostly typing. Everything is given; the only question is reading
+the output. Zero is far outside the interval for b, so the effect of development
+is real, the same reading as the occupancy trend a few slides ago.
+
+The bounds are named on purpose. Without names, mle2 warns that it is guessing
+which bound belongs to which parameter. It guesses right here, but warnings that
+are usually harmless are how real errors get ignored.
+
+Answers on the next slide.
+:::
+
+## What it means {.smaller}
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(
+  parameter = rownames(ci_urban),
+  estimate = round(coef(m_urban), 3),
+  lower = round(ci_urban[, 1], 3),
+  upper = round(ci_urban[, 2], 3)), row.names = FALSE)
+```
+
+. . .
+
+Bobwhite counts halve with every
+**`r round(100 * log(2) / abs(ci_urban["b", 1]), 0)`% to
+`r round(100 * log(2) / abs(ci_urban["b", 2]), 0)`%** of development. Thursday's
+single answer was `r round(100 * log(2) / abs(coef(m_urban)["b"]), 0)`%.
+
+::: {.notes}
+The halving distances are b's two endpoints put through log(2) / |b|, the same
+back-transforming as the occupancy slide. Shown rather than asked, to keep the
+end of class light.
+
+The intervals are narrow because there are 1,360 counts. Worth contrasting with
+the pewee: data buy precision, which is Lecture 14's power analysis run in
+reverse.
+:::
+
+## What "95%" means {.smaller}
+
+Pretend we know the truth: $p = 0.73$. Survey 71 routes, 100 separate times, and
+compute an interval each time.
+
+```{r}
+#| echo: false
+#| fig-height: 3.1
+#| fig-width: 8
+plot(NA, xlim = c(0.5, 0.95), ylim = c(1, 100), yaxt = "n",
+     xlab = "p", ylab = "", bty = "n")
+segments(sim_ci[, 1], 1:100, sim_ci[, 2], 1:100,
+         col = ifelse(sim_hit, "grey70", "red"),
+         lwd = ifelse(sim_hit, 1, 2.5))
+abline(v = 0.73, lwd = 2)
+mtext("the truth", side = 3, at = 0.73, line = -0.2, cex = 0.8)
+```
+
+**`r sum(!sim_hit)` of 100** miss. The **method** catches the truth about 95% of
+the time. Any **one** interval either contains it or doesn't.
+
+::: {.notes}
+The figure that makes the definition stick, and the one slide worth slowing down
+on.
+
+Each horizontal line is one imaginary 2019, with its own 52-ish occupied routes
+and its own interval. The red ones missed. Over 10,000 repetitions the coverage
+is `r round(100 * long_cover, 1)`%, a little under 95% because counts come in
+whole numbers; with continuous data it would be closer.
+
+The trap to name: "there is a 95% chance the true p is between 0.62 and 0.83" is
+not what a frequentist interval says. The truth is fixed; the interval is what
+varies. The statement that sounds right is the Bayesian credible interval, which
+is 6.4.2, optional.
+
+In practice the two usually give similar numbers, and the distinction matters
+more in exams than in field reports. But the figure is the honest picture.
+:::
+
+## From the parameters to the curve {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.3
+#| fig-width: 7.4
+plot(occ$year, occ$n_occupied / occ$n_routes, pch = 16, col = "grey35",
+     ylim = c(0.55, 1), xlab = "year", ylab = "fraction of routes with bobwhite",
+     bty = "l")
+polygon(c(1997 + e_band, rev(1997 + e_band)), c(band[1, ], rev(band[2, ])),
+        col = rgb(0.46, 0.16, 0.51, 0.25), border = NA)
+lines(1997 + e_band, plogis(a_hat + b_hat * e_band), lwd = 3, col = "#762a83")
+legend("topright", c("fitted curve", "95% band"), lwd = c(3, 10),
+       col = c("#762a83", rgb(0.46, 0.16, 0.51, 0.25)), bty = "n", cex = 0.85)
+```
+
+The intervals on $a$ and $b$ become an interval on **the whole curve**. How to
+draw it is **Lecture 21**.
+
+::: {.notes}
+A preview only: nothing to type, and no need to explain the method today.
+
+What to point at: the band is narrowest in the middle of the data and flares at
+both ends, the same way a lever wobbles most far from its pivot. Uncertainty in
+the slope matters most where you are furthest from the center of the years.
+
+Someone will notice that most of the points sit outside the band. That is
+correct: the band is about where the average is, not where a single year's
+survey lands. The scatter of individual years around the line is the binomial
+from slide 9, and an interval that includes it, a prediction interval, is wider.
+Lecture 21 draws both.
+
+For reference, it was made by drawing 2,000 (a, b) pairs from the fitted
+estimates and their covariance, computing the curve for each, and taking the
+middle 95% at every year. That is the population prediction interval from
+Bolker 7.5, which Lecture 21 builds by hand. Supplement 01 has a short version
+under "The band, in six lines" for anyone who wants it sooner.
+:::
+
+## What you can now do {.smaller}
+
+- Read an interval off a likelihood curve: everything **within 1.92** of the
+  minimum
+- Say where 1.92 comes from: half of `qchisq(0.95, 1)`
+- Know when **± 1.96 SE** is fine, and when it gives impossible answers
+- Build a **profile**, and know why a **slice** is overconfident
+- `confint()` an `mle2` fit, and **back-transform the endpoints**
+
+. . .
+
+Still missing: **is the more complicated model worth it?** That is this
+Thursday.
+
+::: {.notes}
+Point out that every interval today came from the same NLL function they already
+had. Nothing about the model changed; only how we read it.
+:::
+
+## Additional practice {background-color="#f0f4f8" .smaller}
+
+Make the coverage plot yourself. Same ideas, less handholding:
+
+::: {.type-it}
+```{r}
+#| eval: false
+# 1. one imaginary survey: 71 routes, true p of 0.73
+k <- rbinom(1, size = 71, prob = 0.73)
+# 2. its interval, by the method from earlier: an NLL curve over p_vec,
+#    then the values within 1.92 of its minimum
+# 3. wrap steps 1 and 2 in a loop that runs 100 times, saving each
+#    interval's lower and upper ends in two vectors
+# 4. what fraction of the 100 contain 0.73?
+# 5. now set the truth to 0.03 instead, with 71 routes. Use the
+#    +/- 1.96 SE shortcut. How often does it miss, and how?
+```
+:::
+
+::: {.notes}
+For outside class, or for anyone who finishes early.
+
+Step 5 is the payoff: with a rare species, the standard-error interval misses far
+more often than 5%, and it misses lopsidedly. It fails in exactly the situation
+where people most need to know how sure they are, which is when the species is
+rare.
+
+The answer key has a complete version.
+:::
+
+## Before next class
+
+Read Bolker **6.6** (6.6.3 optional)
+
+Next time: **comparing models**, and **Assignment 3** goes out
+
+::: {.notes}
+6.6 is the likelihood ratio test applied to whole models, plus AIC. Today's
+1.92 is the bridge: they have now run a likelihood ratio test without being told
+that was what it was.
+:::
