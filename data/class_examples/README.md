@@ -26,6 +26,7 @@ is a new source of data.
 |---|---|---|
 | `bobwhite_occupancy.csv` | 23 | One row per year, 1997 to 2019: Florida BBS routes surveyed (`n_routes`) and how many held Northern Bobwhite (`n_occupied`). The binomial response used in Lecture 16. |
 | `bobwhite_counts.csv` | 1,360 | One row per route-year where bobwhite were detected: the `count`, plus `frac_built`, temperature and precipitation for the route. Used in Lectures 15 and 16. |
+| `bbs_two_species.csv` | 142 | Northern Cardinal and Northern Bobwhite on every Florida BBS route surveyed in 2019, **zeros included**: `species`, `route`, `count`, `frac_built`. The two-species comparison in Lecture 18. |
 | `reef_surveys.csv` | 8,560 | NCRMP reef fish surveys, trimmed to the columns the exercises use: `depth`, `richness`, `abundance`, `visibility`, `habitat`, `protection`. |
 
 `elapsed` in the bobwhite files is years since the first year in that file, which

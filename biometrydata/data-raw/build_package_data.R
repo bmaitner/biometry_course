@@ -36,6 +36,7 @@ tables <- list(
   bobwhite_counts    = function(){ read.csv("data/class_examples/bobwhite_counts.csv") },
   reef_surveys       = function(){ read.csv("data/class_examples/reef_surveys.csv") },
   bbs_species_ranks  = function(){ read.csv("data/class_examples/bbs_species_ranks.csv") },
+  bbs_two_species    = function(){ read.csv("data/class_examples/bbs_two_species.csv") },
 
   # the course datasets
   amniotes = function(){ readRDS("data/Amniote_traits/Amniote_Database_Aug_2015.rds") },

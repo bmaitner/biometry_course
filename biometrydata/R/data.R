@@ -91,6 +91,28 @@
 #' @seealso [fl_bbs]
 "bbs_species_ranks"
 
+#' Cardinal and bobwhite on every 2019 Florida BBS route, zeros included
+#'
+#' Counts of Northern Cardinal (*Cardinalis cardinalis*) and Northern Bobwhite
+#' (*Colinus virginianus*) on each of the 71 Florida Breeding Bird Survey routes
+#' run in 2019. Built from [fl_bbs] for the two-species comparison in Lecture 18.
+#'
+#' Unlike [fl_bbs] and [bobwhite_counts], this table **includes the zeros**:
+#' every route has a row for each species, and a count of 0 means the species
+#' was not recorded on a route that was surveyed.
+#'
+#' @format A data frame with 142 rows, one per species per route:
+#' \describe{
+#'   \item{species}{"bobwhite" or "cardinal"}
+#'   \item{route}{BBS route number}
+#'   \item{count}{birds counted on the route in 2019; 0 if none}
+#'   \item{frac_built}{fraction of the route's surroundings that is developed}
+#' }
+#' @source Built by `data/class_examples/make_class_examples.R`. Download:
+#'   <https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bbs_two_species.csv>
+#' @seealso [fl_bbs], [bobwhite_counts]
+"bbs_two_species"
+
 # ---------------------------------------------------------------------------
 # Birds
 # ---------------------------------------------------------------------------

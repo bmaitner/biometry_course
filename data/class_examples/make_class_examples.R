@@ -142,11 +142,48 @@ write.csv(species_ranks,
           row.names = FALSE)
 
 # ---------------------------------------------------------------------------
+# 5. Cardinal and bobwhite on every 2019 route, zeros included
+#
+# Two species on the same development gradient, for the "do two groups
+# differ?" example in Lecture 18: does development affect a backyard bird and a
+# grassland bird differently?
+#
+# Unlike bobwhite_counts, this table HAS the zeros. The BBS file only records a
+# species where it was seen, so the zeros are rebuilt here: every route surveyed
+# in 2019 gets a row for each species, and a route missing from a species' rows
+# held none of it. That is the fix described in ../BBS/README.
+# ---------------------------------------------------------------------------
+
+routes_2019 <- bbs |>
+  filter(Year == 2019) |>
+  distinct(route = Route, frac_built)
+
+two_species <- tibble::tribble(
+  ~Scientific_Name,        ~species,
+  "Cardinalis cardinalis", "cardinal",
+  "Colinus virginianus",   "bobwhite"
+)
+
+bbs_two_species <- routes_2019 |>
+  tidyr::crossing(two_species) |>
+  left_join(bbs |>
+              filter(Year == 2019) |>
+              select(route = Route, Scientific_Name, count = total_sightings),
+            by = c("route", "Scientific_Name")) |>
+  mutate(count = coalesce(count, 0L)) |>
+  select(species, route, count, frac_built) |>
+  arrange(species, route)
+
+write.csv(bbs_two_species,
+          file.path(out_dir, "bbs_two_species.csv"),
+          row.names = FALSE)
+
+# ---------------------------------------------------------------------------
 # Report what was written, and check the numbers the lectures quote
 # ---------------------------------------------------------------------------
 
 for (f in c("bobwhite_occupancy.csv", "bobwhite_counts.csv", "reef_surveys.csv",
-            "bbs_species_ranks.csv")) {
+            "bbs_species_ranks.csv", "bbs_two_species.csv")) {
   p <- file.path(out_dir, f)
   message(sprintf("%-26s %5d rows  %6.1f KB", f,
                   nrow(read.csv(p)), file.size(p) / 1024))
@@ -160,7 +197,10 @@ stopifnot(
   all(bobwhite_counts$count > 0),
   nrow(reef_surveys) == 8560,
   !any(is.na(species_ranks$common_name)),
-  max(species_ranks$rank) == 6
+  max(species_ranks$rank) == 6,
+  nrow(bbs_two_species) == 142,
+  sum(bbs_two_species$species == "bobwhite" & bbs_two_species$count == 0) == 19,
+  sum(bbs_two_species$species == "cardinal" & bbs_two_species$count == 0) == 0
 )
 
-message("checks passed: 52 of 71 routes in 2019, 1360 counts, 8560 surveys")
+message("checks passed: 52 of 71 routes in 2019, 1360 counts, 8560 surveys, 142 two-species rows")
