@@ -1,0 +1,1318 @@
+---
+title: "Model comparisons"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 18"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+library(bbmle)
+
+occ <- read.csv("../data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("../data/class_examples/bobwhite_counts.csv")
+
+# occupancy: the logistic decline, and a single p for every year
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+occ_data <- list(n_occupied = occ$n_occupied, n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05), data = occ_data)
+
+const_nll <- function(params, n_occupied, n_routes){
+  p <- plogis(params[1])
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(const_nll) <- "a"
+m_const <- mle2(minuslogl = const_nll, start = c(a = 1),
+                data = list(n_occupied = occ$n_occupied, n_routes = occ$n_routes))
+dev_occ <- 2 * (m_const@min - m_occ@min)
+
+# 2,000 nonsense predictors, fitted exactly with glm
+base_glm <- glm(cbind(n_occupied, n_routes - n_occupied) ~ elapsed,
+                data = occ, family = binomial)
+set.seed(18)
+junk_gain <- replicate(2000, {
+  occ$junk <- rnorm(nrow(occ))
+  (deviance(base_glm) - deviance(update(base_glm, . ~ . + junk))) / 2
+})
+
+# the guarded straight line from Lecture 16
+lin_nll <- function(params, n_occupied, n_routes, elapsed){
+  p <- params[1] + params[2] * elapsed
+  if (any(p <= 0 | p >= 1)) { return(1e6) }
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(lin_nll) <- c("a", "b")
+m_lin <- mle2(minuslogl = lin_nll, start = c(a = 0.9, b = -0.008), data = occ_data)
+
+# abundance: four models
+m_flat  <- mle2(count ~ dnbinom(mu = mu0, size = k),
+                start = list(mu0 = 10, k = 1.4), data = counts)
+m_year  <- mle2(count ~ dnbinom(mu = mu0 * exp(r * elapsed), size = k),
+                start = list(mu0 = 15, r = -0.03, k = 1.4), data = counts)
+m_urban <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built), size = k),
+                start = list(mu0 = 12, b = -3, k = 1.4), data = counts)
+m_both  <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed),
+                                size = k),
+                start = list(mu0 = 15, b = -3, r = -0.03, k = 1.4), data = counts)
+m_int   <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed +
+                                             i * frac_built * elapsed),
+                                size = k),
+                start = list(mu0 = 15, b = -3, r = -0.03, i = 0, k = 1.4),
+                data = counts)
+
+# two species on one development gradient, zeros included
+birds <- read.csv("../data/class_examples/bbs_two_species.csv")
+birds$species <- factor(birds$species, levels = c("cardinal", "bobwhite"))
+bird_form <- count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k))
+bird_start <- list(log_mu0 = 2, b = 0, log_k = 0)
+bird_fit <- function(pars){
+  mle2(bird_form, start = bird_start, data = birds, parameters = pars)
+}
+m_same <- bird_fit(NULL)
+m_mu   <- bird_fit(list(log_mu0 ~ species))
+m_b    <- bird_fit(list(b ~ species))
+m_mub  <- bird_fit(list(log_mu0 ~ species, b ~ species))
+m_muk  <- bird_fit(list(log_mu0 ~ species, log_k ~ species))
+m_all  <- bird_fit(list(log_mu0 ~ species, b ~ species, log_k ~ species))
+cf_all <- coef(m_all)
+bird_par <- data.frame(
+  mu0 = exp(c(cf_all[["log_mu0.(Intercept)"]],
+              cf_all[["log_mu0.(Intercept)"]] + cf_all[["log_mu0.speciesbobwhite"]])),
+  b = c(cf_all[["b.(Intercept)"]],
+        cf_all[["b.(Intercept)"]] + cf_all[["b.speciesbobwhite"]]),
+  k = exp(c(cf_all[["log_k.(Intercept)"]],
+            cf_all[["log_k.(Intercept)"]] + cf_all[["log_k.speciesbobwhite"]])),
+  row.names = c("cardinal", "bobwhite"))
+bird_par$halving <- 100 * log(2) / abs(bird_par$b)
+p_b_after_mu <- anova(m_mu, m_mub)[2, "Pr(>Chisq)"]
+
+aic_tab <- function(...){
+  nms <- vapply(as.list(substitute(list(...)))[-1], deparse, character(1))
+  tab <- AICtab(..., mnames = nms, base = TRUE, weights = TRUE)
+  data.frame(model = attr(tab, "row.names"), AIC = round(tab$AIC, 1),
+             dAIC = round(tab$dAIC, 1), parameters = tab$df,
+             weight = ifelse(tab$weight < 0.001, "<0.001",
+                             sprintf("%.3f", tab$weight)))
+}
+```
+
+## Today's agenda {.smaller}
+
+- **Assignment 3** goes out today
+- More parameters always fit better. **So how do you know a model is better?**
+- Nested models: the **likelihood ratio test**
+- Any models: **AIC**
+- Do two bird species respond to development **differently**, and how?
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+You will need it later. Code without the label is there to watch.
+
+::: {.notes}
+Bolker 6.6. Today is the toolkit for Assignment 3, so the assignment goes first
+and the rest of the lecture is framed as "here is how you do it".
+
+The machinery is not new: the likelihood ratio test is Tuesday's 1.92, pointed at
+whole models, and AIC is one line of arithmetic on the negative log-likelihood.
+:::
+
+# Assignment 3
+
+## Assignment 3: model selection {.smaller}
+
+**Part 1:** three starting models, each with something worth questioning
+
+- **Bean beetles:** do two species compete, and how strongly?
+- **Hawks and eagles:** do migrants have longer wings for their size?
+- **Reef fish:** what explains how many species a diver records?
+- For each: build alternatives, compare with `AICtab()`, pick one, say why
+
+**Part 2:** your own focal dataset
+
+- Pick a response, fit two or more models, compare them, explain your choice
+
+. . .
+
+**Due Thursday, November 5**
+
+::: {.notes}
+The due date is from the syllabus, Lecture 22. Confirm before class if it has
+moved.
+
+Worth saying out loud: Part 1 is not a test of whether they can find the "right"
+model. There often is not one. It is graded on whether they built sensible
+alternatives, compared them fairly, and explained the choice.
+
+Part 1 was rewritten on 2026-10-21 around three biological questions, replacing
+the citation and code-sharing models. The whole starter script runs in about five
+seconds with no warnings. A worked answer key is in
+assignments/assignment_3/assignment_3_solution.R, which is gitignored and stays
+local.
+
+The three are built to teach different things: 1a (beetles, 70 dishes) and 1b
+(hawks, 249 species) are over-fit and simplify well; 1c (reef, 8,560 surveys)
+starts with the wrong distribution, and once that is fixed nearly every term
+survives, so the question becomes which effects are big enough to matter.
+
+The data load from the biometrydata package, with a download line as a fallback
+for anyone who has not installed it yet.
+:::
+
+## Assignment 3: the usual
+
+- **Starter script:** `assignments/assignment_3/assignment_3.R`
+- **Grading:** Part 1 40%, Part 2 40%, reproducibility 20%
+- **Submit:** Canvas, or a GitHub link
+  - Graduate students: GitHub required
+  - Undergraduates: GitHub earns +10%
+- **Reproducible:** your code loads its own data
+
+::: {.notes}
+Same rules as Assignments 1 and 2. A quick pass, not a discussion.
+:::
+
+## What today gives you for it {.smaller}
+
+| You will need to | Today's slide |
+|---|---|
+| Decide whether a model with more parameters is really better | "Even nonsense helps" |
+| Compare models where one is a special case of the other | likelihood ratio test |
+| Compare **any** models | AIC, `AICtab()` |
+| Write a model in one line | the `mle2()` **formula** shortcut |
+| Let a parameter differ between groups | `parameters = list(a ~ pop)` |
+| Avoid an unfair comparison | "Rules for a fair comparison" |
+
+::: {.notes}
+A map, so the rest of the lecture has a purpose they can see. Every row is
+something Part 1 of the assignment requires.
+
+The formula shortcut and the parameters argument are both in the starter script
+already, which is why they get explained today rather than met cold.
+:::
+
+# Which model is better?
+
+## Where we are {.smaller}
+
+| Section | Question | When |
+|---|---|---|
+| 6.1 - 6.2 | What parameter values make my data most likely? | Lecture 15 |
+| 6.3 | What if the parameter depends on a covariate? | Lecture 16 |
+| 6.4 - 6.5 | How sure am I about that parameter? | Tuesday |
+| **6.6** | **Which of two models is better?** | **Today** |
+
+. . .
+
+Tuesday ended on: **zero is outside the interval for $b$**, so a flat line is
+ruled out. Today asks the same thing about **whole models**.
+
+::: {.notes}
+The connection to make explicit: "is b different from zero?" and "is the model
+with b better than the model without it?" are the same question. Tuesday asked
+it about a parameter, today about a model, and the arithmetic is identical.
+:::
+
+## The story so far {.smaller}
+
+1. **Likelihood**: if the parameters had these values, how probable are the data
+   I actually got?
+2. **Negative log-likelihood (NLL)**: the same thing, logged and flipped, so
+   **lower is better** and the optimizer can walk downhill
+3. **The best estimate** is the bottom of the NLL curve
+4. **Covariates** (Lecture 16): let a parameter change with something you
+   measured. The NLL works exactly the same way
+5. **A confidence interval** (Tuesday): every value within **1.92** of the
+   bottom. The values the data cannot rule out
+
+. . .
+
+6. **Today: comparing models.** The same 1.92 idea for whole models, and AIC for
+   when that does not work
+
+::: {.notes}
+Added after the mid-semester check-in, where the class said the coding was going
+well and asked for the statistics to be simpler and recapped more often. Every
+statistics lecture from here on opens with one of these.
+
+Read it out loud, one line at a time, and ask for a show of hands on each: "who
+could explain this one to a friend?" Any line that gets few hands is worth two
+minutes now, before building on it.
+
+Each line is one lecture. The point of the list is that it is a chain: nothing
+today is new machinery, only a new use of line 5.
+:::
+
+## Install the course data package {background-color="#f0f4f8"}
+
+Every dataset in the course, in one package. **No more long GitHub links.**
+
+::: {.type-it}
+```{r}
+#| eval: false
+install.packages("remotes")    # skip if you already have it
+
+options(timeout = 600)         # a big download: give it up to 10 minutes
+remotes::install_github("bmaitner/biometry_course",
+                        subdir = "biometrydata",
+                        upgrade = "never")
+
+library(biometrydata)
+?bobwhite_occupancy            # every dataset has a help page
+```
+:::
+
+It takes a few minutes. **Once only**: from now on, `library(biometrydata)` is all
+you need.
+
+::: {.notes}
+The download is the whole course repository, about 280 MB; it took 3.6 minutes
+on a good connection when tested. With the whole room downloading at once it may
+take longer, so this is a good moment to take questions on Assignment 3.
+
+Two settings in that block exist to prevent the usual failures:
+
+- options(timeout = 600): R's default download timeout is 60 seconds, which a
+  280 MB download can exceed, and the install then fails with a confusing
+  message about a connection.
+- upgrade = "never": otherwise install_github may stop and ask whether to
+  update a list of other packages, and students do not know what to answer.
+
+If someone's install fails or stalls, they can keep going with the downloads
+instead, which give identical data:
+
+  occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
+  counts <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+and install at home.
+
+Reinstalling the same way picks up any updates to the data.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(bbmle)
+library(biometrydata)
+
+occ <- bobwhite_occupancy       # straight from the package
+counts <- bobwhite_counts
+
+# Tuesday's occupancy model: the share of routes with bobwhite, falling with year
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+occ_data <- list(n_occupied = occ$n_occupied, n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05), data = occ_data)
+m_occ@min
+```
+:::
+
+**Check:** `r round(m_occ@min, 2)`, as on Tuesday.
+
+::: {.notes}
+Everything here is from Tuesday, retyped so that nobody depends on last week's
+session still being open.
+
+Anyone whose package install did not finish uses the two read.csv lines from
+the previous slide's notes instead of the two dataset lines.
+:::
+
+## More parameters never fit worse {.smaller}
+
+The single-$p$ model is the logistic model **with $b$ set to 0**.
+
+So the optimizer fitting the logistic model could always just choose $b = 0$ and
+match it. The extra parameter can only help.
+
+. . .
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(
+  model = c("one p for every year", "p changes with year"),
+  parameters = c(1, 2),
+  NLL = round(c(m_const@min, m_occ@min), 2)))
+```
+
+. . .
+
+So a lower NLL alone proves nothing. **Would any extra parameter have done this
+well?**
+
+::: {.plain}
+A model with an extra knob can always match the simpler model, so it always fits at least as well. Fitting better is not evidence on its own.
+:::
+
+::: {.notes}
+This is the problem the whole lecture solves, so make sure it lands before moving
+on.
+
+The logic is worth saying slowly: the bigger model contains the smaller one. At
+worst the extra parameter sits at zero and changes nothing; at best it soaks up
+something. It can never make the fit worse, which means "it fit better" is true of
+every extra parameter ever added, including ones that mean nothing.
+:::
+
+## Even nonsense helps {.smaller}
+
+Add a column of **random numbers** as a second predictor. Do it 2,000 times:
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 7.4
+hist(junk_gain, breaks = seq(0, ceiling(max(junk_gain) * 4) / 4, by = 0.125),
+     col = "grey75", border = "white", main = "",
+     xlab = "improvement in NLL from a column of random numbers",
+     ylab = "number of tries")
+abline(v = qchisq(0.95, 1) / 2, lty = 2, lwd = 2, col = "#762a83")
+text(qchisq(0.95, 1) / 2, par("usr")[4] * 0.85, "1.92", pos = 4,
+     col = "#762a83")
+```
+
+**Every one** improved the fit. A median of
+`r round(median(junk_gain), 2)`, and `r round(100 * mean(junk_gain > 1.92), 0)`%
+by more than 1.92.
+
+::: {.notes}
+The picture to remember. All 2,000 bars sit to the right of zero: not one random
+column made the fit worse, because none of them can.
+
+The 1.92 line is Tuesday's threshold. Almost all nonsense falls short of it,
+which is exactly what the threshold is for: an improvement bigger than 1.92 is
+bigger than what random numbers usually manage.
+
+If anyone asks why only 2% cross it rather than 5%: these particular occupancy
+data scatter a little less than a binomial predicts, so random predictors find
+even less to latch onto. With a typical dataset it would be close to 5%. Not
+worth more than a sentence.
+
+The same experiment is in the old version of this lecture with R-squared and lm.
+It gives the same lesson: fit always improves.
+:::
+
+## Try it: a nonsense predictor {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+junk <- runif(nrow(occ))      # 23 random numbers: related to nothing
+
+occ_junk <- function(params, n_occupied, n_routes, elapsed, junk){
+  p <- plogis(params[1] + params[2] * elapsed + params[3] * junk)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_junk) <- c("a", "b", "c")
+
+m_junk <- mle2(minuslogl = occ_junk,
+               start = c(a = 2, b = -0.05, c = 0),
+               data = c(occ_data, list(junk = junk)))
+
+m_occ@min - m_junk@min        # how much did nonsense "improve" the fit?
+```
+:::
+
+**Compare with your neighbor.** Everyone has different random numbers.
+
+::: {.notes}
+Everyone gets a positive number, and almost everyone gets a small one. Ask for a
+show of hands: who got more than 1? More than 1.92? There may be one in the
+room.
+
+The point of doing it rather than only seeing the histogram: they made the
+nonsense themselves, so there is no doubt that the improvement means nothing.
+
+c(occ_data, list(junk = junk)) adds the new column to the list of data mle2
+already has. Mention it only if asked.
+:::
+
+## Setting the bar {.center}
+
+An extra parameter has to improve the fit **by more than chance would**.
+
+Two ways to set that bar: the **likelihood ratio test** and **AIC**.
+
+# The likelihood ratio test
+
+## Nested models {.smaller}
+
+Model A is **nested** in model B if you can get A by fixing some of B's
+parameters.
+
+| Smaller model | Bigger model | Nested? |
+|---|---|---|
+| one $p$ for every year | $p$ changes with year | **yes**: set $b = 0$ |
+| counts flat | counts fall with year | **yes**: set the slope to 0 |
+| counts fall with year | counts fall with year **and** development | **yes** |
+| counts fall with year | counts fall with development | **no** |
+
+. . .
+
+The likelihood ratio test **only works for nested pairs**.
+
+::: {.plain}
+Nested means: switch off one piece of the bigger model, and you have the smaller one.
+:::
+
+::: {.notes}
+The test the class should apply: can I get the small model by setting something
+in the big model to a fixed value, usually zero? If yes, nested.
+
+Year against development is the instructive "no". Both have three parameters,
+neither is a special case of the other, and there is no parameter to set to zero
+that turns one into the other.
+
+Logistic against straight line, from Lecture 16, is also a "no", and for a
+different reason: they are different shapes, not one shape with a piece removed.
+It comes back on the AIC slides.
+:::
+
+## Nested models, in symbols {.smaller}
+
+Start with the biggest model. Each one below it is **nested** in it:
+
+| Model | Equation | Fix in the biggest | Number fixed |
+|---|---|---|---|
+| Biggest | $Y = m_1 X_1 + m_2 X_2 + b$ | | |
+| Smaller | $Y = m_1 X_1 + b$ | $m_2 = 0$ | 1 |
+| Smallest | $Y = b$ | $m_1 = m_2 = 0$ | 2 |
+| Equal slopes | $Y = m (X_1 + X_2) + b$ | $m_1 = m_2$ | 1 |
+
+. . .
+
+**Not nested:** $Y = m_1 X_1 + b$ against $Y = m_2 X_2 + b$, or $Y = m X + b$
+against $Y = b\,e^{mX}$
+
+::: {.plain}
+Nested: you get the smaller model by setting the bigger one's parameters to zero, or equal to each other. Keep count of how many you fix: the test on the next slide needs it.
+:::
+
+::: {.notes}
+The previous slide in words, this one in symbols. Students who think in
+equations get the definition here; the others get it from the table on the
+previous slide.
+
+Map it onto today's bobwhite counts: on the log scale, the "both" model is
+log(mu) = r * year + b * development + log(mu0). Set the development slope to
+zero and you have the year model; set both to zero and you have the flat model.
+That is rows 1 to 3 of the table.
+
+Why the two "not nested" pairs fail: in the first, neither is the other with a
+piece switched off; in the second, the shapes differ, so no parameter value turns
+one into the other.
+
+The "equal slopes" row is worth a moment because it is not obvious that it
+counts as nested: nothing is set to zero, but two parameters are forced to be
+the same, which removes one. It is exactly the question in Assignment 3, Part 1a:
+is a female of the other species as harmful as one of your own (a12 = a11)?
+
+The last column becomes the degrees of freedom for the likelihood ratio test on
+the next slide, which is where the term is introduced. Do not use it here.
+:::
+
+## The test {.smaller}
+
+Same as Tuesday, pointed at two models:
+
+$$\text{deviance} = 2 \times \big(\text{NLL}_{\text{smaller}} - \text{NLL}_{\text{bigger}}\big)$$
+
+If the smaller model is true, the deviance follows a **chi-squared**
+distribution. Its one setting, the **degrees of freedom**, is here simply **the
+number of parameters you fixed**: the last column of the previous slide.
+
+. . .
+
+| Extra parameters | The bigger model must improve the NLL by more than |
+|---|---|
+| 1 | **1.92** |
+| 2 | 3.00 |
+| 3 | 3.91 |
+
+
+::: {.plain}
+If the extra parameters were useless, an improvement this big would be rare. So when we see one, we keep them.
+:::
+
+::: {.notes}
+On Tuesday every interval used the first row: one parameter fixed at a time.
+
+The table is qchisq(0.95, df) / 2 for df = 1, 2, 3. It is worth seeing that the
+bar per parameter falls as you add more at once: three parameters need 3.91,
+not 3 times 1.92. Not worth dwelling on.
+
+Same caveat as Tuesday: this is an approximation that is good with reasonable
+amounts of data, and the book is honest about that.
+:::
+
+## By hand, then with `anova()` {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+const_nll <- function(params, n_occupied, n_routes){
+  p <- plogis(params[1])                      # no year: one p for every year
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(const_nll) <- "a"
+m_const <- mle2(minuslogl = const_nll, start = c(a = 1),
+                data = list(n_occupied = occ$n_occupied, n_routes = occ$n_routes))
+
+deviance_occ <- 2 * (m_const@min - m_occ@min)
+deviance_occ
+pchisq(deviance_occ, df = 1, lower.tail = FALSE)   # the p-value
+
+anova(m_const, m_occ)                              # the same test, in one line
+```
+:::
+
+**Check:** a deviance of `r round(dev_occ, 1)`. R prints the p-value as
+`9.439462e-12`, which means 0.0000000000094: the e-12 moves the decimal point 12 places left.
+
+::: {.notes}
+Lecture 16 promised this: the trend model beat the one-number model by 23 units,
+twice that is 46, and against a threshold of 3.84 it is not close.
+
+pchisq with lower.tail = FALSE gives the probability of a deviance at least this
+large if the smaller model were true. That is a p-value in the usual sense.
+
+anova() on two mle2 fits runs exactly this test, and the next slide reads its
+output.
+:::
+
+## Reading `anova()` {.smaller}
+
+```{r}
+#| echo: false
+anova(m_const, m_occ)
+```
+
+- `Deviance` is $2 \times$ NLL for each model
+- `Chisq` is the **difference**: the test statistic
+- `Df` is how many parameters were fixed to get the smaller model
+- `Pr(>Chisq)` is the p-value
+
+::: {.plain}
+A small p-value means the bigger model gained more than chance would give it. Keep the bigger model.
+:::
+
+::: {.notes}
+Walk the table left to right once. The column called Deviance is twice the NLL,
+which confuses people because it is not the deviance from the formula two slides
+ago; that one is in the Chisq column.
+
+Do not interpret the result yet; the next slide does, so that reading the table
+and drawing the conclusion are separate steps.
+:::
+
+## So which model wins? {.smaller}
+
+| | NLL | Parameters |
+|---|---|---|
+| one $p$ for every year | `r round(m_const@min, 1)` | 1 |
+| $p$ changes with year | `r round(m_occ@min, 1)` | 2 |
+
+. . .
+
+- The year model improves the NLL by **`r round(m_const@min - m_occ@min, 1)`**.
+  Chance alone would rarely give more than **1.92**
+- The p-value is far below 0.05: about **`r round(pchisq(dev_occ, 1, lower.tail = FALSE) * 1e12)` in a trillion**
+
+. . .
+
+**The year model wins.** Bobwhite occupancy really is declining; a flat line
+does not fit the data.
+
+::: {.notes}
+The conclusion stated outright, because the previous slide only taught how to
+read the table.
+
+Connect it to Tuesday: the confidence interval for b excluded zero, and this is
+the same finding reached as a test. Two routes, one answer, which is the point of
+the "which tool, when" slide at the end.
+:::
+
+## Your turn: test the nonsense {background-color="#f0f4f8" .smaller}
+
+Earlier you added a column of random numbers to the model. Test it the same way:
+
+::: {.type-it}
+```{r}
+#| eval: false
+anova(m_occ, m_junk)
+```
+:::
+
+**Is the p-value above or below 0.05? Which model do you keep?**
+
+. . .
+
+It should be **well above 0.05**: the random column did not gain more than
+chance would. **Keep the simpler model**, `m_occ`.
+
+::: {.notes}
+Two minutes. Here the smaller model is m_occ and the bigger one is m_junk, the
+reverse of the order on the previous slides only in which names are which.
+
+Anyone whose random numbers gave p below 0.05 is the one in twenty the test is
+designed to let through, and it is worth congratulating them for it: it is the
+5% in "5% level", happening in front of them.
+:::
+
+# AIC
+
+## When models are not nested {.smaller}
+
+Last Thursday: do bobwhite counts follow **year** or **development**? Same number
+of parameters, neither a special case of the other. **No likelihood ratio test.**
+
+. . .
+
+$$\text{AIC} = 2 \times \text{NLL} + 2 \times (\text{number of parameters})$$
+
+- **Lower is better**, as with the NLL
+- Each parameter costs **1 unit** of NLL. Compare: the test's 1.92
+- Only **differences** mean anything. An AIC of 9079 on its own says nothing
+
+. . .
+
+Works for **any** set of models fitted to **the same data**.
+
+::: {.plain}
+AIC is how badly a model fits, plus a charge for every parameter. The lowest total wins.
+:::
+
+::: {.notes}
+Akaike's information criterion. The formula is short enough to compute by hand,
+and they should do it once so it is not a black box.
+
+Where the penalty comes from, in one sentence for anyone who asks: a model's fit
+to its own data is optimistic, because it was tuned to that data; AIC estimates
+how well the model would do on new data from the same process, and the
+optimism works out to about one NLL unit per parameter. That is the reason for
+the 2 in 2k.
+
+The penalty is gentler than the test's 1.92, so AIC is a little more willing to
+keep a parameter. That is by design: AIC is aimed at prediction, the test at
+deciding whether an effect is there at all.
+:::
+
+## A shortcut: the formula version {.smaller}
+
+Every model so far was a function, then `mle2()`. For a one-line model there is
+a shortcut: **write the model as a formula**.
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Function**
+
+```{r}
+#| eval: false
+urban_nll2 <- function(params, y, u){
+  mu <- params[1] * exp(params[2] * u)
+  -sum(dnbinom(y, mu = mu,
+               size = params[3],
+               log = TRUE))
+}
+parnames(urban_nll2) <- c("mu0", "b", "k")
+mle2(minuslogl = urban_nll2,
+     start = c(mu0 = 12, b = -3, k = 1.4),
+     data = list(y = counts$count,
+                 u = counts$frac_built))
+```
+:::
+
+::: {.column width="50%"}
+**Formula**
+
+```{r}
+#| eval: false
+mle2(count ~ dnbinom(
+       mu = mu0 * exp(b * frac_built),
+       size = k),
+     start = list(mu0 = 12, b = -3,
+                  k = 1.4),
+     data = counts)
+```
+
+Read it as: *count is negative binomial, with this mean and this size.*
+:::
+
+::::
+
+**Same model, same answer.** The formula version is what the assignment uses.
+
+::: {.notes}
+Worth five minutes, because the whole starter script is written this way and
+it looks like a different language until someone points out it is the same model.
+
+How to read it: left of the tilde is the data column; right of it is the
+distribution, written as its d function without the x and without log = TRUE.
+mle2 fills those in, takes the negative log-likelihood, and sums it. Column names
+in the formula are looked up in the data frame; anything not in the data frame
+is treated as a parameter, and must be in start.
+
+The function version still matters. A model with an if statement, a loop, or a
+guard like Lecture 16's straight line cannot be written as a formula.
+:::
+
+## Three models for the counts {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+m_flat <- mle2(count ~ dnbinom(mu = mu0, size = k),
+               start = list(mu0 = 10, k = 1.4), data = counts)
+
+m_year <- mle2(count ~ dnbinom(mu = mu0 * exp(r * elapsed), size = k),
+               start = list(mu0 = 15, r = -0.03, k = 1.4), data = counts)
+
+m_urban <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built), size = k),
+                start = list(mu0 = 12, b = -3, k = 1.4), data = counts)
+
+AIC(m_flat)
+2 * m_flat@min + 2 * 2     # the same number, by hand
+```
+:::
+
+$$\text{AIC} = 2 \times \text{NLL} + 2 \times (\text{number of parameters})$$
+
+By hand: `m_flat@min` is the NLL, and `m_flat` has **2** parameters, `mu0` and
+`k`. **Check:** both lines give `r round(AIC(m_flat), 1)`.
+
+::: {.notes}
+m_year uses an exponential decline, mu0 * exp(r * elapsed), rather than the
+(1 - decline)^year of Lectures 15 and 16. They are the same curve written two ways: r is
+log(1 - decline). Mention it only if someone notices.
+
+The by-hand line is there so that AIC is arithmetic they have done, not a number
+R produced. Two parameters, so the penalty is 4.
+
+Expect NaN warnings while fitting: the optimizer tries a negative k or mu0 on
+its way to the answer. They are harmless here, and the fits converge.
+:::
+
+## Your turn: year **and** development {background-color="#f0f4f8" .smaller}
+
+Does a model with **both** do better than either alone?
+
+::: {.type-it}
+```{r}
+#| eval: false
+m_both <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed),
+                               size = k),
+               start = list(mu0 = 15, b = -3, r = -0.03, k = 1.4),
+               data = counts)
+
+# compare all four with AICtab(). Give it the four fitted models, and
+# base = TRUE so it shows the AIC itself and not only the differences
+```
+:::
+
+. . .
+
+Which is best? **Is year versus development a question the likelihood ratio test
+could have answered?**
+
+::: {.notes}
+Five minutes. The answer is
+
+  AICtab(m_flat, m_year, m_urban, m_both, base = TRUE)
+
+The second question is the check on the nested slide: no, year and development
+are not nested in each other, so only AIC can rank them. Each is nested in
+m_both, though, so a test could ask whether adding the other one helps.
+:::
+
+## Reading `AICtab()` {.smaller}
+
+```{r}
+#| echo: false
+knitr::kable(aic_tab(m_flat, m_year, m_urban, m_both), row.names = FALSE)
+```
+
+- `dAIC`: how far behind the best model. **0 is the best**
+- Rough guide: under **2**, about as good; over **10**, essentially no support
+- `weight`: the share of support among **these** models
+
+. . .
+
+**Both matter**, and development more than year. Neither replaces the other:
+development explains **where** bobwhite are scarce, year **how fast** they are
+going.
+
+::: {.notes}
+The guide is Burnham and Anderson's, and it is a convention rather than a law.
+Students will want a hard threshold; the honest answer is that a dAIC of 3 is a
+judgment call and 75 is not.
+
+Weights are worth one caution: they are shares among the models you happened to
+fit. A weight of 1 means "best of these four", not "true". Add a fifth model and
+every weight changes.
+
+The biological reading closes the loop from Lecture 16, which said the two
+covariates answered different questions because development does not change over
+time. The comparison says both are needed, which is the same conclusion arrived at
+by a number.
+
+If anyone computes it: development alone beats year alone by about 43 AIC units.
+:::
+
+## What AIC cannot see {.smaller}
+
+Lecture 16's two occupancy curves, both with two parameters:
+
+```{r}
+#| echo: false
+knitr::kable(aic_tab(m_lin, m_occ), row.names = FALSE)
+```
+
+`m_lin` is the guarded straight line. AIC prefers it.
+
+. . .
+
+It also predicts an occupancy **below zero** by 2100.
+
+. . .
+
+**AIC ranks only the models you give it, and only on fit.** Whether a model is
+biologically possible is your job.
+
+::: {.notes}
+A deliberate callback. Lecture 16 rejected the straight line on biology, and AIC
+cannot know that: it sees two models with the same number of parameters and
+picks the one with the lower NLL.
+
+A dAIC of 2.2 is in the "about as good" zone anyway, so the honest summary is
+that the data cannot tell these shapes apart and biology breaks the tie.
+
+The general lesson for the assignment: AIC chooses among candidates. Choosing the
+candidates is the scientific part, and it is the part they will be graded on in
+Part 2.
+:::
+
+# Do two species differ?
+
+## Two birds, one gradient {.smaller}
+
+**Northern Cardinal**: feeders, hedges, shrubby edges. **Northern Bobwhite**:
+grassland and open pine. Every Florida route surveyed in 2019:
+
+```{r}
+#| echo: false
+#| fig-height: 2.8
+#| fig-width: 8.4
+par(mfrow = c(1, 2), mar = c(3.4, 3.6, 1.8, 0.6), mgp = c(2.2, 0.6, 0))
+uu <- seq(0, max(birds$frac_built), length.out = 200)
+cols <- c(cardinal = "#b2182b", bobwhite = "#8c6d31")
+for (sp in c("cardinal", "bobwhite")) {
+  d <- birds[birds$species == sp, ]
+  plot(d$frac_built, d$count, pch = 16, col = adjustcolor(cols[sp], 0.55),
+       xlab = "fraction developed", ylab = "birds counted", bty = "l")
+  lines(uu, bird_par[sp, "mu0"] * exp(bird_par[sp, "b"] * uu), lwd = 3,
+        col = cols[sp])
+  mtext(sp, side = 3, line = 0.4, cex = 1.1)
+}
+```
+
+**Does development affect them differently?**
+
+::: {.notes}
+The reading answers the same kind of question with balsam fir in two kinds of
+stand. This is the same idea with birds the class already knows, on the same
+development gradient as the abundance models earlier today.
+
+One change from the earlier bobwhite counts: this table has the zeros. Every
+route surveyed in 2019 has a row for each species, and a route where a species
+was not recorded gets a 0. Bobwhite were missing from 19 of the 71 routes;
+cardinals were on every one. The earlier counts file had no zeros, which the
+BBS README warns about; data/class_examples/make_class_examples.R shows how they
+were put back.
+
+The curves are from the best model, which they will find themselves. Do not
+give it away: the question is how the species differ, and there are three
+possible answers.
+
+Note the y axes differ: cardinals are counted in the tens to hundreds, bobwhite
+in single figures.
+:::
+
+## Get set up, again {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+birds <- bbs_two_species          # from the course data package
+
+head(birds)
+table(birds$species)
+
+# make cardinal the first level, so it is the baseline in the models
+birds$species <- factor(birds$species, levels = c("cardinal", "bobwhite"))
+```
+:::
+
+The development model from earlier, on the log scale to keep $\mu_0$ and $k$
+positive:
+
+$$\mu = \mu_0 \, e^{\,b \cdot \text{development}} \qquad \text{count} \sim \text{NegBin}(\mu, k)$$
+
+**Three ways the species could differ:** in $\mu_0$ (birds where nothing is
+built), in $b$ (how fast counts fall with development), or in $k$ (how variable
+routes are).
+
+::: {.notes}
+142 rows: 71 routes, two species.
+
+Anyone without the package:
+birds <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bbs_two_species.csv")
+
+Why the log scale: on the earlier count models a negative mu0 or k during the
+search produced NaN warnings. Fitting log_mu0 and log_k makes every value legal,
+which is the "keeping parameters legal" table from Lecture 16. exp() turns them
+back.
+
+k is the third way to differ and the one students forget: two species can have
+the same average curve and still differ in how scattered routes are around it.
+:::
+
+## Letting a parameter differ: `parameters =` {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+form <- count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k))
+start <- list(log_mu0 = 2, b = 0, log_k = 0)
+
+m_same <- mle2(form, start = start, data = birds)    # one model for both species
+
+m_mu <- mle2(form, start = start, data = birds,
+             parameters = list(log_mu0 ~ species))   # a separate mu0 for each
+
+coef(m_mu)
+```
+:::
+
+```{r}
+#| echo: false
+round(coef(m_mu), 3)
+```
+
+`log_mu0.(Intercept)` is the **cardinal** value. `log_mu0.speciesbobwhite` is
+**how much bobwhite differ** from it.
+
+::: {.notes}
+Saving the formula and the start list once saves typing them for every model,
+since only the parameters line changes from here on.
+
+parameters = list(log_mu0 ~ species) reads "log_mu0 depends on species". mle2
+builds a baseline for the first level of species, cardinal, and a difference for
+the other.
+
+So the bobwhite value is the sum, about 4.0 + (-1.9) = 2.1 on the log scale. Make
+them do the addition and then exp() once: exp(4.0) is about 54 cardinals where
+nothing is built, exp(2.1) about 8 bobwhite. Reading speciesbobwhite as the
+bobwhite value itself is the mistake everyone makes.
+
+This is exactly what model 1b in the assignment does, letting int, b and the
+scatter differ among resident, partial and full migrants.
+:::
+
+## Your turn: the other ways to differ {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+m_b <- mle2(form, start = start, data = birds,
+            parameters = list(b ~ species))
+
+# now fit three more, changing only the parameters line:
+#   m_mub   log_mu0 and b both differ
+#   m_muk   log_mu0 and log_k differ
+#   m_all   all three differ
+
+# then compare all six with AICtab(), base = TRUE
+```
+:::
+
+**Which way do the species differ?**
+
+::: {.notes}
+Ten minutes. Each model is the same line with a different parameters list, for
+example parameters = list(log_mu0 ~ species, b ~ species, log_k ~ species).
+
+The common slip is forgetting to add the new model to the AICtab call.
+
+These fits produce no warnings, thanks to the log scale.
+:::
+
+## Ranking the six models {.smaller}
+
+```{r}
+#| echo: false
+knitr::kable(aic_tab(m_same, m_mu, m_b, m_mub, m_muk, m_all), row.names = FALSE)
+```
+
+. . .
+
+**`m_all`: all three differ**, with 90% of the weight.
+
+::: {.notes}
+Read the table from the bottom: one model for both species is far behind, as
+expected for two birds this different. The best model lets all three differ.
+
+Ask before the next slide: which do they think differs most? The next slide
+answers it in numbers.
+:::
+
+## How they differ {.smaller}
+
+| From `m_all` | cardinal | bobwhite |
+|---|---|---|
+| birds where nothing is built | `r round(bird_par["cardinal", "mu0"])` | `r round(bird_par["bobwhite", "mu0"])` |
+| counts halve with every ... developed | `r round(bird_par["cardinal", "halving"])`% | `r round(bird_par["bobwhite", "halving"])`% |
+| $k$: smaller means more variable | `r round(bird_par["cardinal", "k"], 2)` | `r round(bird_par["bobwhite", "k"], 2)` |
+
+. . .
+
+- Bobwhite lose birds to development **four times as fast**
+- Bobwhite are far **patchier**: plentiful on some routes, absent from 19 of 71
+
+::: {.plain}
+Groups can differ in more than their average. Here the two species also differ in how fast development hurts them, and in how evenly they are spread.
+:::
+
+::: {.notes}
+The halving numbers are log(2) / |b|, as in Lecture 16, now with an answer for
+each species.
+
+The patchiness is the interesting part and has a habitat explanation: bobwhite
+need open grassland, old fields and fire-maintained pine, which are scattered
+across Florida, so some routes have plenty and 19 have none. Cardinals use almost
+any shrubby edge, including suburbs, so every route has them. The data say the
+variability differs; habitat is the likely reason, not something these models
+test.
+
+The general lesson, and it matters for Part 2: if they only ever let the mean
+differ between groups, they would miss two of the three differences here.
+:::
+
+## The test asks a narrower question {.smaller}
+
+```{r}
+#| echo: false
+anova(m_same, m_mu, m_mub)
+```
+
+Adding a separate $\mu_0$: a huge gain. Adding $b$ **after** it: $p$ =
+`r round(p_b_after_mu, 3)`.
+
+. . .
+
+A sequence of tests checks **one path** through the models, in the order you list
+them. AIC compares **all of them at once**, and found the difference in $k$,
+which this path never tried.
+
+::: {.plain}
+A test compares two models at a time. AIC lines up all of them at once.
+:::
+
+::: {.notes}
+anova() with three models runs two tests: same against mu, then mu against mub.
+Each line is a test of the model above it.
+
+Worth being honest that this sequence would have stopped at m_mub, a model AIC
+puts about 19 units behind the best. Nothing is wrong with the test; it answered
+the question it was asked. The path just never visited k.
+
+For the assignment: either approach is acceptable, but they should say which
+they used and why. AIC is the one the assignment asks for.
+:::
+
+## Rules for a fair comparison {.smaller}
+
+| Rule | Why |
+|---|---|
+| **Same rows** in every model | NLL adds up over rows; drop one and the NLL changes for reasons unrelated to the model. Run `na.omit()` on the data **once**, before fitting anything |
+| **Same response**, on the same scale | `count` and `log(count)` have likelihoods on different scales. Never compare them by AIC |
+| **Count every parameter**, including `k` and `sd` | AIC does it for you with `mle2`. By hand, people forget them |
+| **Every model has to make sense** | AIC ranks only what you give it |
+
+::: {.notes}
+The first rule is the one that will bite in the assignment. The trap is
+filtering the data differently for different models, for example running
+na.omit() on only the columns each model uses. A model fitted to fewer rows has a
+lower NLL simply because it is adding up fewer terms, and AIC will happily
+crown it. The hawk model in the starter script runs na.omit() once, up front,
+for this reason; they should keep that when they build alternatives.
+
+The second rule catches people who log the response to make it look normal, fit
+that, and compare it by AIC with a model of the raw response. The fix is to keep
+the response the same and change the distribution, for example a lognormal on
+the raw values, which is what model 1b does with wing length.
+
+mle2 counts parameters correctly, including those created by parameters = ...:
+m_all has six.
+:::
+
+## Assignment 3, Part 1: a strategy {.smaller}
+
+1. **Run the starter model** as given. Note its AIC.
+2. **Remove one piece at a time**: a covariate, an exponent, a group effect.
+   Fit each as its own model.
+3. **`AICtab()`** them all together.
+4. **Keep removing** from the best one until nothing improves.
+5. **Write it down**: which model, and why, in a sentence of biology.
+
+. . .
+
+**Check the distribution before the terms.** If the data are far more variable
+than the distribution allows, removing terms will not fix it.
+
+::: {.notes}
+A recipe, since "simplify an over-fit model" is open-ended enough to stall people.
+
+The last line is a hint for model 1c, which starts as a Poisson on reef
+richness whose variance is 4.4 times its mean. Switching to a negative binomial
+improves AIC by more than 13,000 units, which dwarfs every other choice in that
+model. A student who checks var / mean first, as in Lecture 15, has understood
+the assignment.
+
+Step 2 can include changing the shape, not only deleting: 1a invites a Ricker
+model, which is not nested in the starting model and can only be compared by
+AIC.
+
+Removing one piece at a time is backward stepwise selection, which has known
+problems in the statistics literature. For a teaching exercise with a handful of
+candidates it is fine; if anyone asks, say so.
+:::
+
+## Which tool, when {.smaller}
+
+| You want to know | Use | In plain words |
+|---|---|---|
+| Could this parameter be zero? | its **confidence interval**, `confint()` | is zero among the values the data cannot rule out? |
+| Is the bigger of two **nested** models better? | **likelihood ratio test**, `anova()` | did the extra parameters gain more than chance would? |
+| Which of **several** models is best? | **AIC**, `AICtab()` | lowest fit-plus-charge wins; within 2 is a tie |
+| Does the model make biological sense? | **you** | no statistic checks this |
+
+::: {.notes}
+The recap slide for today, and the one to photograph for the assignment.
+
+The first row is Tuesday, the next two are today. Point out that rows 1 and 2
+are the same question asked two ways: "is b different from zero" and "is the
+model with b better than the model without it" give the same answer.
+
+The last row is the one people forget, and it is the one that Part 2 of the
+assignment is graded on most.
+:::
+
+## What you can now do {.smaller}
+
+- Explain why a better fit alone does not mean a better model
+- Tell whether two models are **nested**
+- Run a **likelihood ratio test**, by hand and with `anova()`
+- Compute **AIC**, and read `AICtab()`, including its weights
+- Write an `mle2()` model as a **formula**, and let parameters differ between
+  groups with `parameters =`
+- Keep a comparison **fair**
+
+. . .
+
+That is everything Assignment 3 needs.
+
+::: {.notes}
+Point back at the "What today gives you for it" table: every row is now covered.
+:::
+
+## Additional practice {background-color="#f0f4f8" .smaller}
+
+Is development **worse for bobwhite in later years**? Let the effect of
+development change with year:
+
+::: {.type-it}
+```{r}
+#| eval: false
+# 1. add a term i * frac_built * elapsed inside exp(), next to the other two,
+#    and an i = 0 in start. Call the model m_int
+# 2. is m_both nested in m_int? Then compare them with anova()
+# 3. and with AICtab(). Do the test and AIC agree?
+# 4. which would you report, and why?
+```
+:::
+
+::: {.notes}
+For outside class, or for anyone who finishes early.
+
+Answers: i = -0.069, LRT p = 0.14, dAIC 0.2 in favor of m_int. So the test says
+the interaction is not supported and AIC calls it a tie. They do not really
+disagree: a dAIC under 2 means the data cannot tell the models apart, and with a
+tie the simpler model is the one to report.
+
+That is a useful thing to have seen once before Part 2, where it will happen.
+:::
+
+## Before next class
+
+Read Bolker **7.1 - 7.2**
+
+If the course data package did not finish installing in class, run it at home:
+
+```{r}
+#| eval: false
+options(timeout = 600)
+remotes::install_github("bmaitner/biometry_course", subdir = "biometrydata", upgrade = "never")
+```
+
+::: {.notes}
+Chapter 7 is model fitting in practice: what to do when the optimizer fails.
+Today's NaN warnings are a preview.
+
+Anyone who cannot install the package keeps using the read.csv links, which
+still work and give identical data.
+:::
