@@ -30,3 +30,9 @@ lectures/README.md
 *_key.md
 *_key.docx
 *_key.html
+
+# Quarto render leftovers. Supplements render with embed-resources, so the
+# finished .html files are self-contained; on Windows quarto sometimes fails to
+# delete its intermediate .rmarkdown file and _files folder afterwards.
+supplements/*.rmarkdown
+supplements/*_files/

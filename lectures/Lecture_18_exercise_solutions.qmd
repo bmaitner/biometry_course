@@ -1,0 +1,209 @@
+---
+title: "Model comparisons: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 18"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+```
+
+## How to use this
+
+The code from Lecture 18, filled in, with the numbers it produces.
+
+. . .
+
+Optimizers are numerical, so your last decimal place may differ from mine. Any
+`NaNs produced` warnings while fitting are harmless here: the optimizer tried an
+impossible value on its way to the answer.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+
+occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+occ_nll2 <- function(params, n_occupied, n_routes, elapsed){
+  p <- plogis(params[1] + params[2] * elapsed)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_nll2) <- c("a", "b")
+occ_data <- list(n_occupied = occ$n_occupied, n_routes = occ$n_routes,
+                 elapsed = occ$elapsed)
+m_occ <- mle2(minuslogl = occ_nll2, start = c(a = 2, b = -0.05), data = occ_data)
+m_occ@min
+```
+
+With `library(biometrydata)` installed, `occ <- bobwhite_occupancy` and
+`counts <- bobwhite_counts` give the same tables.
+
+## A nonsense predictor {.smaller}
+
+```{r}
+set.seed(1)                   # yours had no seed, so your number differs
+junk <- runif(nrow(occ))
+
+occ_junk <- function(params, n_occupied, n_routes, elapsed, junk){
+  p <- plogis(params[1] + params[2] * elapsed + params[3] * junk)
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(occ_junk) <- c("a", "b", "c")
+
+m_junk <- mle2(minuslogl = occ_junk, start = c(a = 2, b = -0.05, c = 0),
+               data = c(occ_data, list(junk = junk)))
+
+m_occ@min - m_junk@min
+anova(m_occ, m_junk)
+```
+
+Positive, as it must be, and small. The test does not come close to supporting it.
+
+## The likelihood ratio test {.smaller}
+
+```{r}
+const_nll <- function(params, n_occupied, n_routes){
+  p <- plogis(params[1])
+  -sum(dbinom(n_occupied, size = n_routes, prob = p, log = TRUE))
+}
+parnames(const_nll) <- "a"
+m_const <- mle2(minuslogl = const_nll, start = c(a = 1),
+                data = list(n_occupied = occ$n_occupied, n_routes = occ$n_routes))
+
+deviance_occ <- 2 * (m_const@min - m_occ@min)
+deviance_occ
+pchisq(deviance_occ, df = 1, lower.tail = FALSE)
+```
+
+## Three models, and AIC by hand {.smaller}
+
+```{r}
+m_flat <- mle2(count ~ dnbinom(mu = mu0, size = k),
+               start = list(mu0 = 10, k = 1.4), data = counts)
+
+m_year <- mle2(count ~ dnbinom(mu = mu0 * exp(r * elapsed), size = k),
+               start = list(mu0 = 15, r = -0.03, k = 1.4), data = counts)
+
+m_urban <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built), size = k),
+                start = list(mu0 = 12, b = -3, k = 1.4), data = counts)
+
+AIC(m_flat)
+2 * m_flat@min + 2 * 2
+```
+
+## Year and development {.smaller}
+
+```{r}
+m_both <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed),
+                               size = k),
+               start = list(mu0 = 15, b = -3, r = -0.03, k = 1.4),
+               data = counts)
+
+AICtab(m_flat, m_year, m_urban, m_both, base = TRUE)
+```
+
+. . .
+
+`m_both` is best by a wide margin. Year against development is **not** a nested
+pair, so only AIC can rank those two; development alone beats year alone by about
+43 units.
+
+## The two species {.smaller}
+
+```{r}
+birds <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bbs_two_species.csv")
+birds$species <- factor(birds$species, levels = c("cardinal", "bobwhite"))
+
+form <- count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k))
+start <- list(log_mu0 = 2, b = 0, log_k = 0)
+
+m_same <- mle2(form, start = start, data = birds)
+m_mu   <- mle2(form, start = start, data = birds, parameters = list(log_mu0 ~ species))
+m_b    <- mle2(form, start = start, data = birds, parameters = list(b ~ species))
+m_mub  <- mle2(form, start = start, data = birds,
+               parameters = list(log_mu0 ~ species, b ~ species))
+m_muk  <- mle2(form, start = start, data = birds,
+               parameters = list(log_mu0 ~ species, log_k ~ species))
+m_all  <- mle2(form, start = start, data = birds,
+               parameters = list(log_mu0 ~ species, b ~ species, log_k ~ species))
+```
+
+With the package installed, `birds <- bbs_two_species` gives the same table.
+
+## Comparing them {.smaller}
+
+```{r}
+AICtab(m_same, m_mu, m_b, m_mub, m_muk, m_all, base = TRUE, weights = TRUE)
+```
+
+. . .
+
+`m_all` is best: the species differ in all three ways.
+
+## Back-transforming `m_all` {.smaller}
+
+```{r}
+cf <- coef(m_all)
+
+exp(cf["log_mu0.(Intercept)"])                               # cardinals, nothing built
+exp(cf["log_mu0.(Intercept)"] + cf["log_mu0.speciesbobwhite"]) # bobwhite, nothing built
+
+log(2) / abs(cf["b.(Intercept)"])                            # cardinals halve every...
+log(2) / abs(cf["b.(Intercept)"] + cf["b.speciesbobwhite"])  # bobwhite halve every...
+```
+
+Cardinals: about 54 birds where nothing is built, halving with every 37% of
+development. Bobwhite: about 8, halving with every 9%. Bobwhite also have the
+smaller `k`, so they are patchier from route to route.
+
+## Additional practice: does the development effect change over time? {.smaller}
+
+```{r}
+m_int <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed +
+                                           i * frac_built * elapsed),
+                              size = k),
+              start = list(mu0 = 15, b = -3, r = -0.03, i = 0, k = 1.4),
+              data = counts)
+
+anova(m_both, m_int)
+AICtab(m_both, m_int, base = TRUE)
+```
+
+## What the practice shows {.smaller}
+
+`m_both` is nested in `m_int`: set `i = 0`. So both tools apply.
+
+. . .
+
+The test: $p$ = 0.14, not supported. AIC: a difference of 0.2, a tie.
+
+. . .
+
+They do not really disagree. A difference under 2 means the data cannot tell the
+models apart, and with a tie the **simpler model** is the one to report. So:
+development matters, year matters, and there is no evidence that the effect of
+development has changed over the 23 years.

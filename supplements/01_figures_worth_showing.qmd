@@ -1460,6 +1460,8 @@ Flush bars, 12% headroom so the labels fit, and no grid lines that measure nothi
   <https://r-graph-gallery.com>
 - **Fundamentals of Data Visualization**, Claus Wilke, free online and the best
   single source on *why* a figure works: <https://clauswilke.com/dataviz>
+- **Data Visualization: A Practical Introduction**, Kieran Healy, free online,
+  ggplot2 from the ground up: <https://socviz.co>
 - **patchwork**: <https://patchwork.data-imaginist.com>
 - **ggridges vignette**: `vignette("introduction", package = "ggridges")`
 
@@ -1474,6 +1476,8 @@ Flush bars, 12% headroom so the labels fit, and no grid lines that measure nothi
 - **Saket et al. (2019)**, effectiveness by task: <https://arxiv.org/abs/1709.08546>
 - **Skau and Kosara (2016)**, pies and donuts:
   <https://doi.org/10.1111/cgf.12888>
+- **Crameri, Shephard and Heron (2020)**, on rainbow color maps and how color
+  misleads, the reading for Part 1: <https://doi.org/10.1038/s41467-020-19160-7>
 
 . . .
 

@@ -278,8 +278,101 @@ teaches a skill students need and the lectures never have room for. Note the
 dependency on the title slide, and remember that the deck then needs those
 packages to render.
 
-Each ends with the same two things: **what this buys you**, in one sentence, and
-**where it fits**, pointing at the lecture or the project stage it serves.
+Each ends with the same three things: **what this buys you**, in one sentence;
+**where it fits**, pointing at the lecture or the project stage it serves; and
+**going further**, a short reading list. Supplements 01 and 02 already do this.
+
+Rules for the reading list, since a reader alone cannot ask which source to trust:
+
+- **Five or six items, not twenty.** Lead with the single best place to start,
+  and say why it is first.
+- **Free and online first.** Most of the best R material is a free book. A
+  student a year out of the course may no longer have library access.
+- **One line each on what it is for**, not only the title.
+- **Every DOI checked against Crossref and every URL opened before it goes in.**
+  A plausible-looking DOI that resolves to the wrong paper has already happened
+  once in this folder.
+
+## Suggested reading for the planned topics
+
+Drafted 2026-10-22, so a reading list exists before the deck does. Each DOI was
+checked against Crossref and each URL returned a page on that date. Students can
+use these now, and the lists become each supplement's "Going further" slide.
+
+**Geospatial**
+
+- *Geocomputation with R*, Lovelace, Nowosad and Muenchow. Free, and the place to
+  start: <https://r.geocompx.org>
+- *Spatial Data Science*, Pebesma and Bivand. The deeper treatment, by the
+  authors of `sf`: <https://r-spatial.org/book/>
+- Pebesma (2018), the `sf` paper: <https://doi.org/10.32614/RJ-2018-009>
+
+**Writing an R package**
+
+- *R Packages* (2nd edition), Wickham and Bryan. Free, and the standard
+  reference: <https://r-pkgs.org>
+- *rOpenSci Packages: Development, Maintenance, and Peer Review*, for the habits
+  that make a package usable by someone else: <https://devguide.ropensci.org>
+- The course's own `biometrydata/` folder: a complete, small, data-only package
+  to read alongside the book.
+
+**Getting messy data into shape**
+
+- *R for Data Science* (2nd edition), the data import and tidying chapters. The
+  course's own text, so already familiar: <https://r4ds.hadley.nz>
+- Wickham (2014), "Tidy Data", the idea behind the tidyverse:
+  <https://doi.org/10.18637/jss.v059.i10>
+- Broman and Woo (2018), "Data Organization in Spreadsheets". The single most
+  useful paper to read before collecting data:
+  <https://doi.org/10.1080/00031305.2017.1375989>
+
+**Reproducible pipelines**
+
+- Wilson et al. (2017), "Good enough practices in scientific computing". Start
+  here: <https://doi.org/10.1371/journal.pcbi.1005510>
+- *The targets R Package User Manual*: <https://books.ropensci.org/targets/>
+- Landau (2021), the `targets` paper: <https://doi.org/10.21105/joss.02959>
+- *Happy Git and GitHub for the useR*, Bryan: <https://happygitwithr.com>
+
+**Where distributions come from**
+
+- Bolker, chapter 4, the course text, which this supplement extends.
+- Lindén and Mäntyniemi (2011), on the negative binomial for overdispersed
+  ecological counts: <https://doi.org/10.1890/10-1831.1>
+
+**Finding data, and APIs**
+
+- `httr2` documentation, for talking to any web API from R:
+  <https://httr2.r-lib.org>
+- `rgbif` documentation, the worked case most ecologists want first, species
+  occurrences from GBIF: <https://docs.ropensci.org/rgbif/>
+
+**Competition and other dynamic models**
+
+- Bolker, chapter 11, "Dynamic models": fitting them, which is the part the other
+  books leave out.
+- Otto and Day (2007), *A Biologist's Guide to Mathematical Modeling in Ecology
+  and Evolution*, Princeton University Press. Building them.
+
+**Phylogenetics**
+
+- Harmon, *Phylogenetic Comparative Methods*. Free online, and the place to
+  start: <https://lukejharmon.github.io/pcm/>
+- Revell and Harmon (2022), *Phylogenetic Comparative Methods in R*, Princeton
+  University Press. The hands-on companion.
+- Paradis and Schliep (2019), `ape` 5.0:
+  <https://doi.org/10.1093/bioinformatics/bty633>
+- Revell (2012), `phytools`: <https://doi.org/10.1111/j.2041-210X.2011.00169.x>
+
+**Genetics** (population genetics, pending the question of which genetics the
+students meant)
+
+- *Population Genetics in R*, Grünwald lab. Free, worked, and aimed at
+  biologists rather than programmers:
+  <https://grunwaldlab.github.io/Population_Genetics_in_R/>
+- Nielsen and Slatkin (2013), *An Introduction to Population Genetics: Theory and
+  Applications*, Sinauer. The theory, at the level this course works at.
+- Jombart (2008), `adegenet`: <https://doi.org/10.1093/bioinformatics/btn129>
 
 ## Keeping them working
 
