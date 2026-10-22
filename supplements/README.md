@@ -1,7 +1,11 @@
 # Supplements: optional material beyond the course
 
-Plan written 2026-10-16. The first supplement, **01 Figures worth showing**, is
-built; everything below it is still a proposal.
+Plan written 2026-10-16. Two supplements are built, **01 Figures worth showing**
+and **02 Structural equation models**; everything else here is still a proposal.
+
+Supplements are numbered **in the order they get built**, not in the order this
+file plans them, so a number is never reassigned once it is on a deck. That is
+why the second one built is 02 even though it sits below the ranked queue.
 
 ## Who these are for
 
@@ -88,9 +92,11 @@ enough depth to anchor weeks of a future course. A few are both.
 | Competition and other dynamic models | wanted, unranked | Low | **High** |
 | **Phylogenetics** (new request) | requested | Medium | **High** |
 | **Genetics** (new request) | requested | Medium | **High** |
+| **Structural equation models**: path analysis, piecewise SEM | built, not requested | Medium | **High** |
 
 "Wanted, unranked" means the students said they wanted all of the topics, and
-these were not among the four they put first.
+these were not among the four they put first. "Not requested" means nobody asked
+for it; it is on the list because the material argues for it.
 
 Read the right-hand column as a draft syllabus. Geospatial, dynamic models and
 package development are each worth several weeks, and the last of those is
@@ -131,6 +137,128 @@ their top four; Model 3 is built, and whether to finish the module before
 starting geospatial is a judgment call: it serves this semester's material,
 geospatial serves what they asked for.
 
+**Below the ranked queue, and built anyway: "Structural equation models."**
+Proposed and built 2026-10-22, as `02_structural_equation_models.qmd`: 46
+content slides in nine parts, 23 type-and-run blocks. Nobody asked for it, so it
+sits under the four the students ranked, but it is the only candidate that extends the course's own spine instead
+of opening a new domain. The course builds deterministic function (Lectures 9 and
+10), stochastic distribution (11 and 12), likelihood (15 to 17), model comparison
+(18), fitting (19 to 22), then GLMs (23 and 24). An SEM is that same machinery
+with more than one response variable, and a piecewise SEM is a set of GLMs plus a
+test of the independence claims the diagram implies, so by Lecture 24 students
+have everything it needs. It also answers the question ecology students actually
+arrive with: does rainfall affect biomass directly, or through soil moisture?
+Multiple regression cannot separate those, and the course hands them nothing that
+can.
+
+Two design decisions, both carried into the built deck:
+
+- **Piecewise only.** `piecewiseSEM`, component models, d-separation and
+  Fisher's C stay inside the likelihood and AIC framework the course already
+  teaches. Covariance-based SEM (`lavaan`, latent variables, chi-square, CFI,
+  RMSEA) is a different statistical culture, and teaching both in one module
+  would run against the Lecture 17 request to simplify the statistics. Latent
+  variables get one "where this goes next" slide and nothing more. They are also
+  where the partial and global distinction actually bites, and they need sample
+  sizes and measurement-model thinking that the datasets in this class rarely
+  support.
+- **Real time on what the arrows are not.** This is the most misusable tool on
+  the list, because it invites causal language from observational data and can
+  easily produce someone who draws arrows and then believes them. Equivalent
+  diagrams fit identically, unmeasured confounders are invisible, and good fit
+  does not validate the structure. The supplement form helps, since that
+  reasoning has to be visible text rather than something said out loud.
+
+The deck follows the sketch: the question multiple regression cannot answer; the
+diagram as a model, and what a **missing** arrow claims, which is the stronger
+claim and the testable one; path analysis by hand with two `lm()` calls, with the
+indirect effect as a product of path coefficients; standardized against
+unstandardized coefficients; the basis set and the d-sep table; an exercise in
+the Lecture 15 style; Shipley's AIC across competing diagrams, which lands back
+on Lecture 18; what it does not tell you; where it goes next, not taught.
+
+**One thing the build changed: it does the whole method by hand.** The plan
+assumed `piecewiseSEM`. As of October 2026 the CRAN version declares
+**R (>= 4.5.0)**, and this course is on 4.4.1, so `install.packages()` reports
+it as unavailable. The archived versions are reachable but want their
+dependencies built from source, `performance` included, which is a long compile
+for a convenience function. So the deck
+builds the basis set, runs the claims and computes Fisher's C in about forty
+lines of base R and `MASS`, and shows `psem()` once, in a block flagged as not
+runnable here, as the shortcut to use when your R is new enough.
+
+That is now the better version regardless of the R constraint. Doing it by hand
+is the same "by hand, then with the function" move Lecture 18 makes with
+`anova()`, the basis set stops being a black box, and a supplement nobody is
+supervising cannot open with an install that fails. It is also the only piece of
+the course with no CRAN dependency beyond `MASS`, which is worth something for a
+deck meant to still work in a few years.
+
+**The numbers it lands on**, all verified against the data on 2026-10-22: the
+path decomposition sums to the simple regression coefficient exactly (0.26389),
+which gives the exercise the recognizable right answer the Lecture 15 note asks
+for; richness is overdispersed at 9.49 and the negative binomial takes it to
+1.17; the hypothesized diagram survives at Fisher's C = 9.50, df = 6, p = 0.147;
+and both the strict mediation diagram and the temperature chain are rejected.
+The AIC comparison between the two surviving diagrams comes out 1.27 apart,
+inside Lecture 18's own "within 2 is a tie", so the deck reports a tie rather
+than a winner.
+
+**The dataset question is settled: `Deep_sea_megabenthos`.** Checked 2026-10-22
+against the three candidates in `data/`, which came out clearly separated.
+
+`Mangroves` is out. `Cannicci_et_al_Final_dataset_4.0.csv` is 587 rows of species
+by site with binary functional traits (burrowing, leaf storing, woodboring, and
+so on) and no continuous environmental variable anywhere in it, so there is no
+mediator to measure.
+
+`Deep_sea_megabenthos` is the one. `TOSCA_ROV.csv` is already one row per
+subtransect, 749 of them, so no aggregation stands between the student and the
+model, and it carries depth, temperature, salinity, slope and substrate as
+predictors with richness, Shannon and evenness as responses. It yields two chains,
+and the pair is what makes it worth using:
+
+- **A chain that holds:** slope to hard substrate to richness. Steeper ground
+  exposes bedrock and boulders rather than sand, and hard substrate is where
+  sessile animals can attach. The substrate link is a binomial GLM (slope
+  p = 5e-11), and hard-substrate subtransects average 22.5 morphospecies against
+  12.4 on soft (on the 739 rows with every variable present, which is what the
+  deck uses). Slope keeps a direct path as well, so this is partial mediation
+  and the student needs both arrows, which is the point.
+- **A chain the data reject:** depth to temperature to richness. Depth predicts
+  temperature about as hard as anything in ecology does (r = -0.64), and then the
+  temperature path to richness dies once depth is in the model (p = 0.23). That
+  is exactly what a d-separation test is for, and a rejected chain sitting next
+  to a surviving one teaches better than either alone.
+
+Three things to write into the module rather than discover in the room. Richness
+is overdispersed, with residual deviance over df of 9.5, so the component model
+is negative binomial rather than Poisson, which puts the Lecture 12 bestiary to
+live use. The 749 subtransects come from only five dives, so the
+pseudoreplication has to be named even though five levels is too few for a
+comfortable random effect. And Shannon and richness correlate at 0.83 because one
+is computed from the other, so a chain through both is tautological and belongs
+in the "what the arrows are not" section as a worked trap.
+
+`Coral` is the backup, at a price. Its best chain is depth to rugosity to coral
+richness, and it is nearly complete mediation: rugosity to richness p = 8e-18,
+with the direct depth path down to p = 0.054. Richness is a count there too, so
+the component model is a GLM and it ties to Lecture 24 directly. The three costs
+are that `WTD_RUG` is missing at 669 of the 1281 stations, so half the data
+leaves; that reaching station level means aggregating 13,601 rows of long-format
+cover records, which is the `tapply()` problem the messy-data supplement exists
+to solve and not something to do twice; and that the ecology arguably runs
+backwards, since reef rugosity is largely built by the coral, which is a
+liability in a first example even though it is the lesson later. If it is used at
+all, pre-aggregate it into `data/class_examples/` the way `reef_surveys.csv` was
+done, and make it the exercise rather than the worked example.
+
+It is scored Medium for this semester rather than Low only because of the final
+project: a student with a multi-variable observational dataset could use it
+there, and that is the one place in the course where they would be allowed to. In
+a Biometry II it is two or three weeks rather than one: path analysis, piecewise
+SEM, then latent variables and the covariance-based tradition.
+
 ## Anatomy of a supplement
 
 Three pieces, so that "tutorial examples and tools" means something runnable:
@@ -157,10 +285,19 @@ Each ends with the same two things: **what this buys you**, in one sentence, and
 
 Unsupervised code that has quietly stopped working is worse than no supplement.
 
-- Add `supplements/` to `check_deck_student_code.R`. The type-and-run extraction
-  already works on any Quarto file; it only needs the directory.
+- **Done, 2026-10-22:** `check_deck_student_code.R` sweeps `supplements/` as
+  well as `lectures/`. `deck_dirs()` holds the list and `all_decks()` expands
+  it, so `check_all_decks()`, `check_all_characters()` and `deck_packages()` all
+  pick up a new supplement with no further edit. `ci_checks.R` runs them, so CI
+  covers supplements too; keep the package list in `check.yaml` in step with
+  `deck_packages()`.
 - Put a **last checked** date on the title slide. `ggbump` and friends move.
 - Pin examples to course data, as above.
+- **Prefer base R and the packages the course already uses.** Supplement 02 was
+  going to depend on `piecewiseSEM` until that package moved to R 4.5.0 and
+  stopped installing here. A supplement nobody is supervising should not open
+  with an install that fails, so a dependency is worth paying for only when it
+  teaches something the hand-written version cannot.
 
 ## Getting them found
 

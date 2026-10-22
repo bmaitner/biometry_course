@@ -1,0 +1,1077 @@
+---
+title: "Structural equation models"
+subtitle: "Supplement 2 &nbsp;&nbsp;|&nbsp;&nbsp; PCB 6455 / BSC 4933: Biometry"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    output-file: 02_structural_equation_models-slides.html
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 8
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+  html:
+    output-file: 02_structural_equation_models.html
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+    code-line-numbers: false
+    fig-width: 8
+    fig-height: 4.5
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.6em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.4em 0.8em; margin: 0.6em 0; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.8em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE, dev.args = list(bg = "transparent"))
+
+# A path diagram drawer. Boxes at given positions, arrows between them.
+# `bow` bends an arrow sideways so a long path does not cut through a box.
+# This is scaffolding for the figures, not part of the method, so it is the
+# one piece of code on these slides you are not expected to read.
+
+draw_paths <- function(pos, edges, cex = 1.15,
+                       xlim = range(pos$x) + c(-1.3, 1.3),
+                       ylim = range(pos$y) + c(-1.0, 1.0)) {
+
+  par(mar = c(0.2, 0.2, 0.2, 0.2))
+  plot(NA, xlim = xlim, ylim = ylim, axes = FALSE, xlab = "", ylab = "",
+       xaxs = "i", yaxs = "i")
+
+  hw <- (strwidth(rownames(pos), cex = cex) + strwidth("MM", cex = cex)) / 2
+  hh <- rep(strheight("Mg", cex = cex) * 1.15, nrow(pos))
+  names(hw) <- names(hh) <- rownames(pos)
+
+  edge_pt <- function(nm, dx, dy) {
+    t <- min(if (dx != 0) abs(hw[nm] / dx) else Inf,
+             if (dy != 0) abs(hh[nm] / dy) else Inf)
+    c(pos[nm, "x"] + dx * t, pos[nm, "y"] + dy * t)
+  }
+  outside <- function(nm, x, y)
+    abs(x - pos[nm, "x"]) > hw[nm] * 1.04 | abs(y - pos[nm, "y"]) > hh[nm] * 1.15
+
+  col_or <- function(nm, default) if (is.null(edges[[nm]])) default else edges[[nm]]
+  bow <- col_or("bow", rep(0, nrow(edges)))
+  lty <- col_or("lty", rep(1, nrow(edges)))
+  col <- col_or("col", rep("grey25", nrow(edges)))
+  lwd <- col_or("lwd", rep(2.4, nrow(edges)))
+
+  for (i in seq_len(nrow(edges))) {
+
+    a <- edges$from[i]; b <- edges$to[i]
+    ax <- pos[a, "x"]; ay <- pos[a, "y"]
+    bx <- pos[b, "x"]; by <- pos[b, "y"]
+
+    if (bow[i] == 0) {
+      p1 <- edge_pt(a, bx - ax, by - ay)
+      p2 <- edge_pt(b, ax - bx, ay - by)
+      arrows(p1[1], p1[2], p2[1], p2[2], length = 0.11,
+             lwd = lwd[i], col = col[i], lty = lty[i])
+    } else {
+      dx <- bx - ax; dy <- by - ay; len <- sqrt(dx^2 + dy^2)
+      cx <- (ax + bx) / 2 - dy / len * bow[i]
+      cy <- (ay + by) / 2 + dx / len * bow[i]
+      tt <- seq(0, 1, length.out = 80)
+      qx <- (1 - tt)^2 * ax + 2 * (1 - tt) * tt * cx + tt^2 * bx
+      qy <- (1 - tt)^2 * ay + 2 * (1 - tt) * tt * cy + tt^2 * by
+      keep <- outside(a, qx, qy) & outside(b, qx, qy)
+      qx <- qx[keep]; qy <- qy[keep]
+      n <- length(qx)
+      lines(qx[-n], qy[-n], lwd = lwd[i], col = col[i], lty = lty[i])
+      arrows(qx[n - 1], qy[n - 1], qx[n], qy[n], length = 0.11,
+             lwd = lwd[i], col = col[i], lty = lty[i])
+    }
+  }
+
+  for (nm in rownames(pos)) {
+    rect(pos[nm, "x"] - hw[nm], pos[nm, "y"] - hh[nm],
+         pos[nm, "x"] + hw[nm], pos[nm, "y"] + hh[nm],
+         col = "white", border = "grey25", lwd = 2.2)
+    text(pos[nm, "x"], pos[nm, "y"], nm, cex = cex)
+  }
+}
+
+pos3 <- data.frame(x = c(1.0, 3.6, 6.2), y = c(1.0, 1.0, 1.0),
+                   row.names = c("slope", "hard", "richness"))
+pos5 <- data.frame(x = c(1.0, 3.6, 3.6, 3.6, 6.6),
+                   y = c(2.6, 4.2, 2.6, 1.0, 2.6),
+                   row.names = c("depth", "slope", "hard", "temp", "richness"))
+```
+
+## This is optional {.smaller}
+
+A supplement, not a lecture. Nothing here is due and nothing here is on an exam.
+
+It assumes **Lectures 15 to 18**: likelihood, model comparison, AIC. It also
+uses a **generalized linear model**, which is Lectures 23 and 24. If you have
+not met GLMs yet, read `glm()` as "a regression for data that are not normal"
+and you will lose nothing.
+
+**Every code block is meant to be run.** If it is on the page, you can paste it
+into R and get the output printed next to it.
+
+This supplement does the whole method **by hand**, with `lm()`, `glm()` and
+about four lines of arithmetic. That is partly a teaching choice and partly
+forced on us, for a reason given at the end.
+
+*Last checked: 2026-10-22, with R 4.4.1 and MASS 7.3-65.*
+
+## The story so far {.smaller}
+
+1. **A deterministic function** (Lectures 9 and 10): the shape you think the
+   process has
+2. **A distribution** (Lectures 11 and 12): the noise around that shape
+3. **Likelihood** (Lecture 15): given parameters, how probable are the data you
+   actually got
+4. **Covariates** (Lecture 16): let a parameter change with something you
+   measured
+5. **Comparing models** (Lecture 18): the likelihood ratio test, and AIC when
+   models are not nested
+6. **GLMs** (Lectures 23 and 24): all of the above, packaged, for counts and
+   proportions
+
+. . .
+
+7. **Today: more than one response.** Every piece above stays exactly as it is.
+   The only new idea is that a variable can be a response in one equation and a
+   predictor in the next.
+
+::: {.notes}
+If you are reading this alone, the thing to take from the list is that nothing
+new is being introduced. A structural equation model is a set of the models you
+already know how to fit, plus one test that is new.
+
+Line 7 is the whole supplement in one sentence. Substrate is a response to
+slope, and a predictor of richness. No single regression can hold both roles at
+once, which is why we need a diagram.
+:::
+
+## What you need {.smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+install.packages("MASS")       # negative binomial regression
+install.packages("remotes")
+
+options(timeout = 600)
+remotes::install_github("bmaitner/biometry_course",
+                        subdir = "biometrydata",
+                        upgrade = "never")
+```
+:::
+
+Then:
+
+::: {.type-it}
+```{r}
+library(MASS)
+library(biometrydata)
+```
+:::
+
+That is the entire dependency list. No SEM package is involved, which is
+deliberate.
+
+## The data {.smaller}
+
+ROV video transects down a deep-sea margin: 749 subtransects, each with the
+physical conditions and a count of the animals seen.
+
+::: {.type-it}
+```{r}
+rov <- data.frame(
+  depth    = tosca_rov$Depth.water..m.,
+  temp     = tosca_rov$Temp....C.,
+  sal      = tosca_rov$Sal,
+  slope    = tosca_rov$Slope..deg.,
+  hard     = as.integer(tosca_rov$Substrate %in% c("bedrock", "boulders")),
+  richness = tosca_rov$S
+)
+
+rov <- rov[complete.cases(rov[, c("depth", "temp", "slope", "hard",
+                                  "richness")]), ]
+nrow(rov)
+```
+:::
+
+The names come straight from PANGAEA with the units baked in, so they are
+renamed once, here, and never thought about again. `hard` turns five substrate
+classes into one question: is there something solid to attach to? Ten
+subtransects are missing a temperature or salinity reading and drop out, which
+is why 749 rows become 739.
+
+::: {.notes}
+`?tosca_rov` gives the source and the original column names. The substrate
+classes are bedrock, boulders, gravel, biogenic gravels and sand. The first two
+are hard; the rest are not. Collapsing them is a judgment call, and it is the
+kind of judgment call worth stating out loud in a paper.
+:::
+
+# Part 1: The question one regression cannot answer {background-color="#f0f4f8"}
+
+## Two stories, one coefficient {.smaller}
+
+Steeper seafloor holds more species. Fine. **Why?**
+
+- **Story A.** Steep ground is harder to settle on, and the animals that cope
+  with it are varied. Slope acts on richness directly.
+- **Story B.** Steep ground sheds sediment and exposes bedrock. Hard surfaces
+  are what sessile animals attach to. Slope acts on richness **through
+  substrate**.
+
+. . .
+
+These are different claims about how the seafloor works, and they imply
+different things: under B, flatten the ground and you lose the species because
+you lost the rock.
+
+A regression of richness on slope gives **the same coefficient either way**.
+
+## What one regression says {.smaller}
+
+::: {.type-it}
+```{r}
+m_one <- glm.nb(richness ~ slope, data = rov)
+round(summary(m_one)$coefficients, 5)
+```
+:::
+
+Slope is strongly positive, and that is all you learn. The number is real and it
+answers a question nobody asked.
+
+::: {.plain}
+A single regression tells you that two things go together. It cannot tell you
+what happens in between.
+:::
+
+## The variable in between {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.8
+draw_paths(pos3, data.frame(from = c("slope", "hard"),
+                            to   = c("hard", "richness")))
+```
+
+Substrate is the candidate. It is **caused by** slope and it **causes**
+richness, which means it is a response in one equation and a predictor in the
+next. No single regression holds both roles.
+
+::: {.type-it}
+```{r}
+tapply(rov$richness, rov$hard, mean)
+```
+:::
+
+Hard substrate roughly doubles the count. So the middle box is not a technicality.
+
+# Part 2: The diagram is the model {background-color="#f0f4f8"}
+
+## What an arrow claims {.smaller}
+
+An arrow from X to Y says: **if X changed and nothing else did, Y would
+change.** It is a claim about the mechanism, and it is a claim **you** are
+making. The data did not propose it.
+
+. . .
+
+Which means the arrows are the assumptions, written where a reader can see them.
+That is the real gain over a regression table, where the same assumptions are
+present but invisible.
+
+::: {.plain}
+Drawing the diagram does not discover the causes. It makes you write down what
+you already believe, so that someone can disagree with it.
+:::
+
+## What a missing arrow claims {.smaller}
+
+This is the part people skip, and it is where the statistics live.
+
+- **An arrow** says a direct effect exists. You cannot test that by its absence.
+- **A missing arrow** says a direct effect **does not** exist, once everything
+  upstream is accounted for.
+
+. . .
+
+The second is the stronger claim, and the testable one. `slope -> hard ->
+richness` with no arrow straight from slope to richness says:
+
+> once you know the substrate, slope tells you nothing more about richness.
+
+That is a prediction. It can be checked, and it can be wrong.
+
+::: {.notes}
+If you take one thing from this supplement, take this slide.
+
+Students routinely build a diagram with an arrow between every pair, because
+leaving an arrow out feels like an admission of ignorance. It is the opposite:
+the missing arrows are the content. A diagram with every arrow present predicts
+nothing and cannot be tested, and we will hit exactly that wall later on.
+:::
+
+## Draw it before you fit it {.smaller}
+
+The order matters, and it is the same discipline as writing the deterministic
+function down before fitting it in Lecture 9.
+
+1. List the variables you measured
+2. Draw the arrows you are willing to defend to a reviewer
+3. **Notice which arrows you left out**, because those are your hypotheses
+4. Fit, and test the ones you left out
+5. Where the test disagrees with you, say so
+
+We will do exactly that, and the test will disagree with us twice.
+
+# Part 3: Path analysis by hand {background-color="#f0f4f8"}
+
+## Two regressions, not one {.smaller}
+
+Each box with an arrow coming in gets its own model. Here that is two.
+
+::: {.type-it}
+```{r}
+a <- lm(hard ~ slope, data = rov)              # slope -> hard
+b <- lm(richness ~ hard + slope, data = rov)   # hard -> richness, slope direct
+
+round(coef(a)["slope"], 5)
+round(coef(b)[c("hard", "slope")], 5)
+```
+:::
+
+`lm()` on a 0/1 response is wrong and we will fix it shortly. It is here because
+path arithmetic is clearer in straight lines, and because this is how path
+analysis was done for fifty years before anyone could fit a GLM.
+
+## Direct, indirect, total {.smaller}
+
+An indirect effect is a **product**: slope moves substrate, substrate moves
+richness, so slope moves richness by the two multiplied.
+
+::: {.type-it}
+```{r}
+indirect <- coef(a)["slope"] * coef(b)["hard"]
+direct   <- coef(b)["slope"]
+
+round(c(indirect = unname(indirect), direct = unname(direct),
+        total = unname(indirect + direct)), 5)
+```
+:::
+
+::: {.plain}
+Multiply along a path to get what travels down it. Add the paths together to get
+the whole effect.
+:::
+
+## The check that it is right {.smaller}
+
+The total effect of slope should be exactly what a single regression of richness
+on slope gives, because that regression knows nothing about substrate and so
+reports everything slope does, by whatever route.
+
+::: {.type-it}
+```{r}
+round(coef(lm(richness ~ slope, data = rov))["slope"], 5)
+round(indirect + direct, 5)
+```
+:::
+
+. . .
+
+Identical. That is not a coincidence and it is not an approximation: splitting a
+total effect into paths is an identity, not an estimate.
+
+::: {.notes}
+Use this as your check whenever you do this by hand. If the pieces do not sum to
+the total from the simple regression, you have the conditioning wrong, usually
+by putting a variable in the second model that does not belong there.
+:::
+
+## Your turn: which route carries more? {.smaller}
+
+The two numbers above are not comparable yet, because `slope` is in degrees and
+`hard` is 0 or 1. Standardizing puts every variable in standard deviations, so
+the paths can be compared.
+
+::: {.type-it}
+```{r}
+z <- function(x) (x - mean(x)) / sd(x)
+
+rz <- transform(rov, slope = z(slope), hard = z(hard), richness = z(richness))
+
+# refit the same two models on rz, then build the same two quantities
+# (hint: you wrote both of them two slides ago)
+az <- lm(hard ~ slope, data = rz)
+bz <- lm(richness ~ hard + slope, data = rz)
+
+round(c(indirect = unname(coef(az)["slope"] * coef(bz)["hard"]),
+        direct   = unname(coef(bz)["slope"])), 3)
+```
+:::
+
+. . .
+
+The direct path is about **three times** the indirect one. Substrate is a real
+route and a minority route: most of what slope does to richness, it does by some
+means we have not measured.
+
+## What standardizing is for {.smaller}
+
+::: {.plain}
+Standardized coefficients answer "which arrow matters more". Unstandardized ones
+answer "how much does richness change per degree of slope". You need both, for
+different sentences.
+:::
+
+Report unstandardized coefficients when the units mean something to a reader,
+which for depth in meters they do. Report standardized ones when you are
+comparing arrows, or drawing them at different widths.
+
+Never compare raw coefficients across variables measured in different units. The
+arrow widths in half the SEM figures you will see are doing exactly that.
+
+# Part 4: Piecewise SEM {background-color="#f0f4f8"}
+
+## The idea, in one sentence {.smaller}
+
+**Fit each response with the model you would have fitted anyway, then test the
+arrows you left out.**
+
+That is the whole method. There is no joint likelihood, no new estimator, and
+nothing that needs a package. What makes it a structural equation model rather
+than a pile of regressions is the second half: the missing arrows get tested as
+a set.
+
+::: {.notes}
+The alternative tradition, covariance-based SEM, fits all the equations at once
+against the observed covariance matrix. It is a different culture with different
+software and different fit statistics, and the last section says where to find
+it. Piecewise is the one that fits what this course already teaches, and the one
+that copes with counts, binary outcomes and random effects.
+:::
+
+## Choosing each component model {.smaller}
+
+Each response gets the model its data type deserves. Richness is a count, so
+start with Poisson and check it.
+
+::: {.type-it}
+```{r}
+m_pois <- glm(richness ~ depth + slope + hard, family = poisson, data = rov)
+
+round(deviance(m_pois) / df.residual(m_pois), 2)
+```
+:::
+
+That ratio should be near 1. It is near 10.
+
+::: {.plain}
+The counts vary far more than a Poisson allows. Using one anyway would make
+every p-value in the model far too small.
+:::
+
+## The negative binomial, from Lecture 12 {.smaller}
+
+::: {.type-it}
+```{r}
+m_rich <- glm.nb(richness ~ depth + slope + hard, data = rov)
+
+round(deviance(m_rich) / df.residual(m_rich), 2)
+c(poisson = round(AIC(m_pois)), negbin = round(AIC(m_rich)))
+```
+:::
+
+Ratio near 1, and AIC drops by thousands. This is the bestiary slide from
+Lecture 12 doing real work: the negative binomial is the count distribution with
+a spare parameter for extra variance, and deep-sea counts need it.
+
+::: {.notes}
+A reasonable worry: did switching distributions change the story? Compare the
+coefficients from the two fits. The estimates barely move; the standard errors
+roughly triple. That is the general pattern, and it is why ignoring
+overdispersion is dangerous rather than merely untidy. It does not usually
+invent an effect, it makes a real one look far more certain than it is.
+:::
+
+## The diagram we will test {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.2
+draw_paths(pos5, data.frame(
+  from = c("depth", "depth", "depth", "depth", "slope", "slope", "hard"),
+  to   = c("slope", "hard", "temp", "richness", "hard", "richness", "richness"),
+  bow  = c(0, 0, 0, -2.0, 0, 0, 0)))
+```
+
+Depth drives everything physical. Slope and substrate act on richness, both
+directly and in sequence. Temperature is a consequence of depth **and nothing
+else**: no arrow runs from temperature to richness.
+
+That last absence is the claim this diagram is making.
+
+## The four component models {.smaller}
+
+::: {.type-it}
+```{r}
+m_temp  <- lm(temp ~ depth, data = rov)
+m_slope <- lm(slope ~ depth, data = rov)
+m_hard  <- glm(hard ~ depth + slope, family = binomial, data = rov)
+m_rich  <- glm.nb(richness ~ depth + slope + hard, data = rov)
+```
+:::
+
+Four responses, four models, each one chosen for its own data type: two straight
+lines, a logistic regression for the 0/1 substrate, and a negative binomial for
+the counts.
+
+Every one of these is a model you already know how to fit. Nothing above is new.
+
+## Which absences get tested {.smaller}
+
+List every pair of boxes with **no arrow between them**. For each, test whether
+they are still related once everything pointing into them is accounted for.
+
+| Pair with no arrow | Account for | Does temperature still matter? |
+|---|---|---|
+| temperature, slope | depth | ? |
+| temperature, substrate | depth, slope | ? |
+| temperature, richness | depth, slope, substrate | ? |
+
+. . .
+
+Three absences, three tests. Each one is a single `summary()` line: put the
+missing predictor into the model and look at its p-value.
+
+::: {.notes}
+This list has a name, the basis set, and a rule for building it: for each
+non-adjacent pair, condition on the parents of both. "Parents" means every box
+with an arrow pointing into them. You can build it by eye for a diagram this
+size, and you should, because doing it once is what makes the method stop
+feeling like magic.
+:::
+
+## Testing the three absences {.smaller}
+
+::: {.type-it}
+```{r}
+p_of <- function(fit, term) {
+  co <- summary(fit)$coefficients
+  co[term, ncol(co)]                    # the p-value column
+}
+
+claims <- c(
+  "temp vs slope"    = p_of(lm(slope ~ depth + temp, data = rov), "temp"),
+  "temp vs hard"     = p_of(glm(hard ~ depth + slope + temp,
+                                family = binomial, data = rov), "temp"),
+  "temp vs richness" = p_of(glm.nb(richness ~ depth + slope + hard + temp,
+                                   data = rov), "temp")
+)
+round(claims, 4)
+```
+:::
+
+Two of the three absences are comfortable. The first is marginal: temperature
+and slope are not quite independent given depth.
+
+## Fisher's C: all three at once {.smaller}
+
+A diagram stands or falls as a whole, so the three p-values are combined into
+one test.
+
+::: {.type-it}
+```{r}
+fisher_c <- function(p) {
+  C  <- -2 * sum(log(p))
+  df <- 2 * length(p)
+  c(C = C, df = df, p = 1 - pchisq(C, df))
+}
+
+round(fisher_c(claims), 3)
+```
+:::
+
+::: {.plain}
+A small p-value here means the diagram is wrong: something you said was absent
+is plainly there. A large one means the data gave you no reason to add an arrow.
+:::
+
+## Reading that the right way round {.smaller}
+
+This is the reverse of every test in Lecture 18, and it catches people.
+
+| | Lecture 18's tests | Fisher's C |
+|---|---|---|
+| Small p | the extra term earns its place | **your diagram is wrong** |
+| Large p | no evidence for the extra term | **your diagram survives** |
+
+Our C of 9.50 on 6 degrees of freedom gives **p = 0.147**. The diagram survives.
+
+. . .
+
+Surviving is not winning. It means the data could not convict this diagram, not
+that it is true. Plenty of other diagrams would survive the same data, and one
+of them is in Part 7.
+
+::: {.notes}
+Writing it up honestly sounds like: "the hypothesized structure was consistent
+with the data (Fisher's C = 9.50, df = 6, p = 0.15)". Never "the model was
+confirmed" or, worse, "proven".
+
+The marginal first claim should be reported too. A reader who sees only the
+combined test cannot tell that one of the three absences was shaky, and that is
+the kind of thing that ought to be visible.
+:::
+
+## The diagram that did not survive {.smaller}
+
+Go back to Part 1 and take the strong version of Story B, where slope acts on
+richness **only** through substrate. One absence, so one claim.
+
+::: {.type-it}
+```{r}
+claim_strict <- c("slope vs richness" =
+                    p_of(glm.nb(richness ~ hard + slope, data = rov), "slope"))
+
+signif(claim_strict, 3)
+signif(fisher_c(claim_strict), 3)
+```
+:::
+
+Rejected, decisively. Slope keeps a direct path to richness after substrate is
+accounted for, which is what the arithmetic in Part 3 already showed: the direct
+route was three times the indirect one.
+
+::: {.plain}
+Substrate is part of the story and not the whole story. The test is what tells
+you which of those two you are looking at.
+:::
+
+# Part 5: A chain the data reject {background-color="#f0f4f8"}
+
+## Temperature looks like the answer {.smaller}
+
+The obvious deep-sea story: deeper water is colder, cold slows everything down,
+so richness falls with depth **because** of temperature.
+
+::: {.type-it}
+```{r}
+round(cor(rov$depth, rov$temp), 3)
+round(summary(glm.nb(richness ~ temp, data = rov))$coefficients, 5)
+```
+:::
+
+Depth predicts temperature about as hard as anything in ecology does, and
+temperature predicts richness at p below 0.0001. Two strong links. The chain
+looks made.
+
+## Now put depth in {.smaller}
+
+::: {.type-it}
+```{r}
+round(summary(glm.nb(richness ~ temp + depth, data = rov))$coefficients, 5)
+```
+:::
+
+. . .
+
+Temperature collapses to p = 0.41. Depth stands. Whatever depth is doing to
+these animals, it is not doing it by being cold.
+
+::: {.plain}
+Temperature looked important because it is a stand-in for depth. Put the real
+variable in and the stand-in has nothing left to explain.
+:::
+
+## The same thing, as a d-separation test {.smaller}
+
+The chain `depth -> temp -> richness` has one absence: no arrow from depth
+straight to richness.
+
+::: {.type-it}
+```{r}
+claim_temp <- c("depth vs richness" =
+                  p_of(glm.nb(richness ~ temp + depth, data = rov), "depth"))
+
+round(fisher_c(claim_temp), 5)
+```
+:::
+
+Rejected at p = 0.0004. Which is why, in the diagram we kept, temperature hangs
+off depth as a dead end and no arrow runs from it to richness.
+
+::: {.notes}
+Worth noticing how ordinary the test turned out to be. It is the same `glm.nb()`
+line, read for the p-value of the term you claimed was unnecessary. A d-sep test
+is not a new piece of statistics; it is a familiar piece pointed at the absences
+rather than the presences.
+:::
+
+## What that episode is actually about {.smaller}
+
+Nothing here was a mistake in the statistics. Each step was reasonable:
+
+1. A plausible mechanism, from real biology
+2. Both links individually strong
+3. A conclusion that would have gone into a paper
+
+The only thing that caught it was **fitting the whole diagram and testing what
+it left out**. One regression at a time cannot catch this, because one
+regression at a time is what produced it.
+
+# Part 6: Comparing whole diagrams {background-color="#f0f4f8"}
+
+## AIC, for diagrams {.smaller}
+
+Lecture 18's trade comes back unchanged: fit, against the number of parameters
+you spent. Shipley's version uses Fisher's C in place of the deviance.
+
+$$\mathrm{AIC} = C + 2K$$
+
+where $K$ counts every coefficient in every component model, plus the negative
+binomial's extra variance parameter.
+
+::: {.plain}
+A diagram that explains its absences well, without using many parameters, wins.
+Same bargain as always.
+:::
+
+## Is temperature worth an arrow? {.smaller}
+
+Compare the diagram we kept against the same diagram with `temp -> richness`
+added. Adding it costs a parameter and removes one claim from the basis set.
+
+::: {.type-it}
+```{r}
+K_a <- length(coef(m_temp)) + length(coef(m_slope)) +
+       length(coef(m_hard)) + length(coef(m_rich)) + 1   # +1 for theta
+
+fc_a <- fisher_c(claims)                 # temperature a dead end
+fc_b <- fisher_c(claims[1:2])            # temp -> richness added
+
+round(c(A = unname(fc_a["C"]) + 2 * K_a,
+        B = unname(fc_b["C"]) + 2 * (K_a + 1)), 2)
+```
+:::
+
+. . .
+
+A is lower, so the arrow does not pay for itself. But the gap is 1.27, and
+Lecture 18's rule was that **within 2 is a tie**.
+
+## When AIC will not decide {.smaller}
+
+So AIC leans toward leaving temperature out and refuses to insist. Which is the
+honest answer: 739 subtransects cannot separate these two diagrams.
+
+What breaks the tie is the d-separation test and the biology, not another
+statistic:
+
+- the claim `temp vs richness` sat at p = 0.70, nowhere near needing an arrow
+- temperature spans 2.4 to 8.3 degrees across the whole dataset, and most of
+  that range is explained by depth
+
+. . .
+
+Report the tie. A reader who is told A won by 1.27 learns something false about
+how much the data knew.
+
+# Part 7: Your turn {background-color="#f0f4f8"}
+
+## Does salinity belong? {.smaller}
+
+Salinity is in `rov` and has been ignored. Decide whether richness needs an
+arrow from it.
+
+The absence to test is: **salinity and richness, accounting for everything
+already pointing into richness.**
+
+::: {.type-it}
+```{r}
+#| eval: false
+# 1. richness ~ salinity on its own. Is salinity related to richness at all?
+
+# 2. now the claim: add sal to the richness component model, which already has
+#    depth, slope and hard, and pull its p-value out with p_of()
+
+# 3. run that one p-value through fisher_c(). Does the absence survive?
+```
+:::
+
+Work it before turning the page.
+
+## The answer {.smaller}
+
+::: {.type-it}
+```{r}
+round(p_of(glm.nb(richness ~ sal, data = rov), "sal"), 4)
+
+claim_sal <- c("sal vs richness" =
+                 p_of(glm.nb(richness ~ depth + slope + hard + sal,
+                             data = rov), "sal"))
+round(fisher_c(claim_sal), 3)
+```
+:::
+
+p = 0.23, so the absence survives: no arrow needed. On its own salinity was
+already borderline at 0.098, and conditioning finishes it off. Same shape as
+temperature, in a milder form.
+
+. . .
+
+A warning if you now want to draw salinity into the full diagram: salinity is
+tied hard to depth and slope, and adding the box brings **four new absences**
+with it. The whole diagram is then rejected, on claims that have nothing to do
+with richness. Every box you add is tested against every other.
+
+# Part 8: What the arrows are not {background-color="#f0f4f8"}
+
+## The arrows are assumptions you brought {.smaller}
+
+The test checks whether the data are **consistent** with your diagram. It does
+not check whether the diagram is true, and nothing in this supplement licenses
+the word "causes" in a sentence about observational data.
+
+. . .
+
+The strongest honest claim from Part 4 is this: if slope, substrate and depth
+act the way we assumed, then what we see is unsurprising. Flip the arrows and
+much of it still fits.
+
+::: {.plain}
+A diagram that survives is a diagram the data could not knock down. That is a
+much weaker thing than a diagram the data support.
+:::
+
+## Equivalent diagrams {.smaller}
+
+Different diagrams can imply exactly the same absences, and then no amount of
+data separates them. `A -> B -> C` and `A <- B <- C` make the same single claim.
+
+Ours has a real instance of this. Does slope expose bedrock, or does bedrock
+resist erosion and stay steep?
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+draw_paths(pos3, data.frame(from = c("hard", "hard"),
+                            to   = c("slope", "richness")))
+```
+
+Geologically the second is at least as defensible. Statistically the two are
+indistinguishable here. The choice was made by argument, and it should be
+labeled as such in anything you write.
+
+## The tautology trap {.smaller}
+
+`rov` could have used Shannon diversity instead of richness. Both are in the
+file, and they correlate at 0.83, because one is computed from the other.
+
+::: {.type-it}
+```{r}
+round(cor(tosca_rov$S, tosca_rov$H., use = "complete.obs"), 3)
+```
+:::
+
+An arrow from richness to Shannon diversity would fit beautifully and mean
+nothing. It is arithmetic, not ecology.
+
+::: {.plain}
+Before you draw an arrow, check that the two boxes could in principle disagree.
+If one is calculated from the other, the arrow is guaranteed and worthless.
+:::
+
+::: {.notes}
+This failure is common and it is embarrassing in print. Watch for it with
+proportions and their denominators, indices and their components, biomass and
+abundance when biomass was derived from abundance, and anything per unit area
+regressed on area.
+:::
+
+## These 739 rows are not 739 samples {.smaller}
+
+::: {.type-it}
+```{r}
+table(tosca_rov$Dive.no)
+```
+:::
+
+Five dives. Subtransects within one dive share a site, a day, an operator and a
+camera, so they are nothing like independent, and every p-value in this
+supplement is more confident than it has any right to be.
+
+The fix is a random effect for dive, which piecewise SEM does support. Five
+groups is too few to estimate one well, so the honest move here is to say so
+rather than to patch it.
+
+::: {.notes}
+This is why the supplement never claims an effect is "significant" without
+context. The point of the analysis is the structure, and the structure is
+unusually robust to this, since the comparison between substrate types happens
+within dives as well as between them. The exact p-values are not robust to it at
+all.
+:::
+
+## Confounders you did not measure {.smaller}
+
+Every missing-arrow test conditions on **the variables in your diagram**. A
+cause of both substrate and richness that nobody measured, such as current speed
+or food supply, is invisible to the whole procedure and will not show up in
+Fisher's C.
+
+. . .
+
+This is the limit of the method, and it is not a small one. It is also why
+"consistent with the data" is the strongest phrase available: the data can rule
+diagrams out, and can never rule the missing variable in.
+
+# Part 9: Where this goes next {background-color="#f0f4f8"}
+
+## Latent variables, which we did not do {.smaller}
+
+Every box here was something measured with an instrument. The other SEM
+tradition allows boxes for things you **cannot** measure, estimated from several
+indicators at once: "habitat quality" from substrate, rugosity and current;
+"condition" from three morphometrics.
+
+That is a genuinely different tool, and it brings its own apparatus: a
+measurement model per latent variable, identification rules, and global fit
+indices.
+
+It also wants several hundred observations per latent variable and indicators
+chosen in advance, which is why it belongs in a different module and not at the
+end of this one.
+
+## The package, and why this was done by hand {.smaller}
+
+`piecewiseSEM` automates everything in Part 4: it builds the basis set, runs the
+claims and prints Fisher's C.
+
+Not a type-and-run block, for the reason directly below it:
+
+```{r}
+#| eval: false
+# needs R 4.5.0 or newer
+library(piecewiseSEM)
+
+mod <- psem(
+  lm(temp ~ depth, data = rov),
+  lm(slope ~ depth, data = rov),
+  glm(hard ~ depth + slope, family = binomial, data = rov),
+  glm.nb(richness ~ depth + slope + hard, data = rov),
+  data = rov
+)
+summary(mod)
+```
+
+As of October 2026 the CRAN version declares **R (>= 4.5.0)**, and this course
+runs on 4.4.1, so `install.packages("piecewiseSEM")` here just reports that the
+package is unavailable. Older versions sit in the CRAN archive, but installing
+one means building its dependencies from source, which is a long detour for a
+convenience function.
+
+## Which is not really a loss {.smaller}
+
+The hand-built version is forty lines of code you can read, it runs on any R
+from the last decade, and it will not break when a package changes.
+
+More to the point: the basis set is the method. A function that builds it for
+you is convenient once you know what it is building, and a black box before
+that.
+
+. . .
+
+When your R is new enough, use the package. You will know what its output means,
+which is the reason to do it the long way once.
+
+# Taking it with you {background-color="#f0f4f8"}
+
+## What this buys you {.smaller}
+
+1. **Draw the diagram before fitting anything.** The arrows you leave out are
+   the hypotheses.
+2. **A variable can be a response and a predictor.** That is the only structural
+   idea here.
+3. **Multiply along a path, add across paths.** Check the pieces against the
+   simple regression; they must agree exactly.
+4. **Standardize before comparing arrows**, never before interpreting units.
+5. **Each response gets the model its data deserve.** Counts that are
+   overdispersed get a negative binomial, as in Lecture 12.
+6. **Test the absences, as a set**, with Fisher's C, and remember that a large
+   p-value is the good outcome.
+7. **A surviving diagram has not been proven.** Say "consistent with".
+
+## Which tool, when {.smaller}
+
+| You want to know | Use | In plain words |
+|---|---|---|
+| Does X relate to Y? | regression | do they move together |
+| Does X act on Y **through** Z? | **path analysis** | split the effect into routes and compare them |
+| Is my whole picture consistent? | **d-separation**, Fisher's C | is anything I called absent plainly there |
+| Which of two pictures? | **AIC**, $C + 2K$ | same trade as Lecture 18; within 2 is a tie |
+| Is the picture true? | **not available** | no statistic does this |
+
+## Where it fits {.smaller}
+
+- **Your final project**, if your data are observational and multi-variable.
+  This is the one place in the course where a question about mechanism is
+  allowed, and a two-box mediation is usually enough.
+- **Reading papers.** SEM figures are everywhere in ecology and most readers nod
+  at them. You can now ask the two questions that matter: which arrows are
+  missing, and was the fit statistic reported the right way round.
+- **Lecture 24**, as a reason the GLM choices matter: a component model with the
+  wrong family makes every claim in the diagram wrong at once.
+
+## Going further {.smaller}
+
+- **Shipley (2009)**, where the d-separation test comes from, and still the
+  clearest statement of it: <https://doi.org/10.1890/08-1034.1>
+- **Shipley (2013)**, the AIC for these models:
+  <https://doi.org/10.1890/12-0976.1>
+- **Lefcheck (2016)**, the `piecewiseSEM` paper:
+  <https://doi.org/10.1111/2041-210X.12512>
+- **`piecewiseSEM` book**, free online and the best worked examples:
+  <https://jslefche.github.io/sem_book/>
+- **Grace (2006)**, *Structural Equation Modeling and Natural Systems*, the
+  ecology-facing book on the covariance-based tradition
+
+. . .
+
+If you want to try this on your own data, bring the diagram to office hours
+before you fit anything. The diagram is where these go wrong, and it is much
+cheaper to fix on paper.

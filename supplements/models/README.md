@@ -185,7 +185,16 @@ overlaid. Monitors for variance / mean and the fitted `size`.
 variance over mean above 1, and at matched settings (covey size 12, habitat
 variation 1.4) they give the same variance over mean, near 7. The bobwhite data
 have variance over mean near 10, and that number alone cannot tell you whether
-bobwhite travel in coveys or whether some routes are simply better.
+the birds are clumped by grouping or by habitat.
+
+**Corrected 2026-10-22: for the course's bobwhite data, it is habitat.** The
+counts are from the Breeding Bird Survey, run in June, when bobwhite have paired
+off to breed; coveys form in fall and winter. So the covey mechanism is real
+biology but cannot explain these counts, and the Info tab now says so and turns
+it into an exercise: what the season of the survey rules out, which the variance
+cannot. Coveys would be the right story for a winter count. Lecture 18's
+two-species comparison fits the same conclusion: bobwhite are far patchier than
+cardinals across routes, and the notes explain that with habitat.
 
 **Corrected after running the model, 2026-10-19.** The spec originally said the
 two mechanisms produce *the same distribution*. They do not, quite. Variable

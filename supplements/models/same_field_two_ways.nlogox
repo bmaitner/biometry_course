@@ -232,13 +232,15 @@ Raise either one and variance / mean climbs well above 1. The red line stops fit
 
 - Find a covey size and a habitat variation that give the same variance / mean. Can you tell the two fields apart by looking at the field? By the histogram? Which bar gives it away?
 - Turn mean-per-quadrat down to 1. What happens to the number of empty quadrats under each mechanism?
-- The Florida bobwhite counts used in this course have a variance / mean of about 10. Which mechanism produced that? (Trick question: from variance / mean alone, you cannot know.)
+- The Florida bobwhite counts used in this course have a variance / mean of about 10. From variance / mean alone, you cannot tell which mechanism produced that. But the counts come from the Breeding Bird Survey, run in June. What are bobwhite doing in June? Which mechanism does that rule out, and would your answer change for a winter count?
 
 ## CONNECTION TO THE COURSE
 
-Bobwhite travel in coveys of roughly 10 to 15 birds, and they also live only where there is suitable habitat. Both mechanisms are real, and both are acting on the data at once.
+Both mechanisms are real for bobwhite, but not at the same time of year. In fall and winter bobwhite live in coveys of roughly 10 to 15 birds. In spring the coveys break up and the birds pair off to breed.
 
-The shape of the distribution, especially the number of zeros, carries a little information about which mechanism is at work. But with real sample sizes, and both mechanisms acting at once, that signal is weak. Telling them apart usually needs **different data**: watching whether birds arrive together, or measuring habitat directly. That is a general point about models. A good fit to one kind of data can be nearly as good for several different explanations.
+The Florida counts in this course come from the Breeding Bird Survey, which is run in June. Coveys have broken apart by then, so they cannot explain the clumping in those counts. Patchy habitat can: bobwhite need open grassland, old fields and fire-maintained pine, which are scattered across the state, so some routes have many birds and others none. A winter count of the same birds could show both mechanisms at once.
+
+That is a lesson in itself: knowing **when and how the data were collected** can rule out an explanation that the numbers alone cannot. The shape of the distribution, especially the number of zeros, carries a little information too, but with real sample sizes, and two mechanisms possibly acting at once, that signal is weak. Telling them apart usually needs **different data**: watching whether birds arrive together, or measuring habitat directly. That is a general point about models. A good fit to one kind of data can be nearly as good for several different explanations.
 
 The **fitted size** monitor is the negative binomial's size parameter. Small values mean strong clumping. It grows without limit as the counts approach a Poisson.
 
