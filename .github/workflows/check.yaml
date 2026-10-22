@@ -51,8 +51,16 @@ jobs:
       # plus dplyr and tibble for make_class_examples.R. The first step below
       # fails with the missing names if it drifts again.
       #
+      # deck_packages() sweeps supplements/ as well as lectures/ since
+      # 2026-10-22. It also reports MASS, which is not listed here because MASS
+      # is a recommended package and ships with R itself.
+      #
       # Not renv::restore(): the lockfile pulls sf and terra for the data
       # download scripts, and building those means GDAL and PROJ for no gain.
+      #
+      # biometrydata, the course data package, is installed from this checkout
+      # (local::) rather than from GitHub, so the check tests the package as it
+      # is in this commit. The checker skips the install lines students type.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
@@ -60,6 +68,7 @@ jobs:
             any::bbmle
             any::emdbook
             any::reprex
+            local::./biometrydata
 
       # Same script you can run locally with:
       #   Rscript R_scripts/ci_checks.R

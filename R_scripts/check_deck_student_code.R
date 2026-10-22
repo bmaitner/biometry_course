@@ -31,6 +31,44 @@
 # verified end to end by rendering its companion *_exercise_solutions.qmd, where
 # the blanks are filled in and every chunk is evaluated.
 
+# Installing is a step students take once, on their own machine; it is not part
+# of the code path being checked. A block that tells students to run
+# install.packages() or remotes::install_github() would otherwise install
+# packages every time the checker runs, including in CI. Those lines are
+# dropped before a block is run or scanned for the packages it needs; the
+# packages themselves are installed by the CI workflow.
+
+# Where the decks live. Supplements are checked on the same terms as lectures:
+# nobody is in the room when one is read, so code that has quietly stopped
+# working there is worse than in a lecture, not better. Added 2026-10-22 with
+# the first supplement that has type-and-run blocks.
+
+deck_dirs <- function() c("lectures", "supplements")
+
+all_decks <- function(dirs = deck_dirs()) {
+  unlist(lapply(dirs[dir.exists(dirs)],
+                function(d) list.files(d, pattern = "[.]qmd$", full.names = TRUE)),
+         use.names = FALSE)
+}
+
+drop_install_lines <- function(lines) {
+
+  keep <- rep(TRUE, length(lines))
+  depth <- 0    # open parentheses left by an install call spanning several lines
+
+  for (i in seq_along(lines)) {
+    starts <- grepl("install[.]packages[(]|install_github[(]", lines[i])
+    if (starts || depth > 0) {
+      keep[i] <- FALSE
+      code <- sub("#.*$", "", lines[i])
+      depth <- depth + lengths(regmatches(code, gregexpr("[(]", code))) -
+                       lengths(regmatches(code, gregexpr("[)]", code)))
+    }
+  }
+
+  lines[keep]
+}
+
 check_deck <- function(path, verbose = TRUE) {
 
   src <- paste(readLines(path, warn = FALSE), collapse = "\n")
@@ -48,6 +86,7 @@ check_deck <- function(path, verbose = TRUE) {
   bodies <- sub("(?s)^.*?```\\{r\\}\\n", "", hits, perl = TRUE)
   bodies <- sub("(?s)```\\s*$", "", bodies, perl = TRUE)
   bodies <- lapply(strsplit(bodies, "\n"), function(x) x[!grepl("^#\\|", x)])
+  bodies <- lapply(bodies, drop_install_lines)
 
   env <- new.env(parent = globalenv())
   pdf(NULL)
@@ -135,8 +174,7 @@ check_deck <- function(path, verbose = TRUE) {
 
 check_all_decks <- function() {
 
-  decks <- list.files("lectures", pattern = "[.]qmd$", full.names = TRUE)
-  invisible(vapply(decks, check_deck, logical(1)))
+  invisible(vapply(all_decks(), check_deck, logical(1)))
 
 }
 
@@ -162,14 +200,26 @@ check_deck_characters <- function(path) {
     return(invisible(FALSE))
   }
 
+  # A lost backslash before t is a tab, which the test above lets through
+  # because tabs are legal in a source file. Inside math they never are: \text
+  # and \times become a tab plus "ext" and "imes", and the slide shows garbled
+  # italics. Happened on 2026-10-21, in Lecture 18's AIC formula.
+  lines <- readLines(path, warn = FALSE)
+  tabbed_math <- which(grepl("\t", lines) & grepl("[$]", lines))
+
+  if (length(tabbed_math) > 0) {
+    message(sprintf("%s: tab character inside math on line(s) %s",
+                    basename(path), paste(tabbed_math, collapse = ", ")))
+    return(invisible(FALSE))
+  }
+
   invisible(TRUE)
 
 }
 
 check_all_characters <- function() {
 
-  decks <- list.files("lectures", pattern = "[.]qmd$", full.names = TRUE)
-  ok <- vapply(decks, check_deck_characters, logical(1))
+  ok <- vapply(all_decks(), check_deck_characters, logical(1))
   if (all(ok)) message("no stray control characters in any deck")
   invisible(ok)
 
@@ -187,9 +237,9 @@ check_all_characters <- function() {
 # definition that matters for CI. Added 2026-10-18, after the check workflow
 # failed on packages its hand-written list had never heard of.
 
-deck_packages <- function(dir = "lectures") {
+deck_packages <- function(dirs = deck_dirs()) {
 
-  decks <- list.files(dir, pattern = "[.]qmd$", full.names = TRUE)
+  decks <- all_decks(dirs)
   pattern <- "(?s)::: \\{\\.type-it\\}\\s*```\\{r\\}\\n(.*?)```"
 
   pkgs <- character(0)
@@ -200,7 +250,8 @@ deck_packages <- function(dir = "lectures") {
     hits <- regmatches(src, gregexpr(pattern, src, perl = TRUE))[[1]]
     if (length(hits) == 0) next
 
-    code <- paste(hits, collapse = "\n")
+    code <- paste(drop_install_lines(strsplit(paste(hits, collapse = "\n"), "\n")[[1]]),
+                  collapse = "\n")
 
     # library(x) and require(x)
     m <- regmatches(code, gregexpr("(?:library|require)[(]([A-Za-z.][A-Za-z._0-9]*)",
@@ -218,9 +269,9 @@ deck_packages <- function(dir = "lectures") {
 # Fail early, and say exactly what to install, rather than letting the deck
 # checker report a confusing "object not found" twenty blocks later.
 
-check_deck_packages <- function(dir = "lectures") {
+check_deck_packages <- function(dirs = deck_dirs()) {
 
-  needed <- deck_packages(dir)
+  needed <- deck_packages(dirs)
   missing <- needed[!needed %in% rownames(installed.packages())]
 
   if (length(missing) > 0) {
