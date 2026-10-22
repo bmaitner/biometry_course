@@ -19,7 +19,7 @@ Model fitting and comparison is central to hypothesis testing as well as modelli
 
 ## Assignment Format
 
-Part 1 will be easiest if submitted as an .R file (since it requires modification of an existing .R file). Part 2 can be submitted as either .R or .Rmd.
+Part 1 will be easiest if submitted as an .R file (since it requires modification of an existing .R file), but you're also free to paste the code into an .Rmd if you prefer. Part 2 can be submitted as either .R or .Rmd.
 
 Assignments can be submitted in 2 ways:
 
@@ -42,11 +42,21 @@ Students will be graded on both meeting the criteria outlined in the overview as
 
 # Part 1: Model modification and selection
 
-I've prepared three different models (1a, 1b, 1c) using different data and distribution types. The starting script is here:
+I've prepared three biological questions (1a, 1b, 1c), each with its own data and a starting model that is already written and fitted. The starting script is here:
 
 <https://github.com/bmaitner/biometry_course/blob/main/assignments/assignment_3/assignment_3.R>
 
-Your job is to create alternate versions of each model, compare their AICs using the function `AICtab()`, and select which model (or models) you think are best for each of the three. For each, you should start with the code I provided, add multiple alternate models, compare their AICs, and explain which model(s) you think is best and why. The starting models I have are deliberately over-fit, so you can create alternate models simply by removing different parameters if you like. You're also free to add parameters.
+| | Question | Data | Starting model |
+|----|----|----|----|
+| 1a | Do two species of bean beetle compete, and how strongly? | Bean beetle competition experiments | A Beverton-Holt competition model, negative binomial |
+| 1b | Do migratory hawks and eagles have longer wings for their size? | AVONET, 249 species of hawks and eagles | Wing length scaling with body mass, lognormal |
+| 1c | What explains how many fish species a diver records on a reef? | NOAA reef fish surveys, Florida | Richness against depth, visibility, year, region and protection, Poisson |
+
+The data come from the course data package, `biometrydata`. The script shows how to install it, and gives a line that downloads each dataset directly if you can't.
+
+Your job is to create alternate versions of each starting model, compare their AICs using the function `AICtab()`, and explain which model (or models) you think are best for each of the three and why. Each starting model has something worth questioning: parameters that may not be needed, or a distribution that may not fit. You can build alternatives by removing parameters, but you're also free to add parameters, change the shape of the function, or change the distribution. The script lists questions to get you started.
+
+There is not always a single right answer. What matters is that your alternatives are sensible, your comparison is fair, and your explanation connects the model you keep to the biology.
 
 # Part 2: Focal dataset model selection
 
