@@ -76,16 +76,21 @@ the mechanism that makes "write the notes for the reader" pay off twice.
 They are not one list. Some are useful to a student this semester; others have
 enough depth to anchor weeks of a future course. A few are both.
 
-| Topic | Useful this semester | Spine of a Biometry II |
-|---|---|---|
-| Figures worth showing: palettes, `ggridges`, `ggbump`, `patchwork`, model predictions | **High** | Medium |
-| Where distributions come from: simulating the generating process | **High** | Medium |
-| Getting messy data into shape | **High** | Medium |
-| Finding data, and pulling it with APIs | Medium, mistimed this year | Medium |
-| Geospatial: `sf`, rasters, making a decent map | Low | **High** |
-| Competition and other dynamic models | Low | **High** |
-| Package development: `devtools`, docs, tests | Low | **High** |
-| Reproducible pipelines | Low | Medium |
+| Topic | Students' rank (Oct 20) | Useful this semester | Spine of a Biometry II |
+|---|---|---|---|
+| Figures worth showing: palettes, `ggridges`, `ggbump`, `patchwork`, model predictions | built | **High** | Medium |
+| Geospatial: `sf`, rasters, making a decent map | **1** | Low | **High** |
+| Package development: `devtools`, docs, tests | **2** | Low | **High** |
+| Getting messy data into shape | **3** | **High** | Medium |
+| Reproducible pipelines | **4** | Low | Medium |
+| Where distributions come from: simulating the generating process | wanted, unranked | **High** | Medium |
+| Finding data, and pulling it with APIs | wanted, unranked | Medium, mistimed this year | Medium |
+| Competition and other dynamic models | wanted, unranked | Low | **High** |
+| **Phylogenetics** (new request) | requested | Medium | **High** |
+| **Genetics** (new request) | requested | Medium | **High** |
+
+"Wanted, unranked" means the students said they wanted all of the topics, and
+these were not among the four they put first.
 
 Read the right-hand column as a draft syllabus. Geospatial, dynamic models and
 package development are each worth several weeks, and the last of those is
@@ -118,8 +123,13 @@ took ten lines of `tapply()` and a `data.frame()` build, and that was with clean
 data and a worked example on the screen. On their own data, with no example, this
 is the step that stalls people.
 
-**Then the Biometry II spine**, one at a time, in whatever order the students'
-answers suggest. There is no deadline on those, which is the point.
+**Then, in the order the students asked for them (2026-10-20):** geospatial,
+package development, reproducible pipelines, then the rest, with phylogenetics
+and genetics added to the list. "Getting messy data into shape" was their third
+choice, so it keeps its place above. "Where distributions come from" was not in
+their top four; Model 3 is built, and whether to finish the module before
+starting geospatial is a judgment call: it serves this semester's material,
+geospatial serves what they asked for.
 
 ## Anatomy of a supplement
 
@@ -160,12 +170,31 @@ Unsupervised code that has quietly stopped working is worse than no supplement.
 - A line in the final project instructions for the ones that serve it
 - In office hours, when someone asks: "that is Supplement 2"
 
-## Before building past the first two: ask them
+## What the students said
 
-**Lecture 17, Tuesday October 20, is the mid-semester check-in**, already on the
-syllabus. One slide with the topic list, have them pick two. Three minutes, in a
-class that already has the slot, and it replaces a guess with a ranked list.
+Asked at the mid-semester check-in, Lecture 17, 2026-10-20, out loud: "which (if
+any) are most useful?", "which would make you sign up for a second biometry
+course?", and "any other requests?".
 
-Worth asking in a way that separates the two audiences: "which would help you
-this semester" and "which would make you sign up for a second course" are
-different questions, and the second one is the more valuable answer.
+- **They want all of them.** Ranked: geospatial, package development, messy
+  data, reproducible pipelines, then the rest.
+- **Two new topics:** phylogenetics and genetics.
+
+Notes on the two new ones, for when they are specified:
+
+- **Phylogenetics** has a hook already in the course. Assignment 3's hawk model
+  (Part 1b) treats 249 species as independent data points, and the starter script
+  says outright that related species are not. A module on phylogenetic
+  comparative methods, reading a tree into R and refitting that model with the
+  non-independence accounted for, answers a caveat students have already met.
+  It is also a natural partner to the geospatial module: both are about data
+  points that are not independent.
+- **Genetics** fits the likelihood half of the course unusually well: allele
+  frequencies and Hardy-Weinberg are binomial and multinomial likelihoods, the
+  same machinery as Lectures 15 to 18 with a different biology. Which part of
+  genetics the students mean (population genetics, sequence data, quantitative
+  genetics) is worth asking before building; the answer changes the module
+  completely.
+
+The ranking reorders the build order above: the Biometry II spine is no longer
+"whatever order, no deadline", it has a queue.

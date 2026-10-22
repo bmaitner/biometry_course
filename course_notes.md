@@ -405,6 +405,32 @@ told them to type.
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
 
+**Mid-semester check-in, Lecture 17 (2026-10-20).** Asked out loud rather than
+on cards, which has worked before. Two results:
+
+1. **The coding is going well; the statistics need simplifying, with recaps
+   throughout.** Read alongside the Lecture 15 note below: the scaffolded code is
+   working, so the bottleneck has moved to the statistical ideas. Response,
+   starting with Lecture 18:
+
+   - A **"the story so far"** slide near the start of each statistics lecture:
+     the chain of ideas to date, one plain sentence each, ending on what today
+     adds to it.
+   - An **"In plain words"** box on every slide that introduces a statistical
+     idea: one sentence, no symbols, saying what it means and what to do with it.
+   - A **"which tool, when"** summary at the end, so the lecture closes on how
+     the new tool sits next to the old ones rather than on the last technique.
+
+   Lectures 15 to 17 (likelihood, complex functions, confidence intervals) are the
+   ones to retrofit first when they are next revised; they carry the most new
+   statistics per slide.
+
+2. **Optional supplements: they want all of them.** Ranked interest, highest
+   first: geospatial (D), writing an R package (F), getting messy data into
+   shape (B), reproducible pipelines (G), then "actually all of them". Two new
+   requests: a **phylogenetics** module and a **genetics** module. The plan and
+   build order in `supplements/README.md` are updated to match.
+
 **Lecture 15 went well, and the redacted exercises are why.** Brian's report
 after teaching it: the blanked-out activities kept students busy, held their
 interest, and visibly excited them when they worked it out.
