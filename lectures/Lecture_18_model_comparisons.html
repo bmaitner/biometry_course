@@ -2350,7 +2350,7 @@ display:block!important;
 <td>8</td>
 </tr>
 <tr class="even">
-<td>counts halve with every … developed</td>
+<td>development that halves the count</td>
 <td>37%</td>
 <td>9%</td>
 </tr>
@@ -2463,6 +2463,91 @@ display:block!important;
 <p>The first rule is the one that will bite in the assignment. The trap is filtering the data differently for different models, for example running na.omit() on only the columns each model uses. A model fitted to fewer rows has a lower NLL simply because it is adding up fewer terms, and AIC will happily crown it. The hawk model in the starter script runs na.omit() once, up front, for this reason; they should keep that when they build alternatives.</p>
 <p>The second rule catches people who log the response to make it look normal, fit that, and compare it by AIC with a model of the raw response. The fix is to keep the response the same and change the distribution, for example a lognormal on the raw values, which is what model 1b does with wing length.</p>
 <p>mle2 counts parameters correctly, including those created by parameters = …: m_all has six.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
+<section id="comparing-distributions" class="slide level2 smaller">
+<h2>Comparing distributions</h2>
+<p>The bobwhite development model from earlier, with three different distributions:</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">distribution</th>
+<th style="text-align: right;">parameters</th>
+<th style="text-align: right;">AIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">negative binomial</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">9154.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Poisson</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">16180.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">normal</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">10215.1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>The negative binomial wins by about <strong>7,000</strong> units</li>
+<li>Both count models find the <strong>same curve</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> = -3.2 and -3.3. The distribution changes the fit, not the curve</li>
+</ul>
+</div>
+<div class="fragment">
+<p>The normal looks better than the Poisson. <strong>That comparison is not allowed.</strong> Next slide.</p>
+<aside class="notes">
+<p>The 7,000 units are Lecture 15’s variance check turned into a number: the counts are far more variable than a Poisson allows, and the negative binomial’s extra parameter, k, is worth it many times over.</p>
+<p>The third row is the trap, deliberately left in. R computes an AIC for a normal model of these counts without complaint, and it appears to beat the Poisson. Let the room notice that before explaining why it is meaningless.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</div>
+</section>
+<section id="rules-for-comparing-distributions" class="slide level2 smaller">
+<h2>Rules for comparing distributions</h2>
+<ul>
+<li><strong>Discrete with discrete, continuous with continuous.</strong> A count model gives the <strong>probability</strong> of each count; a normal gives a <strong>density</strong>. Their AICs are in different units, so the normal row on the last slide cannot be compared</li>
+<li><strong>Same response, same scale.</strong> For a measurement, try <code>dlnorm(y)</code> against <code>dgamma(y)</code>, never <code>dnorm(log(y))</code> against <code>dgamma(y)</code></li>
+<li><strong>Count the distribution’s own parameter</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> for the negative binomial, the standard deviation for the normal</li>
+<li><strong>Poisson against negative binomial: use AIC</strong>, not the likelihood ratio test</li>
+</ul>
+<div class="plain">
+<p>You can let AIC choose the distribution, as long as every candidate describes the same numbers in the same way: all counts, or all measurements.</p>
+</div>
+<aside class="notes">
+<p>On the first rule: a Poisson probability is a number between 0 and 1. A normal density depends on the units of measurement and can exceed 1, so its log-likelihood can be shifted just by measuring in different units. Different currencies; no exchange rate.</p>
+<p>The second rule is the previous slide’s “same response, same scale”, applied to distributions. dnorm on log(y) is a likelihood for a different response.</p>
+<p>Why not the test for Poisson against negative binomial: the Poisson is the negative binomial with k at infinity, the edge of what k can be, and the chi-squared approximation breaks down at an edge. AIC has no such problem.</p>
+<p>For the assignment: Part 1c starts as a Poisson on reef richness, and this slide is the licence to change it.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;

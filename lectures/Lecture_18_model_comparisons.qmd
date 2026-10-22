@@ -99,6 +99,17 @@ m_int   <- mle2(count ~ dnbinom(mu = mu0 * exp(b * frac_built + r * elapsed +
                 start = list(mu0 = 15, b = -3, r = -0.03, i = 0, k = 1.4),
                 data = counts)
 
+# the development model under three distributions, for the comparing-
+# distributions slide (log scale, so no NaN warnings)
+dist_po <- mle2(count ~ dpois(lambda = exp(log_mu0 + b * frac_built)),
+                start = list(log_mu0 = 2.5, b = -3), data = counts)
+dist_nb <- mle2(count ~ dnbinom(mu = exp(log_mu0 + b * frac_built),
+                                size = exp(log_k)),
+                start = list(log_mu0 = 2.5, b = -3, log_k = 0), data = counts)
+dist_nm <- mle2(count ~ dnorm(mean = exp(log_mu0 + b * frac_built),
+                              sd = exp(log_s)),
+                start = list(log_mu0 = 2.5, b = -3, log_s = 2), data = counts)
+
 # two species on one development gradient, zeros included
 birds <- read.csv("../data/class_examples/bbs_two_species.csv")
 birds$species <- factor(birds$species, levels = c("cardinal", "bobwhite"))
@@ -1115,7 +1126,7 @@ answers it in numbers.
 | From `m_all` | cardinal | bobwhite |
 |---|---|---|
 | birds where nothing is built | `r round(bird_par["cardinal", "mu0"])` | `r round(bird_par["bobwhite", "mu0"])` |
-| counts halve with every ... developed | `r round(bird_par["cardinal", "halving"])`% | `r round(bird_par["bobwhite", "halving"])`% |
+| development that halves the count | `r round(bird_par["cardinal", "halving"])`% | `r round(bird_par["bobwhite", "halving"])`% |
 | $k$: smaller means more variable | `r round(bird_par["cardinal", "k"], 2)` | `r round(bird_par["bobwhite", "k"], 2)` |
 
 . . .
@@ -1198,6 +1209,71 @@ the raw values, which is what model 1b does with wing length.
 
 mle2 counts parameters correctly, including those created by parameters = ...:
 m_all has six.
+:::
+
+## Comparing distributions {.smaller}
+
+The bobwhite development model from earlier, with three different distributions:
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(
+  distribution = c("negative binomial", "Poisson", "normal"),
+  parameters = c(3, 2, 3),
+  AIC = round(c(AIC(dist_nb), AIC(dist_po), AIC(dist_nm)), 1)))
+```
+
+. . .
+
+- The negative binomial wins by about **`r round((AIC(dist_po) - AIC(dist_nb)) / 1000)`,000** units
+- Both count models find the **same curve**: $b$ = `r round(coef(dist_nb)["b"], 1)` and
+  `r round(coef(dist_po)["b"], 1)`. The distribution changes the fit, not the curve
+
+. . .
+
+The normal looks better than the Poisson. **That comparison is not allowed.**
+Next slide.
+
+::: {.notes}
+The 7,000 units are Lecture 15's variance check turned into a number: the counts
+are far more variable than a Poisson allows, and the negative binomial's extra
+parameter, k, is worth it many times over.
+
+The third row is the trap, deliberately left in. R computes an AIC for a normal
+model of these counts without complaint, and it appears to beat the Poisson. Let
+the room notice that before explaining why it is meaningless.
+:::
+
+## Rules for comparing distributions {.smaller}
+
+- **Discrete with discrete, continuous with continuous.** A count model gives
+  the **probability** of each count; a normal gives a **density**. Their AICs are
+  in different units, so the normal row on the last slide cannot be compared
+- **Same response, same scale.** For a measurement, try `dlnorm(y)` against
+  `dgamma(y)`, never `dnorm(log(y))` against `dgamma(y)`
+- **Count the distribution's own parameter**: $k$ for the negative binomial,
+  the standard deviation for the normal
+- **Poisson against negative binomial: use AIC**, not the likelihood ratio test
+
+::: {.plain}
+You can let AIC choose the distribution, as long as every candidate describes the same numbers in the same way: all counts, or all measurements.
+:::
+
+::: {.notes}
+On the first rule: a Poisson probability is a number between 0 and 1. A normal
+density depends on the units of measurement and can exceed 1, so its
+log-likelihood can be shifted just by measuring in different units. Different
+currencies; no exchange rate.
+
+The second rule is the previous slide's "same response, same scale", applied to
+distributions. dnorm on log(y) is a likelihood for a different response.
+
+Why not the test for Poisson against negative binomial: the Poisson is the
+negative binomial with k at infinity, the edge of what k can be, and the
+chi-squared approximation breaks down at an edge. AIC has no such problem.
+
+For the assignment: Part 1c starts as a Poisson on reef richness, and this slide
+is the licence to change it.
 :::
 
 ## Assignment 3, Part 1: a strategy {.smaller}
