@@ -7,6 +7,16 @@ rather than on wrangling. In a deck, setting up should be one line:
 occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
 ```
 
+or, with the course data package installed (see `biometrydata/README.md`):
+
+```r
+library(biometrydata)
+occ <- bobwhite_occupancy
+```
+
+Both give the same table. The package holds every dataset in `data/`, not only
+these.
+
 Everything here is derived from the raw datasets one directory up. Nothing here
 is a new source of data.
 
@@ -29,6 +39,12 @@ becoming strongly correlated.
 
 ```r
 source("data/class_examples/make_class_examples.R")
+```
+
+Then rebuild the package's copies so the two stay identical:
+
+```r
+source("biometrydata/data-raw/build_package_data.R")
 ```
 
 The script is the only way files in this folder are created. If something here

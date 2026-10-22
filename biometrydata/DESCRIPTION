@@ -1,0 +1,18 @@
+Package: biometrydata
+Title: Datasets for the Biometry Course (PCB 6455 / BSC 4933)
+Version: 0.1.0
+Authors@R: 
+    person("Brian", "Maitner", , "bmaitner@gmail.com", role = c("aut", "cre"))
+Description: Every dataset used in Biometry at the University of South
+    Florida, ready to use after library(biometrydata). The same data can be
+    downloaded file by file from the course repository; each help page gives
+    the link and the original source and license.
+License: file LICENSE
+URL: https://github.com/bmaitner/biometry_course
+Depends: 
+    R (>= 3.5)
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

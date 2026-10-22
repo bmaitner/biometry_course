@@ -1,0 +1,16 @@
+The code in this package is released under the MIT License, as is the course
+repository it lives in.
+
+The datasets keep the licenses of their original sources, which differ. Each
+dataset's help page names its source and license. In brief:
+
+  CC0 / public domain   fl_bbs, reef_fish_*, deer_movement, the
+                        European amphibian traits file in extdata, and the
+                        class examples built from them
+  CC-BY 4.0             avonet, amniotes, coral_cover, tosca_rov, and the
+                        beetle_* tables (credit Brian Maitner)
+  CC-BY 3.0             tara
+  CC-BY-NC 4.0          mangroves: not for commercial use
+  See its help page     code_sharing, compiled by Brian Maitner
+
+Please cite the original source of any dataset you use.
