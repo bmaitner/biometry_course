@@ -1,5 +1,5 @@
 ---
-title: "Midterm"
+title: "Midterm, Fall 2026"
 subtitle: "PCB 6455 / BSC 4933: Biometry"
 output:
   html_document:
@@ -131,13 +131,13 @@ Load the data straight from the course repository:
 ```r
 library(readr)
 
-twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2a.RDS")
-twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2b.RDS")
-twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/b_2c.RDS")
+twoa <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/midterm_2026_2a.RDS")
+twob <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/midterm_2026_2b.RDS")
+twoc <- read_rds("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/midterm/midterm_2026_2c.RDS")
 ```
 
 Example code is at
-<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_b_example.R>.
+<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_2026_example.R>.
 
 The datasets:
 
@@ -192,7 +192,7 @@ You will need to produce:
   sample size or halve your measurement error, which would help more here?
 
 A skeleton for this is in
-<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_b_example.R>,
+<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_2026_example.R>,
 which loops over standard deviations at a single sample size. Your job is to
 extend it.
 

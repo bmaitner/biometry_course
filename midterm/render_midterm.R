@@ -1,9 +1,10 @@
 # Render the midterm from Markdown to Word and HTML.
 #
 # Each Midterm_*.md is the source of truth -- edit those, then run this script
-# to regenerate the .docx students download. Lettered versions are different
-# years: Midterm_a is the Fall 2025 version, Midterm_b the current one. Old
-# versions are kept so students have past midterms to practice on.
+# to regenerate the .docx students download. Each file is named for the year
+# it was given: Midterm_2025, Midterm_2026, and so on. Old versions are kept so
+# students have past midterms to practice on. Add next year's as Midterm_2027
+# rather than editing this year's.
 #
 # Run from the project root:  source("midterm/render_midterm.R")
 

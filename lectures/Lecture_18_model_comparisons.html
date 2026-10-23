@@ -1170,139 +1170,23 @@ width: 1px!important;
 overflow: hidden!important;
 display:block!important;
 }</style></aside>
-</section>
-<section id="what-today-gives-you-for-it" class="slide level2 smaller">
-<h2>What today gives you for it</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>You will need to</th>
-<th>Today’s slide</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Decide whether a model with more parameters is really better</td>
-<td>“Even nonsense helps”</td>
-</tr>
-<tr class="even">
-<td>Compare models where one is a special case of the other</td>
-<td>likelihood ratio test</td>
-</tr>
-<tr class="odd">
-<td>Compare <strong>any</strong> models</td>
-<td>AIC, <code>AICtab()</code></td>
-</tr>
-<tr class="even">
-<td>Write a model in one line</td>
-<td>the <code>mle2()</code> <strong>formula</strong> shortcut</td>
-</tr>
-<tr class="odd">
-<td>Let a parameter differ between groups</td>
-<td><code>parameters = list(a ~ pop)</code></td>
-</tr>
-<tr class="even">
-<td>Avoid an unfair comparison</td>
-<td>“Rules for a fair comparison”</td>
-</tr>
-</tbody>
-</table>
-<aside class="notes">
-<p>A map, so the rest of the lecture has a purpose they can see. Every row is something Part 1 of the assignment requires.</p>
-<p>The formula shortcut and the parameters argument are both in the starter script already, which is why they get explained today rather than met cold.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
 </section></section>
 <section>
 <section id="which-model-is-better" class="title-slide slide level1 center">
 <h1>Which model is better?</h1>
 
 </section>
-<section id="where-we-are" class="slide level2 smaller">
-<h2>Where we are</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Section</th>
-<th>Question</th>
-<th>When</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>6.1 - 6.2</td>
-<td>What parameter values make my data most likely?</td>
-<td>Lecture 15</td>
-</tr>
-<tr class="even">
-<td>6.3</td>
-<td>What if the parameter depends on a covariate?</td>
-<td>Lecture 16</td>
-</tr>
-<tr class="odd">
-<td>6.4 - 6.5</td>
-<td>How sure am I about that parameter?</td>
-<td>Tuesday</td>
-</tr>
-<tr class="even">
-<td><strong>6.6</strong></td>
-<td><strong>Which of two models is better?</strong></td>
-<td><strong>Today</strong></td>
-</tr>
-</tbody>
-</table>
-<div class="fragment">
-<p>Tuesday ended on: <strong>zero is outside the interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math></strong>, so a flat line is ruled out. Today asks the same thing about <strong>whole models</strong>.</p>
-<aside class="notes">
-<p>The connection to make explicit: “is b different from zero?” and “is the model with b better than the model without it?” are the same question. Tuesday asked it about a parameter, today about a model, and the arithmetic is identical.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
 <section id="the-story-so-far" class="slide level2 smaller">
 <h2>The story so far</h2>
-<ol type="1">
-<li><strong>Likelihood</strong>: if the parameters had these values, how probable are the data I actually got?</li>
-<li><strong>Negative log-likelihood (NLL)</strong>: the same thing, logged and flipped, so <strong>lower is better</strong> and the optimizer can walk downhill</li>
-<li><strong>The best estimate</strong> is the bottom of the NLL curve</li>
-<li><strong>Covariates</strong> (Lecture 16): let a parameter change with something you measured. The NLL works exactly the same way</li>
-<li><strong>A confidence interval</strong> (Tuesday): every value within <strong>1.92</strong> of the bottom. The values the data cannot rule out</li>
-</ol>
-<div class="fragment">
-<ol start="6" type="1">
-<li><strong>Today: comparing models.</strong> The same 1.92 idea for whole models, and AIC for when that does not work</li>
-</ol>
+<ul>
+<li><strong>Lower NLL = better fit.</strong> The best estimate is the bottom of the curve</li>
+<li><strong>Confidence interval</strong> (Tuesday): every value within <strong>1.92</strong> of the bottom</li>
+<li><strong>Today:</strong> the same idea for <strong>whole models</strong>, and AIC when that does not work</li>
+</ul>
 <aside class="notes">
 <p>Added after the mid-semester check-in, where the class said the coding was going well and asked for the statistics to be simpler and recapped more often. Every statistics lecture from here on opens with one of these.</p>
-<p>Read it out loud, one line at a time, and ask for a show of hands on each: “who could explain this one to a friend?” Any line that gets few hands is worth two minutes now, before building on it.</p>
-<p>Each line is one lecture. The point of the list is that it is a chain: nothing today is new machinery, only a new use of line 5.</p>
+<p>Thirty seconds, not a re-teach. If a line gets blank looks, it is worth a minute; otherwise move on.</p>
+<p>Kept to three lines after Lecture 18 ran long. The point is the chain: nothing today is new machinery, only a new use of Tuesday’s 1.92.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1314,7 +1198,6 @@ width: 1px!important;
 overflow: hidden!important;
 display:block!important;
 }</style></aside>
-</div>
 </section>
 <section id="install-the-course-data-package" class="slide level2" data-background-color="#f0f4f8">
 <h2>Install the course data package</h2>
@@ -1503,11 +1386,6 @@ width: 1px!important;
 overflow: hidden!important;
 display:block!important;
 }</style></aside>
-</section>
-<section id="setting-the-bar" class="slide level2 center">
-<h2>Setting the bar</h2>
-<p>An extra parameter has to improve the fit <strong>by more than chance would</strong>.</p>
-<p>Two ways to set that bar: the <strong>likelihood ratio test</strong> and <strong>AIC</strong>.</p>
 </section></section>
 <section>
 <section id="the-likelihood-ratio-test" class="title-slide slide level1 center">
@@ -1516,67 +1394,6 @@ display:block!important;
 </section>
 <section id="nested-models" class="slide level2 smaller">
 <h2>Nested models</h2>
-<p>Model A is <strong>nested</strong> in model B if you can get A by fixing some of B’s parameters.</p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Smaller model</th>
-<th>Bigger model</th>
-<th>Nested?</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>one <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> for every year</td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> changes with year</td>
-<td><strong>yes</strong>: set <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">b = 0</annotation></semantics></math></td>
-</tr>
-<tr class="even">
-<td>counts flat</td>
-<td>counts fall with year</td>
-<td><strong>yes</strong>: set the slope to 0</td>
-</tr>
-<tr class="odd">
-<td>counts fall with year</td>
-<td>counts fall with year <strong>and</strong> development</td>
-<td><strong>yes</strong></td>
-</tr>
-<tr class="even">
-<td>counts fall with year</td>
-<td>counts fall with development</td>
-<td><strong>no</strong></td>
-</tr>
-</tbody>
-</table>
-<div class="fragment">
-<p>The likelihood ratio test <strong>only works for nested pairs</strong>.</p>
-<div class="plain">
-<p>Nested means: switch off one piece of the bigger model, and you have the smaller one.</p>
-</div>
-<aside class="notes">
-<p>The test the class should apply: can I get the small model by setting something in the big model to a fixed value, usually zero? If yes, nested.</p>
-<p>Year against development is the instructive “no”. Both have three parameters, neither is a special case of the other, and there is no parameter to set to zero that turns one into the other.</p>
-<p>Logistic against straight line, from Lecture 16, is also a “no”, and for a different reason: they are different shapes, not one shape with a piece removed. It comes back on the AIC slides.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
-<section id="nested-models-in-symbols" class="slide level2 smaller">
-<h2>Nested models, in symbols</h2>
 <p>Start with the biggest model. Each one below it is <strong>nested</strong> in it:</p>
 <table class="caption-top">
 <thead>
@@ -1620,7 +1437,7 @@ display:block!important;
 <p>Nested: you get the smaller model by setting the bigger one’s parameters to zero, or equal to each other. Keep count of how many you fix: the test on the next slide needs it.</p>
 </div>
 <aside class="notes">
-<p>The previous slide in words, this one in symbols. Students who think in equations get the definition here; the others get it from the table on the previous slide.</p>
+<p>The definition, in symbols. Say it in words too: nested means you can get the smaller model by switching off a piece of the bigger one. Year against development, in the bobwhite counts, is the instructive “not nested” case: same number of parameters, and neither is the other with a piece switched off.</p>
 <p>Map it onto today’s bobwhite counts: on the log scale, the “both” model is log(mu) = r * year + b * development + log(mu0). Set the development slope to zero and you have the year model; set both to zero and you have the flat model. That is rows 1 to 3 of the table.</p>
 <p>Why the two “not nested” pairs fail: in the first, neither is the other with a piece switched off; in the second, the shapes differ, so no parameter value turns one into the other.</p>
 <p>The “equal slopes” row is worth a moment because it is not obvious that it counts as nested: nothing is set to zero, but two parameters are forced to be the same, which removes one. It is exactly the question in Assignment 3, Part 1a: is a female of the other species as harmful as one of your own (a12 = a11)?</p>
@@ -2628,7 +2445,7 @@ display:block!important;
 </tbody>
 </table>
 <aside class="notes">
-<p>The recap slide for today, and the one to photograph for the assignment.</p>
+<p>The recap slide for today, and the one to photograph for the assignment. It replaces a separate “what you can now do” list.</p>
 <p>The first row is Tuesday, the next two are today. Point out that rows 1 and 2 are the same question asked two ways: “is b different from zero” and “is the model with b better than the model without it” give the same answer.</p>
 <p>The last row is the one people forget, and it is the one that Part 2 of the assignment is graded on most.</p>
 <style type="text/css">
@@ -2642,33 +2459,6 @@ width: 1px!important;
 overflow: hidden!important;
 display:block!important;
 }</style></aside>
-</section>
-<section id="what-you-can-now-do" class="slide level2 smaller">
-<h2>What you can now do</h2>
-<ul>
-<li>Explain why a better fit alone does not mean a better model</li>
-<li>Tell whether two models are <strong>nested</strong></li>
-<li>Run a <strong>likelihood ratio test</strong>, by hand and with <code>anova()</code></li>
-<li>Compute <strong>AIC</strong>, and read <code>AICtab()</code>, including its weights</li>
-<li>Write an <code>mle2()</code> model as a <strong>formula</strong>, and let parameters differ between groups with <code>parameters =</code></li>
-<li>Keep a comparison <strong>fair</strong></li>
-</ul>
-<div class="fragment">
-<p>That is everything Assignment 3 needs.</p>
-<aside class="notes">
-<p>Point back at the “What today gives you for it” table: every row is now covered.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
 </section>
 <section id="additional-practice" class="slide level2 smaller" data-background-color="#f0f4f8">
 <h2>Additional practice</h2>

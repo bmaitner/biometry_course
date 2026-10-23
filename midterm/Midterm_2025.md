@@ -1,5 +1,5 @@
 ---
-title: "Midterm"
+title: "Midterm, Fall 2025"
 subtitle: "PCB 6455 / BSC 4933: Biometry"
 output:
   html_document:
@@ -68,7 +68,7 @@ Your draft paper should contain the following sections:
 
 # Part 2: Distributions and Functions
 
-In this portion of the midterm, you'll be provided with three datasets which you'll use to answer questions about which functions (Chapter 3) and distributions (Chapter 4) are most appropriate. The data for 2a, 2b, and 2c are stored in the folder midterm (<https://github.com/bmaitner/biometry_course/tree/main/midterm>). Example code showing how to load these data is available via Github (<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_example.R>). For each of the three datasets, explain which function (see chapter 3) and distribution (see Chapter 4) are most appropriate to model the data and why you think so. Brief explanations of the variables follow.
+In this portion of the midterm, you'll be provided with three datasets which you'll use to answer questions about which functions (Chapter 3) and distributions (Chapter 4) are most appropriate. The data for 2a, 2b, and 2c are stored in the folder midterm (<https://github.com/bmaitner/biometry_course/tree/main/midterm>). Example code showing how to load these data is available via Github (<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_2025_example.R>). For each of the three datasets, explain which function (see chapter 3) and distribution (see Chapter 4) are most appropriate to model the data and why you think so. Brief explanations of the variables follow.
 
 - **2.a)** This dataset shows bird mass and wing length. You should consider mass as the predictor (x) variable and wing length as the response (y) variable.
 
@@ -78,4 +78,4 @@ In this portion of the midterm, you'll be provided with three datasets which you
 
 # Part 3: Power analysis
 
-In this portion of the midterm, your task is to use simulations and power analysis to identify how sample size and slope interact to impact statistical power. Assume a linear relationship between y and x, where x has a slope ranging between -2 and 2, the intercept is 2, and the standard deviation is 8. Note that this is essentially the equation we were working with in class. As a base for your code, you can use the code on the course Github (<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_example.R>). You'll need to create one or more figures that show how changing sample size changes the relationship between power and slope, and provide a brief answer in your own words about how slope and sample size impact power. This should be turned in as an .R or .Rmd file, but it can be a separate file or can be combined with the answers to parts 1 and/or 2.
+In this portion of the midterm, your task is to use simulations and power analysis to identify how sample size and slope interact to impact statistical power. Assume a linear relationship between y and x, where x has a slope ranging between -2 and 2, the intercept is 2, and the standard deviation is 8. Note that this is essentially the equation we were working with in class. As a base for your code, you can use the code on the course Github (<https://github.com/bmaitner/biometry_course/blob/main/midterm/midterm_2025_example.R>). You'll need to create one or more figures that show how changing sample size changes the relationship between power and slope, and provide a brief answer in your own words about how slope and sample size impact power. This should be turned in as an .R or .Rmd file, but it can be a separate file or can be combined with the answers to parts 1 and/or 2.

@@ -54,7 +54,8 @@ These are written out in full in the scripts and were repointed from `Statistica
 | `data/Avonet/AVONET1_BirdLife.csv` | `R_scripts/Chapter_2_examples.R`, `R_scripts/Chapter_4_examples.R`, `assignments/assignment_3/assignment_3.R`, `example_R_commented/Example.R`, `example_R_markdown/Example.Rmd` |
 | `data/Avonet/AVONET1_BirdLife.rds` | `R_scripts/Chapter_7_examples.R`, `assignments/assignment_3/assignment_3.R` |
 | `data/Code_sharing/code_data.RDS` | `R_scripts/Chapter_9_examples.R` |
-| `midterm/2a.RDS`, `2b.RDS`, `2c.RDS` | `midterm/midterm_example.R` |
+| `midterm/midterm_2025_2a.RDS`, `_2b`, `_2c` | `midterm/midterm_2025_example.R` |
+| `midterm/midterm_2026_2a.RDS`, `_2b`, `_2c` | `midterm/midterm_2026_example.R`, `midterm/Midterm_2026.md`, Lecture 13 |
 
 All are of the form:
 

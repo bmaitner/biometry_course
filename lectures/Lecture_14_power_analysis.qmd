@@ -1155,7 +1155,7 @@ Same machinery, simpler model:
 - at least three sample sizes
 - a figure, and a sentence on what it means
 
-Skeleton: `midterm/midterm_b_example.R`
+Skeleton: `midterm/midterm_2026_example.R`
 
 . . .
 

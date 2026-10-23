@@ -224,12 +224,19 @@ From midterm feedback, Fall 2025:
   assignments and quizzes work. The `.html` is gitignored, the `.docx` is kept
   because students download it.
 
-  **Lettered versions, same idea as the quizzes.** `Midterm_a` is the Fall 2025
-  version, kept so future classes have a past midterm to practice on, and so
-  parts of it can be reused. Its wording is unchanged, but its links were
-  repointed from `Statistical_ecology_course` to `biometry_course` so it stays
-  usable. `Midterm_b` is the Fall 2026 version and the one students are pointed
-  to. Add `Midterm_c` next year rather than editing `Midterm_b`.
+  **Named by year.** `Midterm_2025` is the Fall 2025 version, kept so future
+  classes have a past midterm to practice on, and so parts of it can be reused.
+  Its wording is unchanged, but its links were repointed from
+  `Statistical_ecology_course` to `biometry_course` so it stays usable.
+  `Midterm_2026` is the Fall 2026 version. Add `Midterm_2027` next year rather
+  than editing this year's.
+
+  These were `Midterm_a` and `Midterm_b` until 2026-10-23, when students said
+  the letters were confusing: nothing said which was which. Everything in
+  `midterm/` now carries the year, data files included (`midterm_2026_2a.RDS`
+  and so on), renamed after the 2026 midterms were graded so that no submitted
+  script broke before it was checked. `midterm/README.md` lists what belongs to
+  which year.
 
 - [ ] **Convert the slides to Markdown, so the decks are fully reproducible.**
   Quarto's `revealjs` format is the obvious target: plain-text source, code
@@ -404,6 +411,25 @@ told them to type.
   Bolker 3.1 makes most of these directly. Some are already in the speaker notes,
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
+
+**Lecture 18 ran a bit long (2026-10-22).** The deck had grown to 46 slides
+through same-day additions, on top of a quiz, the Assignment 3 introduction and
+an in-class package install. Trimmed afterwards to 41 by cutting slides that
+repeated others: a "what today gives you" map that duplicated the agenda and the
+closing "which tool, when" table; a "where we are" table next to "the story so
+far"; a one-line "setting the bar" transition; the words version of "nested
+models", kept in symbols only; and "what you can now do", which the closing
+table already covers. "The story so far" went from six lines to three.
+
+Two calibrations for the lectures after it:
+
+- **Recaps lighter than in Lecture 18.** The check-in asked for recaps, but one
+  short "story so far" (three lines) plus the closing "which tool, when" table
+  is enough. Keep the "In plain words" boxes to the central ideas, not every
+  slide that mentions a statistic.
+- **Quizzes faster.** Quiz 8 had five questions including a short calculation;
+  aim for four, each answerable in a line, with at most one that needs any
+  arithmetic.
 
 **Mid-semester check-in, Lecture 17 (2026-10-20).** Asked out loud rather than
 on cards, which has worked before. Two results:

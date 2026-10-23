@@ -70,7 +70,7 @@ real data.
 
 - Part 1 text is yours. Any tools you like for the code.
 - Part 3 is Thursday's power analysis, with the skeleton in
-  `midterm/midterm_b_example.R`.
+  `midterm/midterm_2026_example.R`.
 
 . . .
 

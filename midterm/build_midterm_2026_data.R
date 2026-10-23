@@ -1,12 +1,12 @@
-# Build the Part 2 datasets for Midterm B (Fall 2026).
+# Build the Part 2 datasets for the Fall 2026 midterm.
 #
 # Each is a subsample of data already in the repository, saved as a two-column
 # data frame with the predictor first. Re-running this reproduces the exact
-# files because of the seed. Midterm A's 2a/2b/2c.RDS are untouched.
+# files because of the seed. The Fall 2025 midterm's files are untouched.
 #
-# Expected answers are in Midterm_b_key.md (gitignored).
+# Expected answers are in Midterm_2026_key.md (gitignored).
 #
-# Run from the project root:  source("midterm/build_midterm_b_data.R")
+# Run from the project root:  source("midterm/build_midterm_2026_data.R")
 
 set.seed(2026)
 
@@ -17,7 +17,7 @@ bird <- a[a$class == "Aves" & !is.na(a$egg_mass_g) & !is.na(a$adult_body_mass_g)
 i <- sample(nrow(bird), 250)
 b_2a <- data.frame(Adult.Body.Mass.g = round(bird$adult_body_mass_g[i], 1),
                    Egg.Mass.g        = round(bird$egg_mass_g[i], 2))
-saveRDS(b_2a, "midterm/b_2a.RDS")
+saveRDS(b_2a, "midterm/midterm_2026_2a.RDS")
 
 # b_2b: reef fish species richness vs total abundance  (saturating, neg binomial)
 s <- read.csv("data/Reef_fish/NCRMP_reef_fish_surveys.csv")
@@ -26,7 +26,7 @@ s <- s[complete.cases(s[, c("species_richness", "total_abundance")]) &
 j <- sample(nrow(s), 250)
 b_2b <- data.frame(Total.Fish.Abundance = round(s$total_abundance[j], 1),
                    Species.Richness     = s$species_richness[j])
-saveRDS(b_2b, "midterm/b_2b.RDS")
+saveRDS(b_2b, "midterm/midterm_2026_2b.RDS")
 
 # b_2c: coral hard bottom cover vs rugosity  (proportion, beta)
 cr <- read.csv("data/Coral/CRCP_Benthic_Cover_Florida_7018_0ee5_9488.csv")[-1, ]
@@ -38,7 +38,7 @@ m <- m[complete.cases(m) & m$HARDBOTTOM_P <= 100 & m$HARDBOTTOM_P >= 0, ]
 k <- sample(nrow(m), 150)
 b_2c <- data.frame(Rugosity              = round(m$WTD_RUG[k], 3),
                    Hard.Bottom.Cover.Pct = round(m$HARDBOTTOM_P[k], 1))
-saveRDS(b_2c, "midterm/b_2c.RDS")
+saveRDS(b_2c, "midterm/midterm_2026_2c.RDS")
 
 # report what each looks like
 for (nm in c("b_2a", "b_2b", "b_2c")) {

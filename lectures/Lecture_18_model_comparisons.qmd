@@ -222,75 +222,24 @@ for anyone who has not installed it yet.
 Same rules as Assignments 1 and 2. A quick pass, not a discussion.
 :::
 
-## What today gives you for it {.smaller}
-
-| You will need to | Today's slide |
-|---|---|
-| Decide whether a model with more parameters is really better | "Even nonsense helps" |
-| Compare models where one is a special case of the other | likelihood ratio test |
-| Compare **any** models | AIC, `AICtab()` |
-| Write a model in one line | the `mle2()` **formula** shortcut |
-| Let a parameter differ between groups | `parameters = list(a ~ pop)` |
-| Avoid an unfair comparison | "Rules for a fair comparison" |
-
-::: {.notes}
-A map, so the rest of the lecture has a purpose they can see. Every row is
-something Part 1 of the assignment requires.
-
-The formula shortcut and the parameters argument are both in the starter script
-already, which is why they get explained today rather than met cold.
-:::
-
 # Which model is better?
-
-## Where we are {.smaller}
-
-| Section | Question | When |
-|---|---|---|
-| 6.1 - 6.2 | What parameter values make my data most likely? | Lecture 15 |
-| 6.3 | What if the parameter depends on a covariate? | Lecture 16 |
-| 6.4 - 6.5 | How sure am I about that parameter? | Tuesday |
-| **6.6** | **Which of two models is better?** | **Today** |
-
-. . .
-
-Tuesday ended on: **zero is outside the interval for $b$**, so a flat line is
-ruled out. Today asks the same thing about **whole models**.
-
-::: {.notes}
-The connection to make explicit: "is b different from zero?" and "is the model
-with b better than the model without it?" are the same question. Tuesday asked
-it about a parameter, today about a model, and the arithmetic is identical.
-:::
 
 ## The story so far {.smaller}
 
-1. **Likelihood**: if the parameters had these values, how probable are the data
-   I actually got?
-2. **Negative log-likelihood (NLL)**: the same thing, logged and flipped, so
-   **lower is better** and the optimizer can walk downhill
-3. **The best estimate** is the bottom of the NLL curve
-4. **Covariates** (Lecture 16): let a parameter change with something you
-   measured. The NLL works exactly the same way
-5. **A confidence interval** (Tuesday): every value within **1.92** of the
-   bottom. The values the data cannot rule out
-
-. . .
-
-6. **Today: comparing models.** The same 1.92 idea for whole models, and AIC for
-   when that does not work
+- **Lower NLL = better fit.** The best estimate is the bottom of the curve
+- **Confidence interval** (Tuesday): every value within **1.92** of the bottom
+- **Today:** the same idea for **whole models**, and AIC when that does not work
 
 ::: {.notes}
 Added after the mid-semester check-in, where the class said the coding was going
 well and asked for the statistics to be simpler and recapped more often. Every
 statistics lecture from here on opens with one of these.
 
-Read it out loud, one line at a time, and ask for a show of hands on each: "who
-could explain this one to a friend?" Any line that gets few hands is worth two
-minutes now, before building on it.
+Thirty seconds, not a re-teach. If a line gets blank looks, it is worth a
+minute; otherwise move on.
 
-Each line is one lecture. The point of the list is that it is a chain: nothing
-today is new machinery, only a new use of line 5.
+Kept to three lines after Lecture 18 ran long. The point is the chain: nothing
+today is new machinery, only a new use of Tuesday's 1.92.
 :::
 
 ## Install the course data package {background-color="#f0f4f8"}
@@ -482,48 +431,9 @@ c(occ_data, list(junk = junk)) adds the new column to the list of data mle2
 already has. Mention it only if asked.
 :::
 
-## Setting the bar {.center}
-
-An extra parameter has to improve the fit **by more than chance would**.
-
-Two ways to set that bar: the **likelihood ratio test** and **AIC**.
-
 # The likelihood ratio test
 
 ## Nested models {.smaller}
-
-Model A is **nested** in model B if you can get A by fixing some of B's
-parameters.
-
-| Smaller model | Bigger model | Nested? |
-|---|---|---|
-| one $p$ for every year | $p$ changes with year | **yes**: set $b = 0$ |
-| counts flat | counts fall with year | **yes**: set the slope to 0 |
-| counts fall with year | counts fall with year **and** development | **yes** |
-| counts fall with year | counts fall with development | **no** |
-
-. . .
-
-The likelihood ratio test **only works for nested pairs**.
-
-::: {.plain}
-Nested means: switch off one piece of the bigger model, and you have the smaller one.
-:::
-
-::: {.notes}
-The test the class should apply: can I get the small model by setting something
-in the big model to a fixed value, usually zero? If yes, nested.
-
-Year against development is the instructive "no". Both have three parameters,
-neither is a special case of the other, and there is no parameter to set to zero
-that turns one into the other.
-
-Logistic against straight line, from Lecture 16, is also a "no", and for a
-different reason: they are different shapes, not one shape with a piece removed.
-It comes back on the AIC slides.
-:::
-
-## Nested models, in symbols {.smaller}
 
 Start with the biggest model. Each one below it is **nested** in it:
 
@@ -544,9 +454,10 @@ Nested: you get the smaller model by setting the bigger one's parameters to zero
 :::
 
 ::: {.notes}
-The previous slide in words, this one in symbols. Students who think in
-equations get the definition here; the others get it from the table on the
-previous slide.
+The definition, in symbols. Say it in words too: nested means you can get the
+smaller model by switching off a piece of the bigger one. Year against
+development, in the bobwhite counts, is the instructive "not nested" case: same
+number of parameters, and neither is the other with a piece switched off.
 
 Map it onto today's bobwhite counts: on the log scale, the "both" model is
 log(mu) = r * year + b * development + log(mu0). Set the development slope to
@@ -1318,7 +1229,8 @@ candidates it is fine; if anyone asks, say so.
 | Does the model make biological sense? | **you** | no statistic checks this |
 
 ::: {.notes}
-The recap slide for today, and the one to photograph for the assignment.
+The recap slide for today, and the one to photograph for the assignment. It
+replaces a separate "what you can now do" list.
 
 The first row is Tuesday, the next two are today. Point out that rows 1 and 2
 are the same question asked two ways: "is b different from zero" and "is the
@@ -1326,24 +1238,6 @@ model with b better than the model without it" give the same answer.
 
 The last row is the one people forget, and it is the one that Part 2 of the
 assignment is graded on most.
-:::
-
-## What you can now do {.smaller}
-
-- Explain why a better fit alone does not mean a better model
-- Tell whether two models are **nested**
-- Run a **likelihood ratio test**, by hand and with `anova()`
-- Compute **AIC**, and read `AICtab()`, including its weights
-- Write an `mle2()` model as a **formula**, and let parameters differ between
-  groups with `parameters =`
-- Keep a comparison **fair**
-
-. . .
-
-That is everything Assignment 3 needs.
-
-::: {.notes}
-Point back at the "What today gives you for it" table: every row is now covered.
 :::
 
 ## Additional practice {background-color="#f0f4f8" .smaller}
