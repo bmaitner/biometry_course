@@ -1,5 +1,4 @@
-# Quiz 3
-
+# Quiz, Lecture 7
 Name: ______________________________
 
 1.  Name one dplyr function and say what it does.\

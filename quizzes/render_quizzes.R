@@ -5,6 +5,11 @@
 # the rendered .docx are kept in the repo, so remember to re-run this after
 # editing a quiz or the two will disagree.
 #
+# Names are Quiz_L<lecture>_<year>_<topic>.md: the lecture it goes with in the
+# current syllabus, two digits so they sort in teaching order, then the year the
+# version was written, so every version of a lecture's quiz sorts together. Adding a quiz never renames another. A rewrite gets a new
+# file with the new year, and the old version stays as practice.
+#
 # Run from the project root:  source("quizzes/render_quizzes.R")
 
 if (!requireNamespace("rmarkdown", quietly = TRUE)) {

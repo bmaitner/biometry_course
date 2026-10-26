@@ -1,5 +1,4 @@
-# Quiz 5
-
+# Quiz, Lecture 9
 Name: ______________________________
 
 1.  What R function draws a mathematical function over a range of $x$ values?\

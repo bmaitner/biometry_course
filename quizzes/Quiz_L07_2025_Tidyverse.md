@@ -1,20 +1,19 @@
-# Quiz 4
-
+# Quiz, Lecture 7
 Name: ______________________________
 
-1.  What does the ggplot2 package do?\
+1.  What is a tibble?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-2.  What is the first function you call when producing a figure with ggplot2?\
+2.  What does the pipe operator do ( |> or %>% )?\
     &nbsp;\
     &nbsp;\
     &nbsp;\
     &nbsp;
 
-3.  What is one type of plot available via ggplot?\
+3.  Name one dplyr function and say what it does.\
     &nbsp;\
     &nbsp;\
     &nbsp;\

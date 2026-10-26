@@ -1,5 +1,4 @@
-# Quiz 1
-
+# Quiz, Lecture 3
 Name: ______________________________
 
 1.  Bolker describes three frameworks for statistical inference. Name them.\

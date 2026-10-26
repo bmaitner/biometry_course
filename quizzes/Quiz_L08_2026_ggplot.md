@@ -1,5 +1,4 @@
-# Quiz 4
-
+# Quiz, Lecture 8
 Name: ______________________________
 
 1.  Name one `geom_` function and say what kind of plot it makes.\

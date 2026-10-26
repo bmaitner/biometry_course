@@ -1,5 +1,4 @@
-# Quiz 8
-
+# Quiz, Lecture 18
 Name: ______________________________
 
 1.  Name one R function we have used to find the best-fitting parameter values

@@ -1,5 +1,4 @@
-# Quiz 6
-
+# Quiz, Lecture 12
 Name: ______________________________
 
 1.  Name one probability distribution.\

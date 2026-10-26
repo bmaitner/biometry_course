@@ -1,5 +1,4 @@
-# Quiz 10
-
+# Quiz, Lecture 26
 Name: ______________________________
 
 1.  What is a reprex?\

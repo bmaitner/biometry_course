@@ -1,5 +1,4 @@
-# Quiz 11
-
+# Quiz, Lecture 28
 Name: ______________________________
 
 1.  Why is it important to share code and data?\

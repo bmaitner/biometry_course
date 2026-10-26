@@ -1,5 +1,4 @@
-# Quiz 7
-
+# Quiz, Lecture 16
 Name: ______________________________
 
 1.  Name one R function from the `d`, `p`, `q`, `r` family, for any distribution

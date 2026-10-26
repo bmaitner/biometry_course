@@ -1,5 +1,4 @@
-# Quiz 2
-
+# Quiz, Lecture 5
 Name: ______________________________
 
 1.  Give one reason to put data on a logarithmic scale when exploring it.\

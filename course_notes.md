@@ -142,7 +142,7 @@ From midterm feedback, Fall 2025:
     22, 23 and 26; "analyse" and "optimisation" in Lecture 03; "labelled" in
     Lecture 06. Counts are from the PDF exports in `lectures/`.
   - **Syllabus:** the Lecture 2 row, "Frameworks for modelling".
-  - **Quiz and assignments:** `Quiz_01_Chapter1.md` question 3, and the opening
+  - **Quiz and assignments:** `Quiz_L03_2026_Chapter1.md` question 3, and the opening
     paragraphs of `Assignment_3.md` and `Assignment_4.md`. Re-render after editing.
   - **Scripts:** the section header "lecture 18 modelling fir data" in
     `R_scripts/Chapter_6_examples.R`.
