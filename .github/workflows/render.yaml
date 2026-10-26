@@ -45,6 +45,9 @@ jobs:
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
+      # local::./biometrydata is the course data package, installed from this
+      # checkout so the render uses the data as it is in this commit.
+      # Supplement 02 loads it with library(biometrydata).
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
@@ -64,6 +67,7 @@ jobs:
             github::davidsjoberg/ggbump
             github::bmaitner/glyospalettes
             github::bmaitner/transformerpalettes
+            local::./biometrydata
 
       - name: Render every lecture deck
         run: |
