@@ -1,0 +1,1030 @@
+---
+title: "Model fitting"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 19"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+occ <- read.csv("../data/class_examples/bobwhite_occupancy.csv")
+
+occ_nll <- function(p){
+  prob <- plogis(p[1] + p[2] * occ$elapsed)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+# brute force
+a_vec <- seq(1, 3, by = 0.01)
+b_vec <- seq(-0.15, 0.05, by = 0.001)
+grid <- expand.grid(a = a_vec, b = b_vec)
+t_grid <- system.time({
+  grid$nll <- NA
+  for (i in 1:nrow(grid)) {
+    grid$nll[i] <- occ_nll(c(grid$a[i], grid$b[i]))
+  }
+})[["elapsed"]]
+best_grid <- grid[which.min(grid$nll), ]
+per_eval <- t_grid / nrow(grid)
+
+fit_nm   <- optim(c(0, 0), occ_nll)
+fit_bfgs <- optim(c(0, 0), occ_nll, method = "BFGS")
+fit_cg   <- optim(c(0, 0), occ_nll, method = "CG")
+set.seed(1)
+fit_sa1  <- optim(c(0, 0), occ_nll, method = "SANN")
+set.seed(2026)
+fit_sa2  <- optim(c(0, 0), occ_nll, method = "SANN")
+t_opt <- system.time(for (r in 1:100) optim(c(0, 0), occ_nll))[["elapsed"]] / 100
+
+# record every point each method tries, for the path figure
+trace_fit <- function(method, seed = NULL){
+  pts <- list()
+  f <- function(p){
+    pts[[length(pts) + 1]] <<- p
+    occ_nll(p)
+  }
+  if (!is.null(seed)) { set.seed(seed) }
+  optim(c(0, 0), f, method = method)
+  do.call(rbind, pts)
+}
+path_nm   <- trace_fit("Nelder-Mead")
+path_bfgs <- trace_fit("BFGS")
+path_sa   <- trace_fit("SANN", seed = 1)
+
+# the reef hump: multi-start, the profile over width, and the plateau
+reef <- read.csv("../data/class_examples/reef_surveys.csv")
+reef_nll <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+reef_start <- function(){
+  c(log(runif(1, 5, 50)), runif(1, 0, 30), log(runif(1, 1, 50)), log(runif(1, 1, 20)))
+}
+set.seed(19)
+reef_ms <- NULL
+for (i in 1:10) {
+  fit <- optim(reef_start(), reef_nll)
+  reef_ms <- rbind(reef_ms, c(peak = exp(fit$par[1]), depth = fit$par[2],
+                              width = exp(fit$par[3]), nll = fit$value,
+                              convergence = fit$convergence))
+}
+reef_best <- optim(c(log(20), 15, log(10), log(5)), reef_nll)
+reef_hits <- sum(reef_ms[, "nll"] < reef_best$value + 0.1)
+
+# the same ten random starts on the two-parameter occupancy model
+set.seed(19)
+occ_ends <- replicate(10, optim(c(runif(1, -5, 5), runif(1, -1, 1)), occ_nll)$value)
+occ_hits <- sum(occ_ends < fit_bfgs$value + 0.01)
+
+# profile over width, each fit starting from the previous one's answer
+reef_widths <- exp(seq(log(8), log(5000), length.out = 16))
+reef_prof <- numeric(length(reef_widths))
+q <- reef_best$par[-3]
+for (k in seq_along(reef_widths)) {
+  pf <- optim(q, function(qq){ reef_nll(c(qq[1], qq[2], log(reef_widths[k]), qq[3])) })
+  q <- pf$par
+  reef_prof[k] <- pf$value - reef_best$value
+}
+reef_flat <- optim(c(log(23), log(5)), function(q){
+  -sum(dnbinom(reef$richness, mu = exp(q[1]), size = exp(q[2]), log = TRUE))
+})
+reef_flat_gap <- reef_flat$value - reef_best$value
+reef_bins <- cut(reef$depth, breaks = seq(0, 32, by = 2))
+reef_bin_depth <- tapply(reef$depth, reef_bins, mean)
+reef_bin_rich <- tapply(reef$richness, reef_bins, mean)
+
+# simulating from the occupancy fit
+p_fit <- plogis(fit_bfgs$par[1] + fit_bfgs$par[2] * occ$elapsed)
+set.seed(1)
+fake <- replicate(1000, rbinom(nrow(occ), size = occ$n_routes, prob = p_fit) / occ$n_routes)
+occ_lower <- apply(fake, 1, quantile, 0.025)
+occ_upper <- apply(fake, 1, quantile, 0.975)
+occ_obs <- occ$n_occupied / occ$n_routes
+occ_inside <- sum(occ_obs >= occ_lower & occ_obs <= occ_upper)
+
+# the challenge: a threshold in development
+counts_ch <- read.csv("../data/class_examples/bobwhite_counts.csv")
+threshold_nll <- function(p){
+  mu <- exp(p[1] + p[2] * pmax(0, counts_ch$frac_built - p[3]))
+  -sum(dnbinom(counts_ch$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+ch_first <- optim(c(2, -1, 0.3, 0), threshold_nll)
+ch_lbfgsb <- optim(c(2, -1, 0.3, 0), threshold_nll, method = "L-BFGS-B",
+                   lower = c(-Inf, -Inf, 0, -Inf), upper = c(Inf, Inf, 0.48, Inf))
+ch_tgrid <- seq(-0.2, 0.7, by = 0.01)
+ch_prof <- numeric(length(ch_tgrid))
+q <- c(2.5, -3, 0.4)
+for (k in seq_along(ch_tgrid)) {
+  pf <- optim(q, function(qq){ threshold_nll(c(qq[1], qq[2], ch_tgrid[k], qq[3])) })
+  q <- pf$par
+  ch_prof[k] <- pf$value
+}
+t_best <- ch_tgrid[which.min(ch_prof)]
+ch_best <- optim(c(2.5, -3.4, t_best, 0.4), threshold_nll)
+ch_flat <- optim(c(2.5, 0.4), function(q){
+  -sum(dnbinom(counts_ch$count, mu = exp(q[1]), size = exp(q[2]), log = TRUE))
+})$value
+set.seed(2)
+ch_ms <- replicate(20, optim(c(runif(1, 0, 4), runif(1, -10, 0), runif(1, 0, 0.45),
+                               runif(1, -1, 2)), threshold_nll)$value)
+
+fmt_time <- function(sec){
+  if (sec < 60) { return(paste(signif(sec, 2), "seconds")) }
+  if (sec < 3600) { return(paste(round(sec / 60), "minutes")) }
+  if (sec < 86400) { return(paste(round(sec / 3600, 1), "hours")) }
+  if (sec < 86400 * 365) { return(paste(round(sec / 86400), "days")) }
+  paste(round(sec / 86400 / 365, 1), "years")
+}
+```
+
+## Today's agenda {.smaller}
+
+- R has found the bottom of every NLL curve for us. **How?**
+- Trying every value, and why that stops working
+- Three ways to walk downhill: **Nelder-Mead, BFGS, simulated annealing**
+- How to tell whether a fit **actually worked**, and whether it **fits the data**
+- A challenge: who can get the **best fit**?
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+Code without the label is there to watch.
+
+::: {.notes}
+Bolker 7.1 and 7.2. Students have called optim() and mle2() a dozen times and
+been told they "find the minimum". Today opens the box, for two reasons: the
+method argument has been in their code for weeks without explanation, and
+Thursday's lecture on what goes wrong (7.4) needs to know how the search works.
+
+Kept short on purpose, after Lecture 18 ran long.
+:::
+
+## The story so far {.smaller}
+
+- **Lower NLL = better fit.** The best estimate is the bottom of the curve
+- Intervals and model comparisons read the **shape** of that curve
+- **Today:** how R finds the bottom in the first place, and how to tell when it
+  did not
+
+::: {.notes}
+Thirty seconds. The connection worth making: every number since Lecture 15
+assumed the optimizer found the true bottom. If it did not, the estimates, the
+intervals and the AIC are all wrong together.
+:::
+
+## Why does R need an algorithm at all? {.smaller}
+
+Sometimes the bottom has a formula. For 52 routes occupied out of 71, the best
+$p$ is just $52 / 71$.
+
+. . .
+
+For the logistic decline,
+
+$$p_t = \frac{1}{1 + e^{-(a + bt)}}$$
+
+**there is no formula** for the best $a$ and $b$. The only way to find them is to
+**search**: try values, see which give a lower NLL, and try again.
+
+. . .
+
+An optimizer is a **search strategy**. The `method` argument chooses which one.
+
+::: {.notes}
+Bolker opens chapter 7 with the same point. Most models worth fitting have no
+closed-form answer, so every fit in this course has been a search.
+
+Ask: who has seen method = "BFGS" or method = "L-BFGS-B" in their code without
+knowing what it did? Most hands go up. That is today.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(bbmle)
+library(biometrydata)
+
+occ <- bobwhite_occupancy
+
+# the occupancy model, with both parameters in one vector, as optim() wants
+occ_nll <- function(p){
+  prob <- plogis(p[1] + p[2] * occ$elapsed)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+occ_nll(c(2, -0.05))    # one guess: how good is it?
+```
+:::
+
+**Check:** about `r round(occ_nll(c(2, -0.05)), 1)`. The best possible, from
+Lecture 16, is `r round(fit_bfgs$value, 2)`.
+
+::: {.notes}
+The same model as Lectures 16 to 18, written as a function of one vector p, which
+is the form optim() expects: p[1] is a, the log odds of occupancy in 1997, and
+p[2] is b, the yearly change.
+
+Calling it by hand once makes the point that an NLL function is just a scoring
+rule: give it a guess, it returns how bad the guess is. Every method today is a
+different strategy for choosing the next guess.
+:::
+
+# Trying every value
+
+## Brute force {.smaller}
+
+The simplest strategy: lay a **grid** over the surface and score every point.
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 7.4
+z <- matrix(grid$nll, nrow = length(a_vec))
+contour(a_vec, b_vec, z, levels = c(57, 58, 60, 65, 75, 100, 150, 250),
+        xlab = "a", ylab = "b", col = "grey55", labcex = 0.7)
+gs <- expand.grid(a = seq(1, 3, by = 0.1), b = seq(-0.15, 0.05, by = 0.01))
+points(gs$a, gs$b, pch = 3, cex = 0.35, col = "#2a7ab0")
+points(best_grid$a, best_grid$b, pch = 16, cex = 1.4, col = "red")
+```
+
+Blue crosses: a sample of the grid, every tenth point in each direction. The real
+one has **`r format(nrow(grid), big.mark = ",")`** points.
+
+::: {.notes}
+The red dot is the lowest grid point. Nothing clever is happening: no point is
+chosen because of any other.
+
+Two problems are visible already. The answer can only be a grid point, so it is
+only as precise as the spacing. And the grid only covers the box someone chose;
+if the bottom were outside it, brute force would report the edge of the box
+without any warning.
+:::
+
+## Your turn: brute force {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+a_vec <- seq(1, 3, by = 0.01)
+b_vec <- seq(-0.15, 0.05, by = 0.001)
+grid <- expand.grid(a = a_vec, b = b_vec)    # every combination
+nrow(grid)
+
+grid_time <- system.time({
+  grid$nll <- NA
+  for (i in 1:nrow(grid)) {
+    grid$nll[i] <- occ_nll(c(grid$a[i], grid$b[i]))
+  }
+})
+grid_time
+
+grid[which.min(grid$nll), ]                  # the best grid point
+```
+:::
+
+**Check:** best $a$ = `r best_grid$a`, $b$ = `r best_grid$b`, against
+`r round(fit_bfgs$par[1], 3)` and `r round(fit_bfgs$par[2], 4)` from `optim()`.
+
+::: {.notes}
+Two or three minutes. It takes a few seconds to run, which is part of the
+lesson; let them wait.
+
+expand.grid() is the new function: it builds every combination of the values it
+is given, one row each. system.time() is the other: elapsed is the number to
+read.
+
+The answer matches optim() to the spacing of the grid and no further.
+:::
+
+## How slow is slow? {.smaller}
+
+| | Evaluations | Time |
+|---|---|---|
+| brute force, 2 parameters | `r format(nrow(grid), big.mark = ",")` | `r fmt_time(t_grid)` |
+| `optim()`, 2 parameters | `r fit_nm$counts[["function"]]` | `r signif(t_opt * 1000, 2)` thousandths of a second |
+
+. . .
+
+With **100 values per parameter**, brute force needs $100^k$ evaluations:
+
+| Parameters | Evaluations | Time |
+|---|---|---|
+| 2 | 10 thousand | `r fmt_time(1e4 * per_eval)` |
+| 4 | 100 million | `r fmt_time(1e8 * per_eval)` |
+| **6** | **1 trillion** | **`r fmt_time(1e12 * per_eval)`** |
+
+::: {.plain}
+Trying every value works for one or two parameters. Beyond that, it would outlast the semester, and then the degree.
+:::
+
+::: {.notes}
+The times are from this computer, while rendering these slides, so theirs will
+differ a little; the shape will not.
+
+Six parameters is not a big model. The two-species model on Thursday had six.
+
+Brute force is still useful in one way: for one or two parameters, a coarse grid
+is a fast way to see the whole surface and pick sensible starting values. Bolker
+says the same.
+:::
+
+# Walking downhill
+
+## Three strategies {.smaller}
+
+Every method starts at a guess and moves **downhill**. They differ in how they
+choose the next step:
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+#| fig-width: 9
+par(mfrow = c(1, 3), mar = c(3.4, 3.4, 2, 0.4), mgp = c(2.1, 0.6, 0),
+    cex.axis = 1.1, cex.lab = 1.3, cex.main = 1.5)
+a2 <- seq(-0.5, 3, length.out = 120)
+b2 <- seq(-0.2, 0.12, length.out = 120)
+z2 <- outer(a2, b2, Vectorize(function(a, b){ occ_nll(c(a, b)) }))
+paths <- list("Nelder-Mead" = path_nm, "BFGS" = path_bfgs,
+              "simulated annealing" = path_sa)
+for (nm in names(paths)) {
+  contour(a2, b2, log(z2), nlevels = 14, drawlabels = FALSE, col = "grey70",
+          xlab = "a", ylab = "b", main = nm)
+  pth <- paths[[nm]]
+  if (nm == "simulated annealing") {
+    points(pth[, 1], pth[, 2], pch = 16, cex = 0.3,
+           col = adjustcolor("#762a83", 0.25))
+  } else {
+    lines(pth[, 1], pth[, 2], col = "#762a83", lwd = 1.5)
+    points(pth[, 1], pth[, 2], pch = 16, cex = 0.7, col = "#762a83")
+  }
+  if (nm == "BFGS") {
+    text(0.15, 0.1, "first stride:
+off the map", pos = 4, cex = 1.2,
+         col = "#762a83")
+  }
+  points(0, 0, pch = 17, cex = 2, col = "#1b7837")
+  points(fit_bfgs$par[1], fit_bfgs$par[2], pch = 16, cex = 2, col = "red")
+}
+```
+
+Green: the start. Red: the bottom. Purple: **every point each method tried**.
+
+::: {.notes}
+The one figure to linger on. All three start at a = 0, b = 0 and end at the same
+bottom.
+
+Nelder-Mead feels its way down with a small triangle of points. BFGS takes a few
+long, confident strides, because it uses the slope; its very first stride, from a
+slope measured at a poor start, overshoots to a = 494, b = 4,610, far off the
+map, and it backs up from there in shrinking steps. Simulated annealing sprays
+points everywhere, including uphill, and only settles down at the end.
+
+The contour lines are drawn on a log scale so the shape of the valley is visible
+far from the bottom.
+:::
+
+## Nelder-Mead {.smaller}
+
+A **triangle** of three guesses tumbles downhill. Each step, the worst corner is
+flipped across the other two; the triangle stretches when that works and shrinks
+when it does not.
+
+- Needs **only the NLL itself**, no slopes
+- Copes with rough or awkward surfaces
+- **`optim()`'s default**
+
+::: {.plain}
+Keep the best guesses, replace the worst one, repeat until the guesses stop improving.
+:::
+
+::: {.notes}
+Bolker 7.2 calls it the simplex method. With two parameters the simplex is a
+triangle; with k parameters it has k + 1 corners.
+
+Its weakness is speed on well-behaved problems, where using the slope would get there
+in fewer steps, which is the next slide.
+:::
+
+## BFGS {.smaller}
+
+Uses the **slope** of the surface, and how the slope is changing, to aim straight
+for the bottom.
+
+- **Fast** when the surface is well behaved: fewer evaluations
+- Needs a surface with **no corners or cliffs**, and a start that is not absurd
+- **`mle2()`'s default**
+
+::: {.plain}
+Look at which way is downhill and how steeply, then take a long stride in that direction.
+:::
+
+::: {.notes}
+Named for Broyden, Fletcher, Goldfarb and Shanno. R does not need a formula for
+the slope: it estimates it by nudging each parameter a tiny amount and seeing how
+the NLL changes. That is what the second number in counts is.
+
+The important thing to remember is the defaults: optim() uses Nelder-Mead,
+mle2() uses BFGS. Students who switch between the two and see slightly different
+answers have usually met that difference.
+:::
+
+## Your turn: two methods {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+fit_nm   <- optim(c(0, 0), occ_nll)                    # Nelder-Mead, the default
+fit_bfgs <- optim(c(0, 0), occ_nll, method = "BFGS")
+
+fit_nm$par;   fit_nm$value;   fit_nm$counts
+fit_bfgs$par; fit_bfgs$value; fit_bfgs$counts
+```
+:::
+
+**Same answer? Which needed fewer evaluations?**
+
+. . .
+
+| | $a$ | $b$ | NLL | evaluations |
+|---|---|---|---|---|
+| Nelder-Mead | `r round(fit_nm$par[1], 4)` | `r round(fit_nm$par[2], 5)` | `r round(fit_nm$value, 3)` | `r fit_nm$counts[["function"]]` |
+| BFGS | `r round(fit_bfgs$par[1], 4)` | `r round(fit_bfgs$par[2], 5)` | `r round(fit_bfgs$value, 3)` | `r fit_bfgs$counts[["function"]]` + `r fit_bfgs$counts[["gradient"]]` slopes |
+
+::: {.notes}
+Five minutes. The answers agree to three decimals; the differences in the fourth
+are each method's stopping rule, not a disagreement about the model.
+
+counts has two numbers: how many times the NLL was computed, and how many times
+the slope was. Nelder-Mead never computes a slope, hence NA.
+
+Starting both at (0, 0) on purpose: a deliberately poor start, far from the
+answer, and both still find it. This surface is well behaved. Thursday is about
+the ones that are not.
+:::
+
+## Simulated annealing {.smaller}
+
+Takes **random** steps, and sometimes accepts one that goes **uphill**. Accepts
+fewer uphill steps as it "cools".
+
+- Can escape a **false bottom**, a dip that is not the lowest point
+- **Slow**: always `r format(fit_sa1$counts[["function"]], big.mark = ",")` evaluations here
+- **Random**: a different answer every run, unless you `set.seed()`
+
+::: {.plain}
+Wander widely at first so you do not get stuck in the wrong valley, then settle down.
+:::
+
+::: {.notes}
+Named for annealing metal: heat it so the atoms can move, then cool it slowly so
+they settle into a low-energy arrangement. The "temperature" controls how willing
+the search is to go uphill.
+
+Its strength is surfaces with several dips, where a downhill-only method stops in
+whichever dip it starts near. Our occupancy surface has one bottom, so here it
+only shows its costs: slower, and slightly less precise.
+
+method = "SANN" in R. It always runs a fixed number of steps, so its convergence
+code is always 0 and tells you nothing.
+:::
+
+## Your turn: annealing twice {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+set.seed(1)
+fit_sa1 <- optim(c(0, 0), occ_nll, method = "SANN")
+
+set.seed(2026)
+fit_sa2 <- optim(c(0, 0), occ_nll, method = "SANN")
+
+fit_sa1$par; fit_sa1$value
+fit_sa2$par; fit_sa2$value
+```
+:::
+
+**Do the two runs agree? How close are they to BFGS?**
+
+. . .
+
+Close, not identical: NLLs of `r round(fit_sa1$value, 3)` and
+`r round(fit_sa2$value, 3)`, against `r round(fit_bfgs$value, 3)`. A common habit
+is to **anneal first, then polish** with BFGS, starting from where annealing
+stopped.
+
+::: {.notes}
+Three minutes. Without set.seed() everyone in the room gets a different answer,
+which is worth letting them see by comparing with a neighbor first.
+
+Anneal then polish: optim(fit_sa1$par, occ_nll, method = "BFGS") lands on the
+exact bottom. Annealing finds the right valley; BFGS finds the bottom of it.
+:::
+
+## Two specialists you have already used {.smaller}
+
+| Method | For | Where you met it |
+|---|---|---|
+| `"L-BFGS-B"` | BFGS with **bounds** on each parameter | Lecture 16, keeping `size` positive |
+| `optimize()` | **one** parameter only | Lecture 15, the single-$p$ fits |
+
+. . .
+
+`mle2()` takes the same names: `mle2(..., method = "Nelder-Mead")`.
+
+::: {.notes}
+A callback rather than new material. The bounds in Lecture 16 needed L-BFGS-B
+because plain BFGS does not accept lower and upper.
+
+optimize() is a different function from optim(), not a method of it, which
+trips people up. For one parameter it is the right tool; optim() warns if you
+give it a single parameter with Nelder-Mead.
+:::
+
+# Did it work?
+
+## A fit can fail without an error {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+fit_cg <- optim(c(0, 0), occ_nll, method = "CG")    # another method optim() offers
+
+fit_cg$par
+fit_cg$value
+fit_cg$convergence
+```
+:::
+
+. . .
+
+$a$ = `r round(fit_cg$par[1], 3)`, $b$ = `r round(fit_cg$par[2], 4)`, NLL
+**`r round(fit_cg$value, 1)`**, against `r round(fit_bfgs$value, 1)` at the true
+bottom. **No error. No warning.**
+
+The only clue: `convergence` is **`r fit_cg$convergence`**, not 0. It ran out of
+steps before it got there.
+
+::: {.notes}
+The most important slide today. CG, conjugate gradients, is a legitimate method
+that is slow on this surface, and with the default step limit it simply stops
+partway down the valley and hands back wherever it was.
+
+A b of -0.006 instead of -0.062 is a decline ten times too small, reported with
+complete confidence. Everything downstream, intervals and AIC included, would be
+wrong.
+
+convergence: 0 means the method believes it reached a bottom. 1 means it hit
+the iteration limit. Other numbers are method-specific trouble. mle2() checks it
+for you and prints a warning; optim() does not.
+:::
+
+# Surfaces that are hard to search
+
+## A false bottom you cannot see from inside {.smaller}
+
+Lecture 16's practice problem: reef fish richness **peaks at some depth**, a hump
+with a height, a location and a **width**. The NLL as the width changes, with the
+other parameters re-fitted at each width:
+
+```{r}
+#| echo: false
+#| fig-height: 2.9
+#| fig-width: 7.4
+plot(reef_widths, reef_prof, type = "l", lwd = 3, col = "#762a83", log = "x",
+     xlab = "width of the hump (m, log scale)", ylab = "NLL above the best",
+     bty = "l", ylim = c(0, 60))
+abline(h = reef_flat_gap, lty = 2, col = "grey50")
+text(max(reef_widths), reef_flat_gap + 4, "a flat line: no depth effect at all",
+     pos = 2, cex = 0.85, col = "grey35")
+points(exp(reef_best$par[3]), 0, pch = 16, cex = 1.6, col = "red")
+```
+
+A wide enough hump **is** a flat line. Out there the NLL stops changing, so a
+downhill method sees **no slope** and stops, reporting success.
+
+::: {.notes}
+Read the curve from left to right. Narrow humps fit terribly (off the top). The
+best width is about 24 m, the red dot. Wider than that, the NLL climbs, then
+levels off at exactly the NLL of a model with no depth effect, the dashed line,
+46.65 units worse. Make the hump thousands of metres wide and it is flat across
+every depth in the data, so it simply is the flat model.
+
+That plateau is the trap. A simple bowl has one bottom and every downhill path
+leads to it. A plateau has no downhill: an optimizer that wanders onto it sees a
+slope of zero in every direction, concludes it has arrived, and returns
+convergence = 0. Nothing in the output looks wrong.
+
+Showing the width rather than all four parameters at once is the slices and
+profiles idea from Lecture 17: the only way to look at a surface with more than
+two parameters.
+:::
+
+## What makes a surface hard to search {.smaller}
+
+| The surface has | What goes wrong | Usual fix |
+|---|---|---|
+| a **plateau**: a parameter stops mattering (the hump's width) | no slope, so it stops and reports success | better starts, bounds, or a simpler model |
+| **several dips**: rival explanations fit almost as well | stops in whichever dip is nearest | many starts, or simulated annealing |
+| a **ridge**: two parameters that trade off | zigzags slowly along the valley | re-parameterize (Thursday) |
+| a **cliff**: an `if` or a penalty in the code | BFGS needs a slope, and there is none at a cliff | Nelder-Mead, or rewrite the model |
+
+::: {.plain}
+Each kind of trouble has its own fix, so the first job is to notice which one you have.
+:::
+
+::: {.notes}
+Four shapes, none exotic. The plateau is today's reef example. Several dips is
+what simulated annealing exists for. A ridge is the tilted valley from Lecture
+17, stretched out: two parameters that can compensate for each other, so the
+data pin down a combination of them but not each one. A cliff comes from code,
+not biology: any if() inside an NLL function, or a penalty like the 1e6 that
+guarded the straight-line occupancy model in Lecture 16.
+
+On vocabulary, since "smooth" gets used two ways: to an optimizer, a smooth
+surface is one with no corners or cliffs, so the slope is defined everywhere.
+Plateaus and ridges can be perfectly smooth in that sense and still be hard to
+search. That is why the table names shapes rather than saying smooth or rough.
+
+Thursday (Bolker 7.4) goes into each fix. Today is about noticing.
+:::
+
+## Check: start from many places {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+reef <- reef_surveys
+
+# p[1] log of the peak richness, p[2] depth of the peak (m),
+# p[3] log of the width (m), p[4] log of the negative binomial size
+reef_nll <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+set.seed(19)
+results <- NULL
+for (i in 1:10) {
+  start <- c(log(runif(1, 5, 50)), runif(1, 0, 30), log(runif(1, 1, 50)), log(runif(1, 1, 20)))
+  fit <- optim(start, reef_nll)
+  results <- rbind(results, c(peak = exp(fit$par[1]), depth = fit$par[2],
+                              width = exp(fit$par[3]), nll = fit$value,
+                              convergence = fit$convergence))
+}
+round(results, 1)
+```
+:::
+
+::: {.notes}
+Ten fits from ten random starts. It takes about fifteen seconds; let it run.
+
+The parameters are fitted on the log scale where they must be positive, the
+"keeping parameters legal" table from Lecture 16, and exp() turns them back for
+the table.
+
+runif() draws each starting value from a sensible range: a peak of 5 to 50
+species, a depth of 0 to 30 m, a width of 1 to 50 m. set.seed(19) makes
+everyone's starts the same, so the room can compare tables.
+:::
+
+## What ten starts found {.smaller}
+
+```{r}
+#| echo: false
+knitr::kable(as.data.frame(round(reef_ms[order(reef_ms[, "nll"]), ], 1)),
+             row.names = FALSE)
+```
+
+**`r reef_hits` of 10** reach the best NLL; the rest stop up to
+`r round(max(reef_ms[, "nll"]) - min(reef_ms[, "nll"]))` worse. **All** report `convergence = 0`.
+
+::: {.notes}
+The top rows agree: a peak of about 25 species at about 16 m, with a width of
+about 24 m. The others stopped somewhere else entirely, some with a peak at the
+deep end and a very wide hump, sliding toward the plateau.
+
+The point of the exercise: the convergence code was 0 every time. Only running
+it more than once revealed that some answers were wrong. With one fit, a student
+could have reported any row of this table.
+
+The rule: always run a model with several parameters from several starts, and
+report the one with the lowest NLL. If the best few agree, that is reassurance.
+:::
+
+## More parameters: harder to search {.smaller}
+
+| Model | Parameters | Random starts that found the best fit |
+|---|---|---|
+| bobwhite occupancy | 2 | **`r occ_hits` of 10** |
+| reef hump | 4 | **`r reef_hits` of 10** |
+
+. . .
+
+Why more parameters make the search harder:
+
+- You **cannot look** at a surface with more than two parameters
+- More chances for parameters to **trade off**, making ridges and plateaus
+- More room for **false bottoms**, so you need **more starts** to trust an answer
+
+::: {.notes}
+More parameters create more opportunities for trouble, not a guarantee of it.
+Adding a term to the linear part of a logistic or Poisson regression, for
+instance, can never create a second dip: those likelihoods have a single bottom
+however many predictors they have. The trouble comes from parameters that can
+trade off, or that can make another one irrelevant, as the hump's width does to
+its depth, and those become more likely as models grow.
+
+So the practical consequence is the one students need: the more parameters, the
+more starts it takes before an answer can be trusted, and the more important the
+checks on the next slides become.
+
+The occupancy row is the same exercise, same seed, run on the two-parameter
+model. In testing, 30 of 30 starts found its bottom against 11 of 30 for the
+reef hump.
+:::
+
+# Does the model fit the data?
+
+## Draw the fit over the data {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# richness averaged in 2 m depth bins: 8,560 surveys are too many to read
+bins <- cut(reef$depth, breaks = seq(0, 32, by = 2))
+plot(tapply(reef$depth, bins, mean), tapply(reef$richness, bins, mean),
+     pch = 16, xlab = "depth (m)", ylab = "mean species richness")
+
+hump <- function(d, row){
+  results[row, "peak"] * exp(-(d - results[row, "depth"])^2 / (2 * results[row, "width"]^2))
+}
+best <- which.min(results[, "nll"])
+worst <- which.max(results[, "nll"])
+curve(hump(x, best), add = TRUE, col = "red", lwd = 3)
+curve(hump(x, worst), add = TRUE, col = "grey50", lwd = 3, lty = 2)
+```
+:::
+
+```{r}
+#| echo: false
+#| fig-height: 2.3
+#| fig-width: 7
+plot(reef_bin_depth, reef_bin_rich, pch = 16, xlab = "depth (m)",
+     ylab = "mean richness", bty = "l")
+hump_draw <- function(d, row){
+  reef_ms[row, "peak"] * exp(-(d - reef_ms[row, "depth"])^2 / (2 * reef_ms[row, "width"]^2))
+}
+curve(hump_draw(x, which.min(reef_ms[, "nll"])), add = TRUE, col = "red", lwd = 3)
+curve(hump_draw(x, which.max(reef_ms[, "nll"])), add = TRUE, col = "grey50",
+      lwd = 3, lty = 2)
+```
+
+::: {.notes}
+The plot that catches what the convergence code missed. The red curve, the best
+fit, follows the binned means up and over the hump. The dashed curve, the worst
+of the ten, misses the shape of the data: a failed fit is usually obvious the
+moment it is drawn.
+
+Binned means are a check, not part of the fit: 8,560 points would be a solid
+smear, and averaging within depth bins shows the trend the model is trying to
+capture.
+:::
+
+## Simulate from the fit {background-color="#f0f4f8" .smaller}
+
+**If the model were true, would it produce data like ours?**
+
+::: {.type-it}
+```{r}
+#| eval: false
+fit_occ <- optim(c(2, -0.05), occ_nll, method = "BFGS")
+p_fit <- plogis(fit_occ$par[1] + fit_occ$par[2] * occ$elapsed)
+
+# 1,000 imaginary sets of surveys, from the fitted model
+fake <- replicate(1000, rbinom(nrow(occ), size = occ$n_routes, prob = p_fit) / occ$n_routes)
+lower <- apply(fake, 1, quantile, 0.025)    # the middle 95% of the fakes,
+upper <- apply(fake, 1, quantile, 0.975)    # year by year
+
+plot(occ$year, occ$n_occupied / occ$n_routes, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction of routes occupied")
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+```
+:::
+
+**Check:** `r occ_inside` of `r nrow(occ)` real years fall inside the band.
+
+::: {.notes}
+Lecture 13's simulation idea, pointed at a fitted model. Each fake dataset is
+what the fitted logistic curve plus binomial scatter would produce. If the real
+points sat outside the band, the model would be missing something: a trend it
+does not have, or more scatter than the binomial allows.
+
+Here all of them sit inside: the model reproduces the data it was fitted to,
+which is what a good fit should do. About 1 point in 20 outside would also be
+fine; most outside would not.
+
+This is the same check as comparing a histogram of real counts with simulated
+ones, the way the negative binomial earned its place against the Poisson. It
+works for any model that can be simulated from, which is every model in this
+course.
+:::
+
+## Checking a fit {.smaller}
+
+1. **`convergence` is 0.** With `mle2()`, no warning about convergence
+2. **Several starts agree.** Report the lowest NLL; more parameters, more starts
+3. **The fitted curve goes through the data.** Draw it
+4. **Data simulated from the fit look like the real data**
+5. **A bigger model never fits worse than a smaller one nested in it.** If it
+   does, it has not found its bottom
+
+::: {.plain}
+Never trust a fit just because R returned numbers. Check that it stopped for the right reason, and that it agrees with itself.
+:::
+
+::: {.notes}
+A checklist for Assignment 3. Item 4 is the one students do not think of: a
+bigger model can never fit worse than a model nested inside it (Lecture 18), so
+if it does, the optimizer stopped early.
+
+Thursday, 7.4, is the catalogue of why fits fail: bad starting values,
+parameters on wildly different scales, flat or bumpy surfaces. This checklist is
+how they will notice.
+:::
+
+## Which method, when {.smaller}
+
+| Method | Use it when | Watch out for |
+|---|---|---|
+| brute force | 1 or 2 parameters, or to find a starting point | impossibly slow beyond that |
+| Nelder-Mead | the default; awkward surfaces | slower than BFGS |
+| BFGS | no corners or cliffs; `mle2()`'s default | can fail from a bad start |
+| L-BFGS-B | parameters need bounds | |
+| simulated annealing | several dips; nothing else works | slow, random: `set.seed()` |
+
+**Whatever you use: check `convergence`.**
+
+::: {.notes}
+The summary slide. The practical advice for the assignment: start with the
+default, and if it fails or the convergence code is not 0, try a second method
+from the same start.
+:::
+
+# Challenge
+
+## Challenge: who can get the lowest NLL? {background-color="#f0f4f8" .smaller}
+
+**Does development hurt bobwhite only past a threshold?** Counts stay flat until a
+route is $t$ developed, then fall:
+
+$$\mu = \mu_0 \, e^{\,b \cdot \max(0,\; u - t)} \qquad \text{count} \sim \text{NegBin}(\mu, k)$$
+
+::: {.type-it}
+```{r}
+#| eval: false
+counts <- bobwhite_counts
+
+# p[1] log mu0, p[2] slope b, p[3] threshold t (fraction developed), p[4] log k
+threshold_nll <- function(p){
+  mu <- exp(p[1] + p[2] * pmax(0, counts$frac_built - p[3]))
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+start <- c(2, -1, 0.3, 0)
+first_try <- optim(start, threshold_nll)
+first_try$value
+```
+:::
+
+**Beat it.** Any method, any start, any trick from today. Write down your lowest
+NLL, and **how** you got it.
+
+::: {.notes}
+Fifteen minutes, in pairs if the room prefers. The first try gives about
+`r round(ch_first$value, 2)`; the best possible is about
+`r round(ch_best$value, 2)`. Put the first try on the board and keep a running
+best, with names and methods, as people improve on it.
+
+pmax(0, u - t) is the new piece: it is zero for any route less than t developed,
+so those routes all get the same expected count, mu0. Above t, counts fall
+exponentially, as in Lecture 16's development model.
+
+Hints, in order, for anyone stuck after five minutes:
+
+1. Look at first_try$par. Is the threshold a sensible fraction developed? The
+   routes run from 0 to about 0.49.
+2. Today's table of hard surfaces. What kind of trouble is a threshold that
+   wanders outside the data?
+3. Brute force works well for a single parameter.
+
+Do not reveal the next slide until the board has settled.
+:::
+
+## How the room could have won {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.2
+#| fig-width: 7.6
+plot(ch_tgrid, ch_prof - ch_best$value, type = "l", lwd = 3, col = "#762a83",
+     xlab = "threshold t (fraction developed)", ylab = "NLL above the best",
+     bty = "l")
+abline(v = range(counts_ch$frac_built), lty = 3, col = "grey50")
+text(-0.08, ch_first$value - ch_best$value + 4, "no threshold", cex = 0.8, col = "grey35")
+text(0.6, ch_flat - ch_best$value - 6, "no development effect", cex = 0.8, col = "grey35")
+points(ch_best$par[3], 0, pch = 16, cex = 1.6, col = "red")
+text(ch_best$par[3], 8, "best", cex = 0.8, col = "red")
+```
+
+| Approach | NLL |
+|---|---|
+| `optim()` from the given start | `r round(ch_first$value, 2)` (threshold below zero) |
+| 20 random starts | best `r round(min(ch_ms), 2)`; `r sum(ch_ms > ch_best$value + 1)` stuck on a plateau |
+| **bounds**: `L-BFGS-B`, $t$ from 0 to 0.48 | **`r round(ch_lbfgsb$value, 2)`** |
+| **grid over $t$**, then polish | **`r round(ch_best$value, 2)`** |
+
+::: {.notes}
+The figure is the whole story. The dotted lines are the least and most developed
+routes. Left of zero, every route is past the threshold, so t stops mattering:
+that is the plain development model, a plateau. Right of the most developed
+route, no route is past it, so the development effect vanishes: a second, higher
+plateau. The real answer is a narrow dip near zero, between them.
+
+The default start, t = 0.3, sits on the slope down to the left plateau, and both
+Nelder-Mead and BFGS slide straight off the data onto it. Random starts land on
+either plateau about half the time.
+
+What works is anything that keeps t inside the data: bounds (one argument), a
+grid over the threshold with the other three parameters fitted at each value
+(today's brute force, on one parameter), or annealing then polishing. Whoever
+used one of those deserves the board.
+:::
+
+## What the best fit says {.smaller}
+
+- Best threshold: **`r round(100 * ch_best$par[3], 1)`%** developed. Effectively
+  **no safe level**: counts fall from the first few percent
+- The threshold model beats the plain development model by
+  **`r round(ch_first$value - ch_best$value, 1)`** NLL units, for one extra
+  parameter: AIC prefers it by `r round(2 * (ch_first$value - ch_best$value) - 2, 1)`
+
+::: {.plain}
+The fitting problem and the biology agree: there is a threshold, and it is so close to zero that it barely matters.
+:::
+
+::: {.notes}
+Two callbacks. The number of NLL units against one parameter is Lecture 18's
+question; the AIC difference is 2 times the gain minus 2 for the extra
+parameter, so the threshold earns its place, narrowly.
+
+And the biology is a useful answer for a manager: there is no level of
+development below which bobwhite are safe. The decline starts with the first
+houses.
+
+As ever with these counts, there are no zeros in the file, so this is the effect
+of development on how many birds a route has given that it has any.
+:::
+
+## Before next class
+
+Read Bolker **7.4**
+
+Next time: **when fitting goes wrong**, and what to do about it
