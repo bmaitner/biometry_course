@@ -1,0 +1,259 @@
+---
+title: "Model fitting: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 19"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 19, run, with the numbers it produces, plus two follow-ups
+the slides only mention.
+
+. . .
+
+Times depend on your computer, so yours will differ. Everything else should
+match to three or four decimals.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+
+occ <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_occupancy.csv")
+
+occ_nll <- function(p){
+  prob <- plogis(p[1] + p[2] * occ$elapsed)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+occ_nll(c(2, -0.05))
+```
+
+With the course package installed, `occ <- bobwhite_occupancy` gives the same
+table.
+
+## Brute force {.smaller}
+
+```{r}
+a_vec <- seq(1, 3, by = 0.01)
+b_vec <- seq(-0.15, 0.05, by = 0.001)
+grid <- expand.grid(a = a_vec, b = b_vec)
+nrow(grid)
+
+grid_time <- system.time({
+  grid$nll <- NA
+  for (i in 1:nrow(grid)) {
+    grid$nll[i] <- occ_nll(c(grid$a[i], grid$b[i]))
+  }
+})
+grid_time["elapsed"]
+
+grid[which.min(grid$nll), ]
+```
+
+## Two methods {.smaller}
+
+```{r}
+fit_nm   <- optim(c(0, 0), occ_nll)
+fit_bfgs <- optim(c(0, 0), occ_nll, method = "BFGS")
+
+rbind(nelder_mead = c(fit_nm$par, nll = fit_nm$value, fit_nm$counts),
+      bfgs        = c(fit_bfgs$par, nll = fit_bfgs$value, fit_bfgs$counts))
+```
+
+Same answer to three decimals. BFGS needed fewer evaluations of the NLL, plus a
+few estimates of the slope; Nelder-Mead never computes a slope, hence `NA`.
+
+## Annealing twice {.smaller}
+
+```{r}
+set.seed(1)
+fit_sa1 <- optim(c(0, 0), occ_nll, method = "SANN")
+
+set.seed(2026)
+fit_sa2 <- optim(c(0, 0), occ_nll, method = "SANN")
+
+rbind(seed_1    = c(fit_sa1$par, nll = fit_sa1$value),
+      seed_2026 = c(fit_sa2$par, nll = fit_sa2$value))
+```
+
+Close to BFGS, not identical, and different from each other.
+
+## Follow-up: anneal, then polish {.smaller}
+
+Start BFGS from wherever annealing stopped:
+
+```{r}
+fit_polish <- optim(fit_sa1$par, occ_nll, method = "BFGS")
+c(fit_polish$par, nll = fit_polish$value)
+```
+
+Annealing found the right valley; BFGS found the bottom of it. On surfaces with
+several dips, this is the standard combination.
+
+## A fit that fails without an error {.smaller}
+
+```{r}
+fit_cg <- optim(c(0, 0), occ_nll, method = "CG")
+c(fit_cg$par, nll = fit_cg$value, convergence = fit_cg$convergence)
+```
+
+`convergence` is 1: it hit its step limit, and its $b$ is ten times too small.
+
+## Follow-up: give it more steps {.smaller}
+
+```{r}
+fit_cg2 <- optim(c(0, 0), occ_nll, method = "CG", control = list(maxit = 10000))
+c(fit_cg2$par, nll = fit_cg2$value, convergence = fit_cg2$convergence)
+fit_cg2$counts
+```
+
+With enough steps CG gets there, but it needed thousands of evaluations where
+BFGS needed under a hundred. Raising `maxit` is a fix for a method that was
+heading the right way; switching method is usually the better one.
+
+## Many starts on the reef hump {.smaller}
+
+```{r}
+reef <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/reef_surveys.csv")
+
+reef_nll <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+set.seed(19)
+results <- NULL
+for (i in 1:10) {
+  start <- c(log(runif(1, 5, 50)), runif(1, 0, 30), log(runif(1, 1, 50)), log(runif(1, 1, 20)))
+  fit <- optim(start, reef_nll)
+  results <- rbind(results, c(peak = exp(fit$par[1]), depth = fit$par[2],
+                              width = exp(fit$par[3]), nll = fit$value,
+                              convergence = fit$convergence))
+}
+round(results, 1)
+```
+
+## What the starts show {.smaller}
+
+Six of ten agree: a peak of about 25 species at about 16 m, with a width of about
+24 m. The other four stopped somewhere else, one of them on the plateau, with a
+width over 13,000 m, which is a flat line.
+
+. . .
+
+Every one reports `convergence = 0`. Report the row with the lowest NLL, and
+treat agreement among the best few as the reassurance.
+
+## Drawing the fit {.smaller}
+
+```{r}
+#| fig-height: 3.2
+bins <- cut(reef$depth, breaks = seq(0, 32, by = 2))
+plot(tapply(reef$depth, bins, mean), tapply(reef$richness, bins, mean),
+     pch = 16, xlab = "depth (m)", ylab = "mean species richness")
+
+hump <- function(d, row){
+  results[row, "peak"] * exp(-(d - results[row, "depth"])^2 / (2 * results[row, "width"]^2))
+}
+best <- which.min(results[, "nll"])
+worst <- which.max(results[, "nll"])
+curve(hump(x, best), add = TRUE, col = "red", lwd = 3)
+curve(hump(x, worst), add = TRUE, col = "grey50", lwd = 3, lty = 2)
+```
+
+The best fit follows the hump; the worst is a flat line.
+
+## Simulating from the fit {.smaller}
+
+```{r}
+#| fig-height: 3.2
+p_fit <- plogis(fit_bfgs$par[1] + fit_bfgs$par[2] * occ$elapsed)
+
+set.seed(1)
+fake <- replicate(1000, rbinom(nrow(occ), size = occ$n_routes, prob = p_fit) / occ$n_routes)
+lower <- apply(fake, 1, quantile, 0.025)
+upper <- apply(fake, 1, quantile, 0.975)
+
+plot(occ$year, occ$n_occupied / occ$n_routes, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction of routes occupied")
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+
+obs <- occ$n_occupied / occ$n_routes
+sum(obs >= lower & obs <= upper)
+```
+
+All 23 years sit inside the band: the model produces data like the real data.
+
+## The challenge {.smaller}
+
+```{r}
+counts <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/bobwhite_counts.csv")
+
+threshold_nll <- function(p){
+  mu <- exp(p[1] + p[2] * pmax(0, counts$frac_built - p[3]))
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+start <- c(2, -1, 0.3, 0)
+first_try <- optim(start, threshold_nll)
+c(first_try$par, nll = first_try$value)
+```
+
+The threshold ends up below zero: every route is past it, so the threshold does
+nothing and this is just the plain development model.
+
+## Winning approach 1: keep the threshold inside the data {.smaller}
+
+```{r}
+fit_bounded <- optim(start, threshold_nll, method = "L-BFGS-B",
+                     lower = c(-Inf, -Inf, 0, -Inf),
+                     upper = c(Inf, Inf, 0.48, Inf))
+c(fit_bounded$par, nll = fit_bounded$value)
+```
+
+## Winning approach 2: brute force on the threshold alone {.smaller}
+
+```{r}
+t_grid <- seq(0, 0.45, by = 0.005)
+t_nll <- sapply(t_grid, function(t){
+  optim(c(2.5, -3, 0.4), function(q){ threshold_nll(c(q[1], q[2], t, q[3])) })$value
+})
+best_t <- t_grid[which.min(t_nll)]
+best_t
+
+fit_grid <- optim(c(2.5, -3.4, best_t, 0.4), threshold_nll)    # polish
+c(fit_grid$par, nll = fit_grid$value)
+```
+
+## Winning approach 3: anneal, then polish {.smaller}
+
+```{r}
+set.seed(1)
+fit_sa <- optim(start, threshold_nll, method = "SANN")
+fit_polish <- optim(fit_sa$par, threshold_nll)
+c(fit_polish$par, nll = fit_polish$value)
+```
+
+All three reach the same answer: a threshold near 1.4% developed, so counts fall
+from almost the first development. It beats the plain development model by about
+2.8 NLL units for one extra parameter, so AIC prefers it, narrowly.
