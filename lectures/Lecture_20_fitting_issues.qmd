@@ -1,0 +1,993 @@
+---
+title: "When fitting goes wrong"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 20"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .reveal .bigcode div.sourceCode pre code, .reveal .bigcode pre code { font-size: 28px !important; line-height: 1.3 !important; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+occ <- read.csv("../data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("../data/class_examples/bobwhite_counts.csv")
+reef <- read.csv("../data/class_examples/reef_surveys.csv")
+
+# ridges: the same model with year written three ways
+occ$c_year <- occ$year - mean(occ$year)
+year_nll <- function(p, x){
+  prob <- plogis(p[1] + p[2] * x)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+fit_raw  <- optim(c(0, 0), year_nll, x = occ$year, method = "BFGS")
+fit_el   <- optim(c(0, 0), year_nll, x = occ$elapsed, method = "BFGS")
+fit_cen  <- optim(c(0, 0), year_nll, x = occ$c_year, method = "BFGS")
+cor_of <- function(par, x){
+  h <- optimHess(par, year_nll, x = x)
+  cov2cor(solve(h))[1, 2]
+}
+cor_el  <- cor_of(fit_el$par, occ$elapsed)
+cor_cen <- cor_of(fit_cen$par, occ$c_year)
+true_raw_a <- fit_el$par[1] - fit_el$par[2] * min(occ$year)
+
+# scales: migration against range size and mass, in raw and rescaled units
+av <- readRDS("../data/Avonet/AVONET1_BirdLife.rds")
+birds <- na.omit(av[, c("Migration", "Range.Size", "Mass")])
+birds$migrant <- as.integer(birds$Migration == 3)
+mig_nll <- function(p, range, mass){
+  prob <- plogis(p[1] + p[2] * range + p[3] * mass)
+  -sum(dbinom(birds$migrant, size = 1, prob = prob, log = TRUE))
+}
+fit_mig_nm <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size, mass = birds$Mass)
+fit_mig_bfgs_msg <- tryCatch({
+  optim(c(0, 0, 0), mig_nll, range = birds$Range.Size, mass = birds$Mass,
+        method = "BFGS")
+  "no error"
+}, error = function(e){ conditionMessage(e) })
+fit_mig_sc <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size / 1e6,
+                    mass = birds$Mass / 1000, method = "BFGS")
+fit_mig_sc_nm <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size / 1e6,
+                       mass = birds$Mass / 1000)
+
+# keeping parameters legal: the reef hump from one sensible-looking start
+hump_nat <- function(p){
+  mu <- p[1] * exp(-(reef$depth - p[2])^2 / (2 * p[3]^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = p[4], log = TRUE))
+}
+hump_log <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+hump_pen <- function(p){
+  if (any(p[c(1, 3, 4)] <= 0)) { return(1e10) }
+  hump_nat(p)
+}
+h_start <- c(25, 10, 20, 0.2)
+h_warn <- 0
+h_nat <- withCallingHandlers(optim(h_start, hump_nat, method = "BFGS"),
+                             warning = function(w){
+                               h_warn <<- h_warn + 1
+                               invokeRestart("muffleWarning")
+                             })
+h_log <- optim(c(log(25), 10, log(20), log(0.2)), hump_log, method = "BFGS")
+h_bnd <- optim(h_start, hump_nat, method = "L-BFGS-B",
+               lower = c(0.01, 0, 0.1, 0.01))
+h_pen_bfgs <- optim(h_start, hump_pen, method = "BFGS")
+h_pen_nm <- optim(h_start, hump_pen)
+
+# errors in a loop: the unguarded straight line from Lecture 16
+lin_nll <- function(p){
+  prob <- p[1] + p[2] * occ$elapsed
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+set.seed(20)
+loop_res <- rep(NA, 10)
+for (i in 1:10) {
+  start <- c(runif(1, 0.5, 1), runif(1, -0.03, 0.01))
+  loop_res[i] <- tryCatch(suppressWarnings(optim(start, lin_nll, method = "BFGS"))$value,
+                          error = function(e){ NA })
+}
+first_error <- which(is.na(loop_res))[1]
+
+# starting values: build up from the simpler model
+plain_nll <- function(p){
+  mu <- exp(p[1] + p[2] * counts$frac_built)
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[3]), log = TRUE))
+}
+threshold_nll <- function(p){
+  mu <- exp(p[1] + p[2] * pmax(0, counts$frac_built - p[3]))
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+fit_plain <- optim(c(2, -1, 0), plain_nll)
+fit_built <- optim(c(fit_plain$par[1:2], 0, fit_plain$par[3]), threshold_nll)
+fit_tuesday <- optim(c(2, -1, 0.3, 0), threshold_nll)
+
+# the fix-it challenge
+bad_nll <- function(p, depth = reef$depth, vis = reef$visibility, yr = reef$year){
+  mu <- exp(p[1] + p[2] * depth + p[3] * depth^2 + p[4] * vis + p[5] * yr)
+  -sum(dnbinom(reef$richness, mu = mu, size = p[6], log = TRUE))
+}
+fx_start <- c(3, 0, 0, 0, 0, 1)
+fx_try <- function(...){
+  suppressWarnings(optim(fx_start, bad_nll, method = "BFGS", ...))$value
+}
+fx_raw    <- fx_try()
+fx_nm     <- suppressWarnings(optim(fx_start, bad_nll))$value
+fx_center <- fx_try(yr = reef$year - mean(reef$year))
+fx_scale  <- fx_try(depth = reef$depth / 10, vis = reef$visibility / 10)
+fx_both   <- fx_try(depth = reef$depth / 10, vis = reef$visibility / 10,
+                    yr = reef$year - mean(reef$year))
+fx_glm    <- -as.numeric(logLik(MASS::glm.nb(richness ~ depth + I(depth^2) +
+                                               visibility + year, data = reef)))
+```
+
+## Today's agenda {.smaller}
+
+- Tuesday: how to **notice** a fit that went wrong
+- Today: how to **fix** it
+- Four fixes: **centering**, **rescaling**, **keeping parameters legal**, and
+  **good starting values**
+- Plus: how to keep **one failed fit** from stopping a whole loop
+- A challenge: **fix a broken model**
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+Code without the label is there to watch.
+
+::: {.notes}
+Bolker 7.4. Tuesday was diagnosis: false bottoms, plateaus, multiple starts,
+drawing the fit. Today is treatment. Every fix today is a change to how the model
+is written, not to what it means: the same biology, re-expressed so the optimizer
+can find its answer.
+:::
+
+## The story so far {.smaller}
+
+- An optimizer **searches** for the bottom of the NLL surface
+- It can stop in the **wrong place** and still report `convergence = 0`
+- **Today:** the four most common reasons, and the fix for each
+
+::: {.notes}
+Thirty seconds. The callback worth making: Tuesday's table said "re-parameterize
+(Thursday)" for ridges. This is Thursday.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(biometrydata)
+
+occ <- bobwhite_occupancy
+counts <- bobwhite_counts
+reef <- reef_surveys
+
+# bird traits: keep the columns we need, and drop species missing any of them
+birds <- avonet[, c("Migration", "Range.Size", "Mass")]
+birds <- na.omit(birds)
+birds$migrant <- as.integer(birds$Migration == 3)    # 1 = long-distance migrant
+```
+:::
+
+Four datasets you know: occupancy by year, counts by route, reef surveys, and
+AVONET's bird traits.
+
+::: {.notes}
+Nothing new; every dataset today is one they have used before. That is
+deliberate: the point is that a model they already understand can still fail to
+fit, for reasons that have nothing to do with the biology.
+
+AVONET codes Migration as 1 (sedentary), 2 (partial migrant) and 3 (full
+migrant). The last line turns that into a 0/1 response for a binomial model,
+which is used in Fix 2.
+:::
+
+# Fix 1: center your covariates
+
+## Same model, three ways to write the year {.smaller}
+
+The occupancy model, $p = \text{logistic}(a + b \cdot \text{year})$, with "year"
+written three ways:
+
+| Year as | $a$ means | Correlation of $a$ and $b$ | BFGS from (0, 0) |
+|---|---|---|---|
+| calendar year, 1997 to 2019 | occupancy in **year 0 AD** | effectively $-1$ | NLL **`r round(fit_raw$value, 1)`**, `convergence` `r fit_raw$convergence` |
+| years since 1997 | occupancy in 1997 | `r round(cor_el, 2)` | NLL `r round(fit_el$value, 2)` |
+| years from the middle year | occupancy in the **middle** year (`r mean(occ$year)`) | `r round(cor_cen, 2)` | NLL `r round(fit_cen$value, 2)` |
+
+. . .
+
+**Same model. Same data.** With the calendar year, BFGS stops far from the bottom
+and reports success.
+
+::: {.notes}
+The right answer is NLL 56.69 in every row: these are three ways of writing one
+model. Only the first fails, and it fails silently.
+
+Why the calendar year is a ridge: a is the log odds of occupancy in year 0, two
+thousand years before the data. Any small change in the slope b swings that
+far-off intercept by a huge amount, so a and b can only move together, along a
+valley so narrow it is nearly a line. Their correlation is so close to -1 that R
+cannot even compute it.
+
+Years since 1997 helps a lot (the intercept is now at the edge of the data), and
+centering on the middle year helps most: a is then the occupancy in a typical
+year, and it barely depends on the slope at all.
+:::
+
+## Your turn: break it {background-color="#f0f4f8" .bigcode}
+
+::: {.type-it}
+```{r}
+#| eval: false
+year_nll <- function(p, x){
+  prob <- plogis(p[1] + p[2] * x)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes,
+              prob = prob, log = TRUE))
+}
+
+# the calendar year, as it comes in the data
+fit_raw <- optim(c(0, 0), year_nll, x = occ$year,
+                 method = "BFGS")
+fit_raw$value
+fit_raw$convergence
+```
+:::
+
+**Check:** an NLL of `r round(fit_raw$value, 1)`, with `convergence` `r fit_raw$convergence`.
+The bottom is at `r round(fit_cen$value, 2)`.
+
+::: {.notes}
+Three minutes. The function now takes the covariate as a second argument, x, so
+the same NLL can be fitted to any version of year; optim() passes x = ... through
+to it.
+
+Let them sit with the result for a moment: the fit reports success, and it is
+nearly 40 units from the bottom.
+:::
+
+## Your turn: fix it {background-color="#f0f4f8" .bigcode}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# centered: subtract the mean year
+occ$c_year <- occ$year - mean(occ$year)
+
+fit_cen <- optim(c(0, 0), year_nll, x = occ$c_year,
+                 method = "BFGS")
+fit_cen$value
+fit_cen$convergence
+fit_cen$par
+```
+:::
+
+**Check:** `r round(fit_cen$value, 2)`, the true bottom, and a slope $b$ of
+`r round(fit_cen$par[2], 3)`, the same as Lecture 16's.
+
+::: {.notes}
+Two minutes. One new line, and the same function.
+
+The slope b comes out the same as in Lecture 16, -0.062: centering changes what
+a means, not what b means. That is the general rule, and it is why centering is
+free.
+:::
+
+## Why centering works {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+#| fig-width: 8.4
+par(mfrow = c(1, 2), mar = c(3.4, 3.6, 1.8, 0.6), mgp = c(2.2, 0.6, 0))
+b_seq <- seq(-0.1, -0.025, length.out = 100)
+a_raw <- seq(true_raw_a - 80, true_raw_a + 80, length.out = 100)
+z_raw <- outer(a_raw, b_seq, Vectorize(function(a, b){ year_nll(c(a, b), occ$year) }))
+contour(a_raw, b_seq, log(z_raw - min(z_raw) + 1), nlevels = 10,
+        drawlabels = FALSE, xlab = "a (year 0)", ylab = "b", main = "calendar year")
+a_cen <- seq(fit_cen$par[1] - 0.4, fit_cen$par[1] + 0.4, length.out = 100)
+z_cen <- outer(a_cen, b_seq, Vectorize(function(a, b){ year_nll(c(a, b), occ$c_year) }))
+contour(a_cen, b_seq, log(z_cen - min(z_cen) + 1), nlevels = 10,
+        drawlabels = FALSE, xlab = "a (middle year)", ylab = "b", main = "centered year")
+```
+
+Left: a valley so narrow it is almost a line. Right: a round bowl.
+
+::: {.plain}
+Measure from the middle of your data, not from zero. The intercept then describes a year you actually observed, instead of a wild extrapolation two thousand years back, and the optimizer can find it.
+:::
+
+::: {.notes}
+Both panels are the same surface, drawn for the same model; only the meaning of
+a has changed. On the left, every step in b drags a along with it, so the only
+way down is a diagonal line. On the right, a and b can move independently.
+
+This is the "ridge" row from Tuesday's table, and centering is its standard fix.
+It applies to any covariate with a large offset from zero: year, elevation,
+temperature in Kelvin, body mass in grams.
+:::
+
+# Fix 2: rescale
+
+## Data that span orders of magnitude {.smaller}
+
+**Are wide-ranging birds more likely to be long-distance migrants?** AVONET,
+`r format(nrow(birds), big.mark = ",")` species. Range size runs from under 1 km² to
+`r round(max(birds$Range.Size) / 1e6)` million km²; body mass from 2 g to 111 kg.
+
+$$P(\text{migrant}) = \text{logistic}(a + b \cdot \text{range} + c \cdot \text{mass})$$
+
+| Units | Nelder-Mead | BFGS |
+|---|---|---|
+| km² and grams, as in the data | NLL **`r format(round(fit_mig_nm$value), big.mark = ",")`**, `convergence` `r fit_mig_nm$convergence`, range effect the **wrong sign** | **error**: `non-finite finite-difference value` |
+| millions of km², kg | `r format(round(fit_mig_sc_nm$value, 2), nsmall = 2, big.mark = ",")` | `r format(round(fit_mig_sc$value, 2), nsmall = 2, big.mark = ",")` |
+
+. . .
+
+**Same model.** In km², the range coefficient's right value is about 0.00000005. A
+step that suits the intercept is ten million times too big for it.
+
+::: {.notes}
+The striking row is Nelder-Mead in raw units: an NLL more than twice the best,
+reported as converged, with the range effect pointing the wrong way. A student
+would have concluded that wide-ranging birds are less likely to migrate. The
+right answer, from the rescaled fit and from glm(), is the opposite: migrants
+have larger ranges, which makes sense, since a migrant's range includes both its
+breeding and its wintering grounds.
+
+Why it happens: an optimizer moves all parameters by steps of roughly similar
+size. With range in km², multiplying a step of 0.1 in b by a range of 10 million
+km² sends the log odds to a million, so every probability is 0 or 1 and the NLL
+explodes. BFGS, estimating slopes from tiny nudges, gets an infinite slope and
+stops with an error; Nelder-Mead shrinks its steps until it stops making
+progress, somewhere wrong.
+
+Not every model breaks this way: a straight-line model of hand-wing index against
+the same raw range sizes fits fine, because nothing in it explodes. The trouble
+comes when big raw values sit inside an exp() or a logistic, which is most of the
+models in this course.
+:::
+
+## Your turn: change the units {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+mig_nll <- function(p, range, mass){
+  prob <- plogis(p[1] + p[2] * range + p[3] * mass)
+  -sum(dbinom(birds$migrant, size = 1, prob = prob, log = TRUE))
+}
+
+fit_raw <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size, mass = birds$Mass)
+fit_raw$par; fit_raw$value
+
+fit_sc <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size / 1e6,
+                mass = birds$Mass / 1000, method = "BFGS")
+fit_sc$par; fit_sc$value
+```
+:::
+
+**Check:** `r format(round(fit_mig_nm$value), big.mark = ",")` against
+`r format(round(fit_mig_sc$value, 2), nsmall = 2, big.mark = ",")`. Which way does
+the range effect point in each?
+
+::: {.plain}
+Choose units that put your covariates roughly between 0.1 and 100. The model is unchanged; only the numbers the optimizer handles get easier.
+:::
+
+::: {.notes}
+Five minutes. Rescaling multiplies each coefficient by the same factor it divided
+the covariate by, so the conclusions are identical: in millions of km², the range
+coefficient is about 0.05 per million km² instead of 0.00000005 per km².
+
+Two alternatives worth naming. optim()'s control = list(parscale = ...) tells it
+the typical size of each parameter, and works without changing the data. And for
+quantities that span orders of magnitude, a log scale is often better biology as
+well as better numerics: log10 range and log10 mass fit these data noticeably
+better than the raw versions. That is a different model, though, so it belongs
+in a model comparison, not here.
+:::
+
+# Fix 3: keep parameters legal
+
+## Three ways, in order of preference {.smaller}
+
+| Fix | How | Where you have used it |
+|---|---|---|
+| **1. Transform** | fit the log of a positive parameter, the logit of a probability | Lecture 16's table; every `exp(log_k)` since |
+| **2. Bound** | `method = "L-BFGS-B"` with `lower` and `upper` | Lecture 16's `size`; Tuesday's challenge |
+| **3. Penalize** | return a huge NLL for an illegal value | Lecture 16's guard on the straight line |
+
+. . .
+
+Transforming is first because it **removes** the edge. Bounding stops at the edge.
+A penalty builds a **cliff**, which is exactly what Tuesday warned about.
+
+::: {.plain}
+Rewrite the parameter so no value is illegal, if you can. Fence it in if you cannot. Punish it only as a last resort.
+:::
+
+::: {.notes}
+A summary of things they have already done, ranked. The ranking is the new part,
+and it is the one from the original version of this lecture.
+
+The penalty's problem is Tuesday's "cliff" row: the surface jumps from a sensible
+NLL to 1,000,000, so BFGS gets a meaningless slope near the edge. It works when
+the answer is far from the edge, and quietly misbehaves when it is close.
+:::
+
+## Worked example: an unprotected fit {background-color="#f0f4f8" .smaller}
+
+**Where on Florida's reefs do divers find the most fish species?** If richness
+peaks at some intermediate depth, the hump from Tuesday describes it: how many
+species at the peak, at what depth, and how fast richness falls away on either
+side. Here with every parameter on its **natural** scale:
+
+::: {.type-it}
+```{r}
+#| eval: false
+# p[1] peak richness, p[2] depth of the peak, p[3] width, p[4] negative binomial size
+hump_nat <- function(p){
+  mu <- p[1] * exp(-(reef$depth - p[2])^2 / (2 * p[3]^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = p[4], log = TRUE))
+}
+
+start <- c(25, 10, 20, 0.2)    # 25 species at 10 m, 20 m wide: a sensible guess
+fit_nat <- optim(start, hump_nat, method = "BFGS")
+fit_nat$value
+fit_nat$par
+```
+:::
+
+`r h_warn` warnings, `NaNs produced`. The answer: a peak of
+**`r round(h_nat$par[1])` species at `r round(h_nat$par[2])` m**. The deepest
+survey is at `r round(max(reef$depth))` m.
+
+::: {.notes}
+Biological context, if anyone asks why a hump: shallow reefs take the most
+wave action and the biggest swings in temperature, while deeper reefs get less
+light; somewhere between, there is often the most structure and the most kinds of
+fish. Whether that is true here is what the model estimates, and on Tuesday it
+put the peak near 16 m. Today the question is only whether the fit finds it.
+
+Three minutes. Let the warnings scroll past, then ask them to read the
+parameters: a hump centred hundreds of metres below the deepest dive is not a
+description of these reefs.
+
+What happened: on its way, BFGS tried a negative size and a negative peak. A
+negative-binomial size below zero, or a negative expected count, is undefined, so
+dnbinom() returned NaN, which is where the warnings come from. Those undefined
+regions bent the search, and it ended somewhere absurd, with convergence 0.
+
+The start is deliberately reasonable. Nothing about it signals trouble, which is
+the point: protection is not something to add only when a start looks bad.
+:::
+
+## Fix it: transform {background-color="#f0f4f8" .smaller}
+
+Fit the **log** of everything that must be positive, then `exp()` it back:
+
+::: {.type-it}
+```{r}
+#| eval: false
+hump_log <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+# the same start, on the log scale
+fit_log <- optim(c(log(25), 10, log(20), log(0.2)), hump_log, method = "BFGS")
+fit_log$value
+
+# back to the natural scale: peak, depth, width, size
+c(exp(fit_log$par[1]), fit_log$par[2], exp(fit_log$par[3]), exp(fit_log$par[4]))
+```
+:::
+
+**Check:** NLL `r format(round(h_log$value, 2), nsmall = 2, big.mark = ",")`, a peak
+of `r round(exp(h_log$par[1]), 1)` species at `r round(h_log$par[2], 1)` m. No warnings.
+
+::: {.notes}
+Four minutes. Three exp() calls inside the function, and one line to
+back-transform the answer: that is the whole fix. The depth of the peak stays on
+its natural scale: it cannot be negative either, but the fit never comes near
+the surface, so it needs no protection here. The bounds on the next slide do
+protect it.
+
+This is the "fit on a transformed scale, then back-transform" lesson from
+Lecture 16, used for a different reason: there to keep a probability legal, here
+to keep three positive parameters positive. Every value the optimizer can try is
+now legal, so it never meets an NaN.
+:::
+
+## Fix it: bound {background-color="#f0f4f8" .smaller}
+
+Keep the natural scale, and fence each positive parameter in:
+
+::: {.type-it}
+```{r}
+#| eval: false
+fit_bnd <- optim(start, hump_nat, method = "L-BFGS-B",
+                 lower = c(peak  = 0.01,   # species at the peak: must be above 0
+                           depth = 0,      # metres below the surface: not above it
+                           width = 0.1,    # metres: must be above 0
+                           size  = 0.01))  # clumping: must be above 0
+fit_bnd$value
+fit_bnd$par
+```
+:::
+
+**Why these limits:** each sits just above zero, where the model stops making
+sense, and far below any value the data would choose. The names are only labels,
+to remind you which is which; the order is what matters.
+
+**Check:** NLL `r format(round(h_bnd$value, 2), nsmall = 2, big.mark = ",")`, a peak
+of `r round(h_bnd$par[1], 1)` species at `r round(h_bnd$par[2], 1)` m. No warnings,
+and no back-transforming.
+
+::: {.notes}
+Two minutes. The same function as the unprotected fit, hump_nat, unchanged; the
+protection is entirely in the call. method = "L-BFGS-B" is the one method that
+accepts bounds.
+
+Depth is measured in metres below the surface, so a peak above the water makes no
+sense, and 0 is a natural limit for it. One nuance: that bound assumes richness
+really does peak somewhere. If it simply fell with depth, the fit would push the
+peak against the surface and stop on the bound. Here the peak is at 16 m, far
+from it, but a fit sitting exactly on a bound always deserves a second look.
+
+The other limits are small positive numbers rather than zero, because the search
+can land exactly on a bound, and a size or width of exactly zero is still
+undefined.
+How small does not matter much, as long as it is well below anything plausible:
+the best fit has a peak near 25 species, a width near 24 m and a size near 6.5,
+so the limits are far out of its way.
+
+The names in lower = c(peak = ...) are for the reader. optim() matches limits to
+parameters by position, in the same order as the start vector, so the names do
+not change anything, but they make a wrong order much easier to spot.
+
+Bounds are a fine choice when you want the answer on its natural scale and there
+is no natural transformation. Their weakness: the fit can end sitting on a
+bound, which needs checking, as a plateau did in Lecture 19's challenge.
+:::
+
+## Fix it: penalize {background-color="#f0f4f8" .smaller}
+
+Return a huge NLL whenever a value is illegal:
+
+::: {.type-it}
+```{r}
+#| eval: false
+hump_pen <- function(p){
+  if (any(p[c(1, 3, 4)] <= 0)) {     # peak, width or size not positive
+    return(1e10)                     # a terrible score: go somewhere else
+  }
+  hump_nat(p)
+}
+
+fit_pen_bfgs <- optim(start, hump_pen, method = "BFGS")
+fit_pen_nm   <- optim(start, hump_pen)                   # Nelder-Mead
+fit_pen_bfgs$value; fit_pen_nm$value
+```
+:::
+
+**Check:** BFGS puts the peak at **`r round(h_pen_bfgs$par[2])` m** again (NLL
+`r format(round(h_pen_bfgs$value, 1), nsmall = 1, big.mark = ",")`). Nelder-Mead
+finds **`r round(h_pen_nm$par[1], 1)` species at `r round(h_pen_nm$par[2], 1)` m**
+(NLL `r format(round(h_pen_nm$value, 2), nsmall = 2, big.mark = ",")`), the same hump as
+the transformed and bounded fits.
+
+::: {.notes}
+Three minutes. The if() is exactly the "cliff in the code" from Tuesday's table.
+Below zero the NLL jumps from about 31,800 to 10,000,000,000.
+
+BFGS estimates slopes by nudging each parameter a little. Near the edge, a
+nudge either stays on the sensible side or falls off the cliff, so the slope it
+computes is meaningless, and it ends where the unprotected fit did. Nelder-Mead
+never computes a slope: it only compares values, and to it the cliff is simply a
+region of very bad points to stay out of.
+
+This is the guard students met in Lecture 16, on the straight-line occupancy
+model, with a different number.
+:::
+
+## All three, side by side {.smaller}
+
+| Protection | Method | NLL | Peak at |
+|---|---|---|---|
+| none | BFGS | `r format(round(h_nat$value, 1), nsmall = 1, big.mark = ",")` | `r round(h_nat$par[2])` m |
+| **transform** | BFGS | **`r format(round(h_log$value, 2), nsmall = 2, big.mark = ",")`** | `r round(h_log$par[2], 1)` m |
+| **bound** | L-BFGS-B | **`r format(round(h_bnd$value, 2), nsmall = 2, big.mark = ",")`** | `r round(h_bnd$par[2], 1)` m |
+| penalize | BFGS | `r format(round(h_pen_bfgs$value, 1), nsmall = 1, big.mark = ",")` | `r round(h_pen_bfgs$par[2])` m |
+| penalize | Nelder-Mead | `r format(round(h_pen_nm$value, 2), nsmall = 2, big.mark = ",")` | `r round(h_pen_nm$par[2], 1)` m |
+
+::: {.plain}
+Transform first. Bounds also work. A penalty only works with a method that does not rely on slopes.
+:::
+
+::: {.notes}
+The ranking on the earlier table, now with numbers behind it. Transforming and
+bounding both work with any method; the penalty depends on choosing a method
+that can cope with a cliff.
+
+One caution worth saying: protection stops illegal values, it does not rescue a
+bad start. From a start with a width of 2 m, all three protected fits still go
+wrong. That is Fix 4.
+:::
+
+# When one fit fails
+
+## A loop that dies on one bad fit {background-color="#f0f4f8" .smaller}
+
+Lecture 16's straight line, unguarded, from ten random starts:
+
+::: {.type-it}
+```{r}
+#| eval: false
+lin_nll <- function(p){
+  prob <- p[1] + p[2] * occ$elapsed
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+set.seed(20)
+results <- rep(NA, 10)
+for (i in 1:10) {                      # this loop fails on purpose
+  start <- c(runif(1, 0.5, 1), runif(1, -0.03, 0.01))
+  results[i] <- optim(start, lin_nll, method = "BFGS")$value
+}
+results
+```
+:::
+
+It stops at fit **`r first_error`** with `initial value in 'vmmin' is not finite`.
+One impossible start ends the whole loop.
+
+::: {.notes}
+Some starts put a probability above 1 for some year, so the NLL is not a number
+and BFGS refuses to begin. In a loop, that error does not just lose one fit: it
+stops everything after it, and results holds only what came before.
+
+Students will meet this in Part 2 of the assignment the first time they loop over
+starting values or profile a parameter.
+:::
+
+## `tryCatch()`: record the failure, keep going {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+set.seed(20)
+results <- rep(NA, 10)
+for (i in 1:10) {
+  start <- c(runif(1, 0.5, 1), runif(1, -0.03, 0.01))
+  results[i] <- tryCatch(
+    optim(start, lin_nll, method = "BFGS")$value,
+    error = function(e){ NA }               # if it fails, record NA
+  )
+}
+results
+```
+:::
+
+**`r sum(!is.na(loop_res))` of 10** fits succeed; the failures are `NA`, and the
+loop finishes.
+
+::: {.plain}
+tryCatch() says: try this, and if it throws an error, do this instead.
+:::
+
+::: {.notes}
+tryCatch() runs the first expression; if it raises an error, it runs the error
+function instead and returns that function's value, here NA. The loop never sees
+the error.
+
+Worth adding: the NA rows are information. If most starts fail, the problem is
+the model (here, a model that can propose impossible probabilities), not bad
+luck. The fix for this particular model is Fix 3, a transformation.
+:::
+
+## Errors, warnings, and `try()` {.smaller}
+
+An **error** stops your code. A **warning** prints a message and carries on.
+
+| | What it does |
+|---|---|
+| `try(code, silent = TRUE)` | runs the code; if it fails, returns a `"try-error"` object instead of stopping |
+| `tryCatch(code, error = ..., warning = ...)` | lets you choose what happens on an error, on a warning, or both |
+
+`try()` is the quick version:
+
+```{r}
+#| eval: false
+fit <- try(optim(start, lin_nll, method = "BFGS"), silent = TRUE)
+if (inherits(fit, "try-error")) {
+  cat("this start failed\n")
+}
+```
+
+::: {.notes}
+Two slides, and not ones to type: a reference for when they need it.
+
+The distinction worth making explicit: errors and warnings are different things.
+An error ends the computation. A warning, such as the NaNs produced messages from
+the unprotected hump earlier, lets it finish, which is why warnings are so easy
+to ignore and why it is worth reading them.
+
+try() needs only one function, and inherits(x, "try-error") to test whether it
+worked.
+
+These tools are not only for model fitting. Any loop over many things that can
+fail individually, such as reading a folder of files or downloading from an
+API, uses the same pattern, and students will meet it in their own projects.
+:::
+
+## `tryCatch()`, and a caution {.smaller}
+
+`tryCatch()` is the flexible version: a separate response for errors and for
+warnings, and `finally =` for code that must run either way.
+
+```{r}
+#| eval: false
+result <- tryCatch(
+  optim(start, lin_nll, method = "BFGS")$value,
+  error = function(e){
+    message("failed: ", conditionMessage(e))   # record WHY it failed
+    NA
+  }
+)
+```
+
+::: {.plain}
+Catching an error hides it. Keep a record of what failed, and if most attempts fail, fix the model rather than the loop.
+:::
+
+::: {.notes}
+finally = is for clean-up, such as closing a file or a connection, that has to
+happen whether the code worked or not.
+
+The caution is the important part. tryCatch() makes a loop finish, but it also
+makes failures silent unless you record them. conditionMessage(e) gives the
+error's text, so it can be saved alongside the NA. If most attempts fail, the
+problem is the model, as it was with the unguarded straight line, and the fix is
+Fix 3, not a better loop.
+:::
+
+# Fix 4: good starting values
+
+## Where starting values come from {.smaller}
+
+| Source | Example |
+|---|---|
+| **The plot** | read the reef peak off the graph: about 25 species at about 15 m |
+| **A simpler model** | fit the nested model first; start the bigger one from its estimates |
+| **A rough calculation** | method of moments, Lecture 15 |
+| **A coarse grid** | for one or two parameters, Tuesday's brute force |
+
+::: {.notes}
+The first is the most underused. A start that is merely in the right
+neighborhood rules out most false bottoms, and the plot gives that for free.
+
+The second is the most powerful, and the next slide shows why: a nested model is
+the bigger model with something fixed, so its fit is a point on the bigger
+model's surface that is already good.
+:::
+
+## Build up from the simpler model {background-color="#f0f4f8" .smaller}
+
+**Does development hurt bobwhite only past a threshold?** Tuesday's challenge:
+counts stay flat until a route is a fraction $t$ developed, then fall. From
+Tuesday's start, `optim()` slid to $t$ below zero, which means **no threshold at
+all**. Two models, one nested in the other:
+
+::: {.type-it}
+```{r}
+#| eval: false
+plain_nll <- function(p){            # counts fall from the first development
+  mu <- exp(p[1] + p[2] * counts$frac_built)
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[3]), log = TRUE))
+}
+threshold_nll <- function(p){        # counts flat until a fraction p[3] is built
+  mu <- exp(p[1] + p[2] * pmax(0, counts$frac_built - p[3]))
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+```
+:::
+
+With $t = 0$, the threshold model **is** the plain model.
+
+::: {.notes}
+The biology first, because the fitting trick only makes sense once the two
+models are clear. The plain model says development costs bobwhite from the very
+first house. The threshold model says there is some level of development they
+tolerate, and only beyond it do counts fall. Which is right matters for
+management: a threshold would mean there is a safe amount of development.
+
+Nested: set the threshold to zero and pmax(0, u - 0) is just u, so the threshold
+model collapses to the plain one. That is what the next slide uses.
+:::
+
+## Start from the plain fit {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+fit_plain <- optim(c(2, -1, 0), plain_nll)
+
+# start exactly at the plain model: its estimates, with a threshold of 0
+fit_built <- optim(c(fit_plain$par[1:2], 0, fit_plain$par[3]), threshold_nll)
+
+fit_built$par[3]              # the threshold: fraction of the route developed
+exp(fit_built$par[1])         # expected bobwhite on a route below the threshold
+fit_built$value
+```
+:::
+
+**Check:** a threshold of **`r round(100 * fit_built$par[3], 1)`%** developed, with
+about **`r round(exp(fit_built$par[1]), 1)`** bobwhite expected on a route below it
+(NLL `r format(round(fit_built$value, 2), nsmall = 2, big.mark = ",")`, the best
+possible). Tuesday's start stopped at a threshold of
+`r round(fit_tuesday$par[3], 2)`: no threshold at all.
+
+. . .
+
+The biology: there is a threshold, but it is **so close to zero** that there is
+effectively no safe level of development.
+
+::: {.notes}
+The idea: the plain model's estimates are a point on the threshold model's
+surface that is already as good as the plain model, and on the right side of it.
+From there, Nelder-Mead walks straight into the dip that Tuesday's start missed.
+
+exp() on the first parameter turns the log of the expected count back into
+birds, the back-transforming habit from Lecture 16.
+
+This is a general strategy for Part 2 of the assignment: fit the simplest
+version, then add one piece at a time, each starting from the last fit.
+:::
+
+## What to try, in order {.smaller}
+
+| You see | Likely cause | Try |
+|---|---|---|
+| an error before it starts | a start that is illegal | a legal start; transform (Fix 3) |
+| estimates that disagree between starts | false bottoms | more starts; build up (Fix 4) |
+| estimates strongly correlated | a ridge | center (Fix 1) |
+| coefficients differing a hundredfold | scales | rescale (Fix 2) |
+| a curve that misses the data | any of the above | draw it, then work up this table |
+| one failure stops a loop | | `tryCatch()` |
+
+::: {.notes}
+The summary to photograph for the assignment. Read it alongside Tuesday's
+checklist: that one says how to notice a problem, this one what to do about it.
+
+The correlation between estimates is easy to get from mle2: cov2cor(vcov(fit)).
+Anything beyond about 0.9 in absolute value is worth centering for.
+:::
+
+# Challenge
+
+## Challenge: fix this model {background-color="#f0f4f8" .smaller}
+
+Reef richness against depth, $\text{depth}^2$, visibility and year, written the way
+data usually arrive:
+
+::: {.type-it}
+```{r}
+#| eval: false
+bad_nll <- function(p){
+  mu <- exp(p[1] + p[2] * reef$depth + p[3] * reef$depth^2 +
+            p[4] * reef$visibility + p[5] * reef$year)
+  -sum(dnbinom(reef$richness, mu = mu, size = p[6], log = TRUE))
+}
+
+start <- c(3, 0, 0, 0, 0, 1)
+first_try <- optim(start, bad_nll, method = "BFGS")
+first_try$value
+first_try$convergence
+```
+:::
+
+**Get the lowest NLL you can.** Same data, same model: change only how it is
+written. Note what you changed.
+
+::: {.notes}
+Fifteen minutes, in pairs. The first try gives about
+`r format(round(fx_raw), big.mark = ",")`, with convergence 0. The best possible
+is `r format(round(fx_glm, 2), nsmall = 2, big.mark = ",")`. Keep a running best
+on the board, with what each pair changed.
+
+The changes allowed are the ones from today: what the covariates are measured
+from (centering), what units they are in (rescaling), and how size is written
+(transforming). The model itself, its curve and its distribution, stays the same,
+which is what makes the NLLs comparable.
+
+Hints for anyone stuck after five minutes, in order:
+
+1. Today's table. Which rows describe this model?
+2. What is year measured from, here? And what does depth squared run up to?
+3. One fix alone is not enough.
+
+Do not reveal the next slide until the board settles.
+:::
+
+## How the room could have won {.smaller}
+
+| The model with... | BFGS reaches |
+|---|---|
+| nothing changed | `r format(round(fx_raw, 1), nsmall = 1, big.mark = ",")` |
+| nothing changed, Nelder-Mead instead | `r format(round(fx_nm, 1), nsmall = 1, big.mark = ",")` |
+| **only** year centered | `r format(round(fx_center, 1), nsmall = 1, big.mark = ",")` |
+| **only** depth and visibility rescaled | `r format(round(fx_scale, 1), nsmall = 1, big.mark = ",")` |
+| year centered **and** depth and visibility rescaled | **`r format(round(fx_both, 2), nsmall = 2, big.mark = ",")`** |
+
+. . .
+
+**One fix alone is not enough. Together, they reach the bottom.** And a
+completely different fitting routine, `MASS::glm.nb()`, agrees to the second
+decimal: `r format(round(fx_glm, 2), nsmall = 2, big.mark = ",")`.
+
+::: {.plain}
+Most failed fits have more than one cause. Fix what you can find, then check the answer a second, independent way.
+:::
+
+::: {.notes}
+The model has two independent problems: a ridge from the calendar year (2014 to
+2024, so the intercept is in year 0 AD), and badly matched scales from depth in
+metres with depth squared running to 1,000. The second is why the Assignment 3
+starter script divides depth by 10 for Part 1c. Fixing either alone leaves the other
+to stall BFGS. Fixing both makes it easy.
+
+Nelder-Mead does better on the unfixed model than BFGS does, but still stops
+short: a reminder that switching method can paper over a badly written model
+without curing it.
+
+glm.nb() is a preview of Lecture 24: it fits this kind of model with a
+specialized algorithm, and it makes a good independent check on a hand-written
+NLL when the model happens to be one it can fit.
+
+Deliberately no interpretation of the coefficients here: this is close to
+Assignment 3's Part 1c, and the point of the exercise is the fitting.
+:::
+
+## Before next class
+
+Read Bolker **7.5**
+
+Next time: **confidence limits** on things other than parameters, such as a
+fitted curve
