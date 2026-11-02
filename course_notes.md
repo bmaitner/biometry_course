@@ -158,6 +158,30 @@ From midterm feedback, Fall 2025:
 
 - [ ] Add in more content about model interpretation
 - [ ] Add in more content about visualizing model predictions for complicated models
+- [ ] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
+  shortcuts for Lecture 21.** Lecture 21 (Fall 2026) built confidence bands and
+  prediction intervals by hand: draw parameter sets with `MASS::mvrnorm()` from
+  `coef()` and `vcov()`, compute, take the middle 95%, and simulate the scatter
+  for a prediction interval. Its closing slide promises that `lm()` and `glm()`
+  have shortcuts in Lectures 23 and 24. The 2025 `lm()` slides were left out of
+  Lecture 21 on purpose, because `lm()` and `glm()` are not introduced until 23.
+  The old Lecture 24 deck has only three slides on `predict()` (about 23 to 25),
+  for `lm()` only. To cover:
+  - `predict(fit, interval = "confidence")` and `interval = "prediction"` for
+    `lm()`, checked against Lecture 21's recipe on the same model, the way
+    Lecture 20 checked a hand-written NLL against `glm.nb()`.
+  - `predict()` on a `glm()` has **no** `interval` argument and silently ignores
+    one. The band comes from `se.fit = TRUE` on the link scale, then
+    back-transforming the ends (Lecture 17's back-transformed endpoints). There is
+    no built-in prediction interval for a GLM; the recipe's simulation is how.
+  - `confint()` on `lm()` and `glm()` fits, the same as on `mle2()`.
+  - The grey ribbon from `geom_smooth()` (seen in Lecture 8) is a **confidence**
+    band, not a prediction band.
+- [ ] **Show that `lm()` and `glm()` are also maximizing a likelihood**, by fitting
+  one model both ways and comparing estimates and `logLik()`. Raised while
+  planning Lecture 19 and deferred until those functions are introduced
+  (Lectures 23 and 24). Lecture 20's challenge already does this once, with
+  `glm.nb()`.
 
 ## Logistics
 

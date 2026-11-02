@@ -184,7 +184,7 @@ whole models, and AIC is one line of arithmetic on the negative log-likelihood.
 
 . . .
 
-**Due Thursday, November 5**
+**Due Friday, November 6**
 
 ::: {.notes}
 The due date is from the syllabus, Lecture 22. Confirm before class if it has

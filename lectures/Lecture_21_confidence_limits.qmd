@@ -1,0 +1,956 @@
+---
+title: "Confidence limits on what you predict"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 21"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+library(bbmle)
+
+occ <- read.csv("../data/class_examples/bobwhite_occupancy.csv")
+counts <- read.csv("../data/class_examples/bobwhite_counts.csv")
+
+pct <- function(x){ paste0(round(100 * x), "%") }
+pct1 <- function(x){ paste0(sprintf("%.1f", 100 * x), "%") }
+
+# the occupancy model, fitted the way students fit it
+m_occ <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * elapsed)),
+              start = list(a = 2, b = -0.05), data = occ)
+a_hat <- coef(m_occ)["a"]
+b_hat <- coef(m_occ)["b"]
+ci_occ <- confint(m_occ)
+se_occ <- sqrt(diag(vcov(m_occ)))
+cor_ab <- cov2cor(vcov(m_occ))["a", "b"]
+
+# occupancy in 2019, four ways
+occ19_hat <- plogis(a_hat + 22 * b_hat)
+corners <- expand.grid(a = ci_occ["a", ], b = ci_occ["b", ])
+corners$p19 <- plogis(corners$a + 22 * corners$b)
+
+set.seed(21)
+draws <- MASS::mvrnorm(1000, mu = coef(m_occ), Sigma = vcov(m_occ))
+occ19 <- plogis(draws[, "a"] + 22 * draws[, "b"])
+occ19_ci <- quantile(occ19, c(0.025, 0.975))
+obs19 <- occ$n_occupied[occ$year == 2019] / occ$n_routes[occ$year == 2019]
+
+drop_draws <- plogis(draws[, "a"]) - occ19
+drop_hat <- plogis(a_hat) - occ19_hat
+drop_ci <- quantile(drop_draws, c(0.025, 0.975))
+
+occ$from2019 <- occ$elapsed - 22
+m_2019 <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * from2019)),
+               start = list(a = 1, b = -0.05), data = occ)
+rewrite_ci <- plogis(confint(m_2019, parm = "a"))
+
+g19 <- function(th){ plogis(th[1] + 22 * th[2]) }
+grad19 <- sapply(1:2, function(i){
+  d <- coef(m_occ)
+  d[i] <- d[i] + 1e-6
+  (g19(d) - g19(coef(m_occ))) / 1e-6
+})
+se19 <- sqrt(drop(t(grad19) %*% vcov(m_occ) %*% grad19))
+delta_ci <- occ19_hat + c(-1.96, 1.96) * se19
+
+# the band, at the surveyed years, in the order students build it
+years <- occ$elapsed
+curves <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  curves[i, ] <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+}
+lower <- apply(curves, 2, quantile, 0.025)
+upper <- apply(curves, 2, quantile, 0.975)
+obs <- occ$n_occupied / occ$n_routes
+in_band <- sum(obs >= lower & obs <= upper)
+band_w <- upper - lower
+
+preds <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  p_i <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+  preds[i, ] <- rbinom(length(years), size = occ$n_routes, prob = p_i) / occ$n_routes
+}
+pred_lower <- apply(preds, 2, quantile, 0.025)
+pred_upper <- apply(preds, 2, quantile, 0.975)
+in_pred <- sum(obs >= pred_lower & obs <= pred_upper)
+pred_w <- pred_upper - pred_lower
+
+# Lecture 19's band: the same simulation with the parameters held at their estimates
+set.seed(19)
+p_fit <- plogis(a_hat + b_hat * years)
+fake <- replicate(1000, rbinom(length(years), size = occ$n_routes, prob = p_fit) / occ$n_routes)
+fixed_w <- apply(fake, 1, quantile, 0.975) - apply(fake, 1, quantile, 0.025)
+
+# extrapolating: the curve out to 2035, for the figure
+e_long <- seq(0, 38, by = 0.25)
+long_curves <- sapply(1:1000, function(i){ plogis(draws[i, "a"] + draws[i, "b"] * e_long) })
+long_band <- apply(long_curves, 1, quantile, probs = c(0.025, 0.975))
+w2035 <- diff(long_band[, length(e_long)])
+
+# counts against development, on the log scale
+m_nb <- mle2(count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k)),
+             start = list(log_mu0 = 2.5, b = -3, log_k = 0), data = counts)
+b_nb <- coef(m_nb)["b"]
+ci_b_nb <- confint(m_nb)["b", ]
+half_hat <- log(2) / -b_nb
+half_ci <- log(2) / -ci_b_nb
+
+set.seed(22)
+draws_nb <- MASS::mvrnorm(1000, mu = coef(m_nb), Sigma = vcov(m_nb))
+built <- seq(0, 0.5, by = 0.01)
+counts_curves <- matrix(NA, nrow = 1000, ncol = length(built))
+for (i in 1:1000) {
+  counts_curves[i, ] <- exp(draws_nb[i, "log_mu0"] + draws_nb[i, "b"] * built)
+}
+nb_lower <- apply(counts_curves, 2, quantile, 0.025)
+nb_upper <- apply(counts_curves, 2, quantile, 0.975)
+half_recipe <- quantile(log(2) / -draws_nb[, "b"], c(0.025, 0.975))
+
+mu_20 <- exp(draws_nb[, "log_mu0"] + draws_nb[, "b"] * 0.2)
+mu_20_hat <- exp(coef(m_nb)["log_mu0"] + b_nb * 0.2)
+mu_20_ci <- quantile(mu_20, c(0.025, 0.975))
+one_route <- rnbinom(1000, mu = mu_20, size = exp(draws_nb[, "log_k"]))
+one_route_ci <- quantile(one_route, c(0.025, 0.975))
+n_above40 <- sum(counts$count > 40)
+```
+
+## Today's agenda {.smaller}
+
+- Intervals on what the parameters **predict**: a value in one year, a change
+  over time, a whole curve
+- One recipe that works for all of them: **draw, compute, take the middle 95%**
+- **Confidence** intervals versus **prediction** intervals
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+Code without the label is there to watch.
+
+::: {.notes}
+Bolker 7.5. Lecture 17 put intervals on parameters. Today puts them on the
+things biologists actually report, which are almost never a single parameter.
+Lecture 17 ended with a picture of a band around the occupancy curve and a
+promise that Lecture 21 would draw it. This is that lecture.
+:::
+
+## The story so far {.smaller}
+
+- A parameter's interval: every value within **1.92** of the best NLL (Lecture 17)
+- We can compare models, and fit them reliably (Lectures 18 to 20)
+- **Today:** intervals on what the fitted model **predicts**
+
+::: {.notes}
+Thirty seconds.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(bbmle)
+library(biometrydata)
+
+occ <- bobwhite_occupancy
+counts <- bobwhite_counts
+
+# occupancy against years since 1997, as in Lecture 17
+m_occ <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * elapsed)),
+              start = list(a = 2, b = -0.05), data = occ)
+coef(m_occ)
+confint(m_occ)
+```
+:::
+
+**Check:** $a$ = `r round(a_hat, 2)` and $b$ = `r round(b_hat, 3)`, the decline of
+about 6% a year in the odds of occupancy from Lecture 17.
+
+::: {.notes}
+Two minutes. The model they have fitted three times now, written with mle2's
+formula interface from Lecture 18. a is the log odds of occupancy in 1997
+(elapsed = 0), b the change in log odds per year.
+
+confint() gives the profile intervals from Lecture 17. Leave them on screen:
+the next few slides use them.
+:::
+
+# The question is rarely a parameter
+
+## What biologists actually ask {.smaller}
+
+| The question | The answer is | Uses |
+|---|---|---|
+| What fraction of routes had bobwhite in 2019? | $\text{logistic}(a + 22b)$ | $a$ and $b$ |
+| How much did occupancy fall, 1997 to 2019? | $\text{logistic}(a) - \text{logistic}(a + 22b)$ | $a$ and $b$ |
+| At what level of development are counts halved? | $\log(2) / -b$ | $b$ only |
+| What does the whole decline look like? | $\text{logistic}(a + b \cdot \text{year})$, every year | $a$ and $b$ |
+
+. . .
+
+`confint()` gives intervals on $a$ and $b$. **None of these is $a$ or $b$.**
+
+::: {.notes}
+The motivation for the whole lecture. A manager does not want the log odds of
+occupancy in 1997; they want to know how many routes still have bobwhite, and
+how fast that is changing. Each of those numbers is calculated from the
+parameters, and each needs its own interval.
+
+The 22 is the number of years from 1997 to 2019, the last survey.
+:::
+
+## Occupancy in 2019, give or take what? {.smaller}
+
+The estimate: $\text{logistic}(a + 22b)$ = **`r pct(occ19_hat)`** of routes.
+
+. . .
+
+A first idea: plug in the ends of the two intervals, every combination:
+
+| $a$ | $b$ | Occupancy in 2019 |
+|---|---|---|
+| `r round(corners$a[1], 2)` (low) | `r round(corners$b[1], 3)` (low) | `r pct(corners$p19[1])` |
+| `r round(corners$a[2], 2)` (high) | `r round(corners$b[1], 3)` (low) | `r pct(corners$p19[2])` |
+| `r round(corners$a[1], 2)` (low) | `r round(corners$b[3], 3)` (high) | `r pct(corners$p19[3])` |
+| `r round(corners$a[2], 2)` (high) | `r round(corners$b[3], 3)` (high) | `r pct(corners$p19[4])` |
+
+. . .
+
+So somewhere from `r pct(min(corners$p19))` to `r pct(max(corners$p19))`? **Too
+wide, by a lot.**
+
+::: {.notes}
+Ask the room first: given the two intervals on screen, how would you get an
+interval for occupancy in 2019? Someone will suggest this. It is a natural idea,
+and it is what a lot of people do.
+
+A range of `r round(100 * diff(range(corners$p19)))` points for one number is suspicious when each parameter is fairly
+well pinned down. The next slide shows why.
+:::
+
+## Why the corners are wrong {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.85
+#| fig-width: 7.6
+par(mar = c(3.4, 4.6, 0.6, 0.6), mgp = c(2.2, 0.6, 0), las = 1)
+plot(draws[, "a"], draws[, "b"], pch = 16, cex = 0.5, col = rgb(0.16, 0.48, 0.69, 0.35),
+     xlim = range(c(draws[, "a"], ci_occ["a", ])) + c(-0.03, 0.03),
+     ylim = range(c(draws[, "b"], ci_occ["b", ])) + c(-0.002, 0.002),
+     xlab = "a (log odds of occupancy, 1997)", ylab = "", bty = "l")
+title(ylab = "b (change per year)", line = 3.5)
+rect(ci_occ["a", 1], ci_occ["b", 1], ci_occ["a", 2], ci_occ["b", 2], border = "grey30", lty = 2)
+points(corners$a, corners$b, pch = 4, cex = 2.2, lwd = 3, col = "#b2182b")
+points(a_hat, b_hat, pch = 16, cex = 1.4)
+```
+
+Each blue dot is a pair of values the data support. The dashed box is the two
+intervals. **Two of the corners sit far from every dot.**
+
+::: {.plain}
+The ends of two intervals are rarely plausible together. Here, a higher start goes with a steeper decline.
+:::
+
+::: {.notes}
+The correlation between a and b is `r round(cor_ab, 2)`: if 1997 occupancy was
+a little higher than estimated, the decline must have been a little steeper to
+end at the same 2019 values, and vice versa. The dots lie along a tilted
+ellipse, and the box drawn from the two intervals is mostly empty space.
+
+The two corners that set the extremes of the plug-in range, low a with low b
+and high a with high b, go against that tilt. They are combinations the data
+rule out, which is why the plug-in range was so wide.
+
+This is the same correlation that made the slice overconfident in Lecture 17,
+and that made the calendar-year model hard to fit in Lecture 20.
+
+How the dots were made is the next section.
+:::
+
+# One recipe: draw, compute, summarize
+
+## The recipe {.smaller}
+
+1. **Draw** 1,000 plausible sets of parameters from the fit, the blue dots
+2. **Compute** the number you care about from each set
+3. Take the **middle 95%** of those 1,000 numbers
+
+. . .
+
+It works for **any** number you can calculate from the parameters: a value, a
+difference, a ratio, a whole curve.
+
+::: {.plain}
+If you do not know the parameters exactly, try many plausible values and see how much the answer moves.
+:::
+
+::: {.notes}
+Bolker calls this a population prediction interval, PPI, which is an unhelpful
+name: it is a confidence interval, not a prediction interval in the sense of the
+end of today. It is also close to what a Bayesian analysis does with its
+posterior draws. Students do not need either label; "the recipe" is enough.
+
+It is Lecture 13's simulation idea again: when the math is hard, simulate.
+:::
+
+## Where plausible values come from {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+vcov(m_occ)                 # the variance-covariance matrix
+sqrt(diag(vcov(m_occ)))     # standard errors of a and b
+cov2cor(vcov(m_occ))        # how strongly a and b move together
+```
+:::
+
+| Part of `vcov()` | Means |
+|---|---|
+| the diagonal | how uncertain each parameter is: its **standard error**, squared |
+| off the diagonal | how the two move **together** |
+
+**Check:** standard errors `r round(se_occ["a"], 3)` and `r round(se_occ["b"], 4)`,
+and a correlation of `r round(cor_ab, 2)`.
+
+::: {.notes}
+Two minutes. vcov() describes the shape of the bottom of the NLL bowl: how wide
+it is in each direction, and which way it tilts. mle2 works it out from how
+sharply the NLL curves at the bottom (the Hessian, for anyone who wants the
+word).
+
+The standard errors are the ones the plus-or-minus 1.96 SE shortcut from
+Lecture 17 uses. That is the caveat for today's recipe: it treats the bowl as a
+smooth, symmetric bowl, which is the shortcut's assumption. It is fine when the
+parameters are on a scale where the bowl is round, which is one more reason to
+fit on the logit or log scale, as we did here. It is not fine for a rare
+species on the natural probability scale, Lecture 17's counterexample.
+:::
+
+## Step 1: draw {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+set.seed(21)
+draws <- MASS::mvrnorm(1000, mu = coef(m_occ), Sigma = vcov(m_occ))
+head(draws)
+cor(draws)
+```
+:::
+
+`mvrnorm()` draws from a **multivariate normal**: centered on the estimates, with
+the spread and the tilt from `vcov()`.
+
+**Check:** 1,000 rows, one plausible $(a, b)$ pair in each, and a correlation of
+about `r round(cor(draws)[1, 2], 2)`, the tilt from the picture.
+
+::: {.notes}
+Two minutes. MASS comes with every R installation. MASS:: uses one function from
+it without loading the whole package, which matters because loading MASS hides
+dplyr's select(), a confusing error for anyone using the tidyverse.
+
+Each row of draws is one blue dot from the corners picture. Point at the
+correlation: rnorm() twice would have drawn a and b independently, filling the
+whole box. mvrnorm() keeps the tilt.
+:::
+
+## Steps 2 and 3: compute, summarize {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# occupancy in 2019 (22 years after 1997), once for each draw
+occ19 <- plogis(draws[, "a"] + 22 * draws[, "b"])
+
+hist(occ19)
+quantile(occ19, c(0.025, 0.975))     # the middle 95%
+```
+:::
+
+**Check:** `r pct1(occ19_ci[1])` to `r pct1(occ19_ci[2])` of routes. Your last
+decimal may differ.
+
+::: {.notes}
+Two minutes. The calculation is the formula from the table, written once; R
+applies it to all 1,000 rows at once. The histogram is the uncertainty in the
+answer, and the quantiles cut off 2.5% at each end.
+
+Compare with the plug-in corners: `r pct(min(corners$p19))` to
+`r pct(max(corners$p19))`. The recipe's interval is about a third as wide,
+because it never uses a pair of values the data rule out.
+:::
+
+## Two surprises {.smaller}
+
+| Method | Occupancy in 2019 |
+|---|---|
+| plug in the corners | `r pct(min(corners$p19))` to `r pct(max(corners$p19))` |
+| **the recipe** | **`r pct(occ19_ci[1])` to `r pct(occ19_ci[2])`** |
+
+. . .
+
+1. The recipe's interval is about **a third as wide**
+2. The real 2019 survey found bobwhite on **52 of 71 routes, `r pct(obs19)`**:
+   *outside* the interval
+
+. . .
+
+Is the model wrong? Hold that thought until the end of the lecture.
+
+::: {.notes}
+The second surprise is the setup for prediction intervals. Let someone guess.
+The short answer, for later: this interval is about the model's average for
+2019, the trend line. Any single year's survey scatters around that line, and
+2019 happened to land above it.
+:::
+
+## Your turn: how much was lost? {background-color="#f0f4f8" .smaller}
+
+**By how many percentage points did occupancy fall from 1997 to 2019?**
+
+::: {.type-it}
+```{r}
+#| eval: false
+# occupancy in 1997, for every draw, goes here (hint: elapsed is 0 in 1997)
+
+# the drop, for every draw, goes here (you already have occ19)
+
+# the middle 95% of the drop goes here
+```
+:::
+
+**Hint:** slide 13 computed occupancy in 2019 for every draw. Do the same for
+1997, then subtract.
+
+**Check:** a drop of about **`r round(100 * drop_hat)` points**, from
+`r round(100 * drop_ci[1])` to `r round(100 * drop_ci[2])`.
+
+::: {.notes}
+Four minutes. Three lines:
+
+occ97 <- plogis(draws[, "a"])
+drop <- occ97 - occ19
+quantile(drop, c(0.025, 0.975))
+
+The point to draw out: the drop uses both parameters, and it is the kind of
+number a report or a management plan would actually quote. No new method, just
+a different formula in step 2. That is the strength of the recipe.
+:::
+
+## Two other ways, and when they work {.smaller}
+
+| Method | Occupancy in 2019 | Works when |
+|---|---|---|
+| **the recipe** | `r pct1(occ19_ci[1])` to `r pct1(occ19_ci[2])` | always; the bowl should be roughly round |
+| **rewrite the model** so the number is a parameter | `r pct1(rewrite_ci[1])` to `r pct1(rewrite_ci[2])` | you can rewrite it, one number at a time |
+| the **delta method**, from slopes and `vcov()` | `r pct1(delta_ci[1])` to `r pct1(delta_ci[2])` | as for $\pm$ 1.96 SE |
+
+. . .
+
+Rewriting, for this model: measure time from 2019 instead of 1997. Then $a$ **is**
+the log odds of occupancy in 2019, and `confint()` gives its profile interval.
+
+::: {.notes}
+Watch only. Three methods, one answer, to within a point.
+
+Rewriting is Lecture 20's centering idea used on purpose: measure the covariate
+from wherever you want a to mean something. The code, for anyone curious, is in
+the solutions:
+
+occ$from2019 <- occ$elapsed - 22, refit with from2019 in place of elapsed, and
+plogis(confint(m_2019, parm = "a")).
+
+It gives a profile interval, the most trustworthy kind, but it only works for
+numbers you can turn into a parameter, and a curve would need one refit per year.
+
+The delta method appears in many papers and in some R functions. It
+approximates the uncertainty using the slope of the formula at the estimate. It
+makes the same assumption as plus-or-minus 1.96 SE, so it fails where that
+does. Bolker 7.5.2 has the details; students do not need to compute it.
+:::
+
+# A band around the curve
+
+## From one year to every year {.smaller}
+
+A curve is the same calculation at **every year**. So the band is the recipe, run
+once per year:
+
+- one **row** per draw (1,000)
+- one **column** per year (`r length(years)`)
+- the middle 95% of **each column**
+
+::: {.notes}
+The only new thing in the code coming up is bookkeeping: a matrix to hold a
+whole curve for each draw, and apply() to summarize each column.
+:::
+
+## The band, step 1 {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+years <- occ$elapsed                 # the surveyed years, 0 to 22
+
+# one row per draw, one column per year
+curves <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  curves[i, ] <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+}
+
+# the middle 95% of each column (the 2 means columns)
+lower <- apply(curves, 2, quantile, 0.025)
+upper <- apply(curves, 2, quantile, 0.975)
+```
+:::
+
+**Check:** `dim(curves)` is 1000 by `r length(years)`. `lower[23]` and `upper[23]`
+are 2019's interval from before.
+
+::: {.notes}
+Three minutes. Inside the loop, draws[i, "a"] is a single number and years is a
+vector, so each pass computes a whole curve, all 23 years, for one draw.
+
+apply(curves, 2, quantile, 0.025) reads as: for every column of curves, run
+quantile(column, 0.025). The 2 means columns; a 1 would mean rows.
+:::
+
+## The band, step 2 {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+obs <- occ$n_occupied / occ$n_routes
+plot(occ$year, obs, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction of routes occupied")
+
+lines(occ$year, plogis(coef(m_occ)["a"] + coef(m_occ)["b"] * years), lwd = 2)
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+```
+:::
+
+```{r}
+#| echo: false
+#| fig-height: 2.4
+#| fig-width: 7
+plot(occ$year, obs, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction occupied")
+lines(occ$year, plogis(a_hat + b_hat * years), lwd = 2)
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+```
+
+::: {.notes}
+Two minutes. The plot is Lecture 19's "draw the fit", plus two dashed lines.
+:::
+
+## Why the band flares {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.8
+#| fig-width: 7.6
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+plot(occ$year, obs, pch = 16, xlim = c(1997, 2035), ylim = c(0.2, 1),
+     xlab = "year", ylab = "fraction of routes occupied", bty = "l")
+for (i in 1:40) {
+  lines(1997 + e_long, long_curves[, i], col = rgb(0.16, 0.48, 0.69, 0.35))
+}
+lines(1997 + e_long, long_band[1, ], lty = 2, lwd = 2)
+lines(1997 + e_long, long_band[2, ], lty = 2, lwd = 2)
+abline(v = 2019.5, col = "grey50")
+text(2020, 0.95, "no data past here", adj = 0, cex = 0.8, col = "grey30")
+```
+
+Forty of the 1,000 curves. They **pivot** near the middle of the data.
+
+::: {.plain}
+The band is narrowest where the data are, and keeps widening the further you predict beyond them.
+:::
+
+::: {.notes}
+Within the data, the band is about `r round(100 * min(band_w))` points wide near
+the middle and `r round(100 * band_w[23])` points wide in 2019. By 2035 it is
+`r round(100 * w2035)` points wide, and that is the optimistic version: it
+assumes the decline keeps the same logistic shape for sixteen more years, which
+nothing in the data can tell us.
+
+Like a seesaw: a small change in the slope barely moves the middle, and swings
+the ends a long way. This is also why centering in Lecture 20 made a and b
+nearly uncorrelated: the middle of the data is the pivot.
+:::
+
+## Is the model wrong? {.smaller}
+
+Only **`r in_band` of the `r nrow(occ)`** years fall inside the band, 2019 among the
+misses.
+
+. . .
+
+The band answers: **where is the trend line?**
+
+It does not answer: **where will a year's survey land?** Each year's survey
+scatters around the line: binomial scatter, from sampling 70-odd routes.
+
+. . .
+
+That needs a **prediction interval**.
+
+::: {.notes}
+Answer the "two surprises" cliffhanger here. The model is not wrong; the band
+is answering a different question from the one the points pose. A confidence
+band that contained 95% of the data points would be far too wide to say
+anything about the trend.
+:::
+
+# Where will the next survey land?
+
+## Confidence or prediction? {.smaller}
+
+| Interval | Includes | Answers |
+|---|---|---|
+| **confidence** | uncertainty in the **parameters** | where is the average, the trend line? |
+| **prediction** | the parameters **plus** the scatter of real data | where will one new observation land? |
+
+. . .
+
+To get a prediction interval: run the recipe, but in step 2 **simulate a survey**
+from each draw, instead of computing its average.
+
+::: {.plain}
+A confidence interval says where the average is. A prediction interval says where the next observation will land, so it is always wider.
+:::
+
+::: {.notes}
+An archery picture works: the confidence interval is where the center of the
+target is; the prediction interval is where the next arrow lands.
+
+The scatter is the distribution half of the model, from Lecture 17's "a model is
+two things": the deterministic curve says where the average is, the
+distribution says how data scatter around it. A confidence interval uses only
+the first half; a prediction interval uses both.
+:::
+
+## The prediction interval {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+preds <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  p_i <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+  # one simulated survey per year, with that year's number of routes
+  preds[i, ] <- rbinom(length(years), size = occ$n_routes, prob = p_i) / occ$n_routes
+}
+pred_lower <- apply(preds, 2, quantile, 0.025)
+pred_upper <- apply(preds, 2, quantile, 0.975)
+
+lines(occ$year, pred_lower, lty = 3, col = "red")
+lines(occ$year, pred_upper, lty = 3, col = "red")
+sum(obs >= pred_lower & obs <= pred_upper)
+```
+:::
+
+**Check:** about **`r in_pred` of `r nrow(occ)`** years inside the red lines.
+
+::: {.notes}
+Three minutes. The loop is the band's loop with one added line: rbinom()
+simulates a survey from each draw's curve.
+
+This is Lecture 19's "simulate from the fit" with one improvement: there, every
+fake survey used the single best-fit curve; here, each uses a different
+plausible curve. That is the full prediction interval.
+:::
+
+## Both, together {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.1
+#| fig-width: 7.6
+par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+plot(occ$year, obs, pch = 16, ylim = c(0.45, 1), type = "n",
+     xlab = "year", ylab = "fraction of routes occupied", bty = "l")
+polygon(c(occ$year, rev(occ$year)), c(pred_lower, rev(pred_upper)),
+        col = rgb(0.84, 0.38, 0.30, 0.18), border = NA)
+polygon(c(occ$year, rev(occ$year)), c(lower, rev(upper)),
+        col = rgb(0.16, 0.48, 0.69, 0.40), border = NA)
+lines(occ$year, plogis(a_hat + b_hat * years), lwd = 2)
+points(occ$year, obs, pch = 16)
+legend("topright", c("confidence: the trend", "prediction: one year's survey"),
+       fill = c(rgb(0.16, 0.48, 0.69, 0.40), rgb(0.84, 0.38, 0.30, 0.18)),
+       border = NA, bty = "n", cex = 0.85)
+```
+
+The prediction band is about **`r round(mean(pred_w) / mean(band_w))` times as
+wide**. Almost all of that width is the scatter of real surveys.
+
+::: {.notes}
+Lecture 19's band, with the parameters fixed at their estimates, averaged
+`r round(100 * mean(fixed_w))` points wide; this one averages
+`r round(100 * mean(pred_w))`. Parameter uncertainty adds very little: for
+predicting one survey, the noise in the data dominates. For describing the
+trend, it is the only thing that matters.
+
+Which to report depends on the question. "Is bobwhite occupancy declining?" is
+about the trend: confidence. "How many routes will have bobwhite next year?" is
+about one observation: prediction.
+:::
+
+## Vote: confidence or prediction? {.smaller}
+
+Hands up for **confidence**, then for **prediction**:
+
+| | The question | |
+|--|------------------------------------------------------------------|----------------|
+| 1 | Has bobwhite occupancy declined since 1997? | [**confidence**]{.fragment} |
+| 2 | Is the warbler you just caught unusually light? | [**prediction**]{.fragment} |
+| 3 | How much does protection raise reef fish biomass, on average? | [**confidence**]{.fragment} |
+| 4 | Seedlings to plant at a restoration site so 100 survive | [**prediction**]{.fragment} |
+| 5 | Does a pesticide lower bumblebee colony survival? | [**confidence**]{.fragment} |
+| 6 | Will the next reef you survey, at 15 m, have over 30 species? | [**prediction**]{.fragment} |
+
+. . .
+
+::: {.plain}
+Ask: is the question about the average, or about one particular case? The average needs a confidence interval. One case needs a prediction interval.
+:::
+
+::: {.notes}
+Five minutes. Read each question, take the two votes, then click to reveal the
+answer before moving to the next. Ask one person from the losing side to say why
+they voted that way; the wrong answers are usually reasonable, and saying why
+they are wrong is what makes the distinction stick.
+
+What to say about each:
+
+1. A trend, the average change over years. Confidence. This is the band.
+2. "Unusually light" means outside the range where individual birds of that
+   species, at that wing length, normally fall: a range for one bird, not for
+   the average bird. Prediction. With a confidence interval for the average
+   weight, most healthy birds would look abnormal.
+3. The average effect of protection across reefs, the quantity a comparison of
+   protected and unprotected sites estimates. Confidence. The vote often splits
+   here; contrast it with "will protecting THIS reef raise its biomass by 20%?",
+   which is prediction.
+4. One site's outcome, and the planting has to work at that site, not at the
+   average site. Prediction, and the lower end matters most. Planting for the
+   average survival rate would fall short at about half of sites.
+5. An average effect across colonies, what a field or lab experiment estimates.
+   Confidence.
+6. One new survey. Prediction. It is the reef version of the landowner's route,
+   coming up in a few minutes.
+
+The pattern to draw out: the questions about one particular thing (a bird, a
+site, a reef, a route) are the ones people most often answer with the wrong,
+too-narrow interval. Using a confidence interval for a prediction question is
+the common mistake, and it makes you overconfident, which in conservation can
+mean a restoration that fails or a population that drops below a threshold no
+one expected it to reach.
+:::
+
+# Your turn: bobwhite and development
+
+## Get set up: counts and development {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# bobwhite counted on a route, against the fraction of the route developed
+m_nb <- mle2(count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k)),
+             start = list(log_mu0 = 2.5, b = -3, log_k = 0), data = counts)
+coef(m_nb)
+
+set.seed(22)
+draws_nb <- MASS::mvrnorm(1000, mu = coef(m_nb), Sigma = vcov(m_nb))
+```
+:::
+
+**Check:** $b$ = `r round(b_nb, 2)`.
+
+Why `log_mu0` and `log_k`? Draws from a normal can be **negative**. On the log
+scale, every draw is a legal value.
+
+::: {.notes}
+Two minutes. The model from Lecture 18's comparison of distributions. Fitting
+on the log scale was Lecture 20's Fix 3, transforming. It matters twice over
+here: drawing on the natural scale, some draws of k could come out negative,
+and rnbinom() would fail. On the log scale, exp() of any draw is positive.
+:::
+
+## One parameter: transform the ends {background-color="#f0f4f8" .smaller}
+
+The **halving point**: how developed a route can be before its expected count
+halves. It uses $b$ **only**.
+
+::: {.type-it}
+```{r}
+#| eval: false
+log(2) / -coef(m_nb)["b"]                  # the halving point
+log(2) / -confint(m_nb)["b", ]        # its interval: transform the ends
+```
+:::
+
+**Check:** `r pct(half_hat)` developed, from `r pct1(half_ci[1])` to
+`r pct1(half_ci[2])`. The recipe gives `r pct1(half_recipe[1])` to
+`r pct1(half_recipe[2])`.
+
+::: {.plain}
+When a number is calculated from just one parameter, put each end of that parameter's interval through the same calculation: the two answers are the number's interval. With two or more parameters, that runs into the corners problem from slide 8, so use the recipe.
+:::
+
+::: {.notes}
+Two minutes. This is Lecture 17's back-transforming of endpoints, used for a
+derived quantity. It works because the halving point depends on b alone and
+moves in one direction as b changes: the most extreme plausible b gives the most
+extreme plausible halving point.
+
+The lower end comes from the steeper slope: a steeper decline halves the count
+sooner.
+:::
+
+## Your turn: the band for development {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+built <- seq(0, 0.5, by = 0.01)     # 0% to 50% developed
+
+counts_curves <- matrix(NA, nrow = 1000, ncol = length(built))
+for (i in 1:1000) {
+  # the expected count at every value of built, for draw i, goes here
+}
+
+# the lower and upper ends of the band go here
+
+plot(counts$frac_built, counts$count, col = "grey", ylim = c(0, 40),
+     xlab = "fraction developed", ylab = "bobwhite counted")
+# the fitted curve and the two ends of the band go here
+```
+:::
+
+**Hint:** slides 19 and 20 built the occupancy band. Same steps, with the draws
+from slide 29 and `exp(log_mu0 + b * built)` in place of `plogis(a + b * years)`.
+
+**Check:** at 20% developed (`built[21]`), the average route has
+`r sprintf("%.1f", nb_lower[21])` to `r sprintf("%.1f", nb_upper[21])` bobwhite.
+
+::: {.notes}
+Eight minutes. Everything they need is on the occupancy slides; the changes are
+the formula, exp(log_mu0 + b * built) instead of plogis(a + b * years), and the
+names.
+
+`r n_above40` of the 1,360 counts are above 40 and fall off the top of the plot;
+the ylim keeps the band visible.
+
+For anyone done early: the next slide.
+:::
+
+## Your turn: one route {background-color="#f0f4f8" .smaller}
+
+A landowner's route is **20% developed**. How many bobwhite will its survey find?
+
+::: {.type-it}
+```{r}
+#| eval: false
+mu_20 <- exp(draws_nb[, "log_mu0"] + draws_nb[, "b"] * 0.2)
+quantile(mu_20, c(0.025, 0.975))          # the average route at 20%
+
+# one simulated count per draw goes here (hint: rnbinom(), with mu = mu_20;
+# for size, use the log_k column of draws_nb, the way mu_20 used log_mu0)
+
+# the middle 95% of those counts goes here
+```
+:::
+
+**Check:** the average route, `r sprintf("%.1f", mu_20_ci[1])` to
+`r sprintf("%.1f", mu_20_ci[2])` birds. One route, **`r one_route_ci[1]` to
+`r one_route_ci[2]`**.
+
+::: {.notes}
+Five minutes. The missing lines:
+
+one_route <- rnbinom(1000, mu = mu_20, size = exp(draws_nb[, "log_k"]))
+quantile(one_route, c(0.025, 0.975))
+
+The contrast is the point of the lecture in one line: we know the average route
+at 20% developed quite precisely, and still cannot say much about any one
+route. Both statements are true, and they answer different questions. The
+negative binomial's clumping, from habitat patchiness, is what makes the single
+route so unpredictable.
+:::
+
+# Wrapping up
+
+## Which tool, when {.smaller}
+
+| You want an interval on | Use |
+|---|---|
+| one parameter | `confint()` (Lecture 17) |
+| a number built from **one** parameter | `confint()`, then transform the ends |
+| a number built from **several** | the recipe: draw, compute, middle 95% |
+| a whole curve | the recipe, at every $x$ |
+| where **new data** will land | the recipe, plus simulating the scatter |
+
+Coming up: `lm()` and `glm()` have **shortcuts** for some of these (Lectures 23
+and 24). The recipe works for any model, including the ones they cannot fit.
+
+::: {.notes}
+The slide to photograph. The last row is the prediction interval; every other
+row is a confidence interval.
+
+The shortcuts: predict() with interval = "confidence" or "prediction" for lm(),
+and predict() with se.fit = TRUE for glm(), back-transformed. No need to show
+them today; they are worth more once students can fit those models.
+
+For Assignment 3, due Friday: a band around a fitted curve is a good way to
+show the comparison between models, though it is not required.
+:::
+
+## Before next class
+
+Skim Bolker **chapter 8**
+
+**Assignment 3** is due **Friday, November 6**
+
+Next time: **likelihood examples**, worked through in class
+
+::: {.notes}
+Chapter 8 is a set of worked examples, all using the tools from chapters 6 and
+7. Thursday works through some of them together.
+:::
