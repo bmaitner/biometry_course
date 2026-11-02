@@ -1,0 +1,226 @@
+---
+title: "When fitting goes wrong: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 20"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 20, run, with the numbers it produces, and the challenge
+solved.
+
+. . .
+
+Your last decimal place may differ from mine. Anything beyond that is worth
+asking about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+base <- "https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/"
+occ <- read.csv(paste0(base, "bobwhite_occupancy.csv"))
+counts <- read.csv(paste0(base, "bobwhite_counts.csv"))
+reef <- read.csv(paste0(base, "reef_surveys.csv"))
+```
+
+With the course package installed, `bobwhite_occupancy`, `bobwhite_counts` and
+`reef_surveys` give the same tables.
+
+## Fix 1: centering {.smaller}
+
+```{r}
+year_nll <- function(p, x){
+  prob <- plogis(p[1] + p[2] * x)
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+fit_raw <- optim(c(0, 0), year_nll, x = occ$year, method = "BFGS")
+c(nll = fit_raw$value, convergence = fit_raw$convergence)
+
+occ$c_year <- occ$year - mean(occ$year)
+fit_cen <- optim(c(0, 0), year_nll, x = occ$c_year, method = "BFGS")
+c(fit_cen$par, nll = fit_cen$value, convergence = fit_cen$convergence)
+```
+
+The slope is the same as Lecture 16's, -0.062. Only the meaning of the intercept
+changed: occupancy in the middle year.
+
+## Fix 2: rescaling {.smaller}
+
+```{r}
+av <- readRDS(url("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Avonet/AVONET1_BirdLife.rds"))
+birds <- na.omit(av[, c("Migration", "Range.Size", "Mass")])
+birds$migrant <- as.integer(birds$Migration == 3)
+
+mig_nll <- function(p, range, mass){
+  prob <- plogis(p[1] + p[2] * range + p[3] * mass)
+  -sum(dbinom(birds$migrant, size = 1, prob = prob, log = TRUE))
+}
+
+fit_raw <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size, mass = birds$Mass)
+c(fit_raw$par, nll = fit_raw$value)
+
+fit_sc <- optim(c(0, 0, 0), mig_nll, range = birds$Range.Size / 1e6,
+                mass = birds$Mass / 1000, method = "BFGS")
+c(fit_sc$par, nll = fit_sc$value)
+```
+
+## What rescaling showed {.smaller}
+
+In km² and grams, Nelder-Mead stops at more than twice the best NLL, with the
+range effect negative. In millions of km² and kg, the range effect is positive:
+migrants have larger ranges, which fits, since their ranges include both breeding
+and wintering grounds.
+
+. . .
+
+A check with `glm()`, which fits logistic models directly:
+
+```{r}
+glm(migrant ~ I(Range.Size / 1e6) + I(Mass / 1000), family = binomial,
+    data = birds)$coefficients
+```
+
+## Fix 3: an unprotected fit {.smaller}
+
+```{r}
+hump_nat <- function(p){
+  mu <- p[1] * exp(-(reef$depth - p[2])^2 / (2 * p[3]^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = p[4], log = TRUE))
+}
+
+start <- c(25, 10, 20, 0.2)
+fit_nat <- suppressWarnings(optim(start, hump_nat, method = "BFGS"))
+c(fit_nat$par, nll = fit_nat$value)
+```
+
+A peak 328 m deep, in data that stop at 32 m. On the way, the search tried a
+negative size and a negative peak.
+
+## Fix 3: transformed, and bounded {.smaller}
+
+```{r}
+hump_log <- function(p){
+  mu <- exp(p[1]) * exp(-(reef$depth - p[2])^2 / (2 * exp(p[3])^2))
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[4]), log = TRUE))
+}
+fit_log <- optim(c(log(25), 10, log(20), log(0.2)), hump_log, method = "BFGS")
+c(peak = exp(fit_log$par[1]), depth = fit_log$par[2], width = exp(fit_log$par[3]),
+  size = exp(fit_log$par[4]), nll = fit_log$value)
+
+fit_bnd <- optim(start, hump_nat, method = "L-BFGS-B", lower = c(0.01, 0, 0.1, 0.01))
+c(fit_bnd$par, nll = fit_bnd$value)
+```
+
+Both find the hump: about 25 species at 16 m, 24 m wide.
+
+## Fix 3: penalized {.smaller}
+
+```{r}
+hump_pen <- function(p){
+  if (any(p[c(1, 3, 4)] <= 0)) {
+    return(1e10)
+  }
+  hump_nat(p)
+}
+
+fit_pen_bfgs <- optim(start, hump_pen, method = "BFGS")
+fit_pen_nm   <- optim(start, hump_pen)
+rbind(bfgs = c(fit_pen_bfgs$par, nll = fit_pen_bfgs$value),
+      nelder_mead = c(fit_pen_nm$par, nll = fit_pen_nm$value))
+```
+
+BFGS lands where the unprotected fit did; Nelder-Mead, which never uses a slope,
+gets past the penalty's cliff to the right answer.
+
+## The loop and `tryCatch()` {.smaller}
+
+```{r}
+lin_nll <- function(p){
+  prob <- p[1] + p[2] * occ$elapsed
+  -sum(dbinom(occ$n_occupied, size = occ$n_routes, prob = prob, log = TRUE))
+}
+
+set.seed(20)
+results <- rep(NA, 10)
+for (i in 1:10) {
+  start <- c(runif(1, 0.5, 1), runif(1, -0.03, 0.01))
+  results[i] <- tryCatch(
+    optim(start, lin_nll, method = "BFGS")$value,
+    error = function(e){ NA }
+  )
+}
+round(results, 2)
+```
+
+Without `tryCatch()`, the loop stops at the third fit.
+
+## Fix 4: build up from the simpler model {.smaller}
+
+```{r}
+plain_nll <- function(p){
+  mu <- exp(p[1] + p[2] * counts$frac_built)
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[3]), log = TRUE))
+}
+threshold_nll <- function(p){
+  mu <- exp(p[1] + p[2] * pmax(0, counts$frac_built - p[3]))
+  -sum(dnbinom(counts$count, mu = mu, size = exp(p[4]), log = TRUE))
+}
+
+fit_plain <- optim(c(2, -1, 0), plain_nll)
+fit_built <- optim(c(fit_plain$par[1:2], 0, fit_plain$par[3]), threshold_nll)
+c(threshold = fit_built$par[3], birds_below = exp(fit_built$par[1]),
+  nll = fit_built$value)
+```
+
+A threshold of about 1.4% developed, with about 12 bobwhite expected on a route
+below it: there is a threshold, but it is so close to zero that there is
+effectively no safe level of development.
+
+## The challenge, solved {.smaller}
+
+```{r}
+reef$depth10 <- reef$depth / 10
+reef$vis10 <- reef$visibility / 10
+reef$c_year <- reef$year - mean(reef$year)
+
+fixed_nll <- function(p){
+  mu <- exp(p[1] + p[2] * reef$depth10 + p[3] * reef$depth10^2 +
+            p[4] * reef$vis10 + p[5] * reef$c_year)
+  -sum(dnbinom(reef$richness, mu = mu, size = exp(p[6]), log = TRUE))
+}
+
+fit_fixed <- optim(c(3, 0, 0, 0, 0, 1), fixed_nll, method = "BFGS")
+c(nll = fit_fixed$value, convergence = fit_fixed$convergence)
+```
+
+Three changes: centered year, depth and visibility in tens of metres, and size on
+the log scale. The first two are what matter here; the third is good practice.
+
+## Checking it a second way {.smaller}
+
+```{r}
+check <- MASS::glm.nb(richness ~ depth + I(depth^2) + visibility + year, data = reef)
+-as.numeric(logLik(check))
+```
+
+A completely different fitting routine, on the original unscaled covariates,
+reaches the same NLL. Lecture 24 covers `glm.nb()` properly.
