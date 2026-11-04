@@ -316,7 +316,7 @@ rov <- data.frame(dive = tosca_rov$Dive.no,
                   substrate = tosca_rov$Substrate,
                   fov = tosca_rov$FOV.camera..m.,       # camera width, m
                   sponges = tosca_rov$Porifera....,
-                  corals = tosca_rov$Cnidaria....)
+                  corals = tosca_rov$Cnidaria....)      # all cnidarians, mostly corals
 
 rov <- rov[!is.na(rov$fov), ]        # sections with no camera width
 rov$area <- 50 * rov$fov             # seafloor seen: 50 m long, fov wide
@@ -948,7 +948,8 @@ adding dive, so the main conclusion is safe.
 
 **Corals** also feed on particles in the water, and many attach to hard
 substrate. Cold-water corals also depend on temperature, which falls with depth.
-(The `corals` column counts all cnidarians: corals, sea pens, anemones, hydroids.)
+(`corals` is shorthand: the column counts all cnidarians, but at least 79 of the
+116 cnidarian morphospecies on these dives are corals.)
 
 ::: {.type-it}
 ```{r}
@@ -967,6 +968,14 @@ c_nb <- mle2(corals ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
 `c_depth` beats `c_sub` by `r round(aic_c["sub"] - aic_c["depth"])` units.
 
 ::: {.notes}
+On the shorthand, in case someone asks: Keogh et al. (2022) list 116 cnidarian
+morphospecies from these dives, of which 26 are black corals (Antipatharia), 37
+are Alcyonacea (gorgonians and soft corals), 16 are sea pens (Pennatulacea,
+which are octocorals), and at least one is a stony coral (Solenosmilia
+variabilis). The rest are sea anemones, cerianthids and hydroids. That is a
+count of species, not individuals: the dataset only gives the phylum total, so
+we cannot say what share of the individuals are corals.
+
 Ten minutes, in pairs. Ask each pair to write their prediction down first,
 step 1 again. Then the three missing models are copies of the sponge models
 with "corals" in place of "sponges".

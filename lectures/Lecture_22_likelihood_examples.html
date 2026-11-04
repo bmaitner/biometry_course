@@ -1205,7 +1205,7 @@ display:block!important;
 <span id="cb1-9"><a href aria-hidden="true" tabindex="-1"></a>                  <span class="at">substrate =</span> tosca_rov<span class="sc">$</span>Substrate,</span>
 <span id="cb1-10"><a href aria-hidden="true" tabindex="-1"></a>                  <span class="at">fov =</span> tosca_rov<span class="sc">$</span>FOV.camera..m.,       <span class="co"># camera width, m</span></span>
 <span id="cb1-11"><a href aria-hidden="true" tabindex="-1"></a>                  <span class="at">sponges =</span> tosca_rov<span class="sc">$</span>Porifera....,</span>
-<span id="cb1-12"><a href aria-hidden="true" tabindex="-1"></a>                  <span class="at">corals =</span> tosca_rov<span class="sc">$</span>Cnidaria....)</span>
+<span id="cb1-12"><a href aria-hidden="true" tabindex="-1"></a>                  <span class="at">corals =</span> tosca_rov<span class="sc">$</span>Cnidaria....)      <span class="co"># all cnidarians, mostly corals</span></span>
 <span id="cb1-13"><a href aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-14"><a href aria-hidden="true" tabindex="-1"></a>rov <span class="ot">&lt;-</span> rov[<span class="sc">!</span><span class="fu">is.na</span>(rov<span class="sc">$</span>fov), ]        <span class="co"># sections with no camera width</span></span>
 <span id="cb1-15"><a href aria-hidden="true" tabindex="-1"></a>rov<span class="sc">$</span>area <span class="ot">&lt;-</span> <span class="dv">50</span> <span class="sc">*</span> rov<span class="sc">$</span>fov             <span class="co"># seafloor seen: 50 m long, fov wide</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1896,7 +1896,7 @@ display:block!important;
 </section>
 <section id="your-turn-the-same-eight-steps" class="slide level2 smaller" data-background-color="#f0f4f8">
 <h2>Your turn: the same eight steps</h2>
-<p><strong>Corals</strong> also feed on particles in the water, and many attach to hard substrate. Cold-water corals also depend on temperature, which falls with depth. (The <code>corals</code> column counts all cnidarians: corals, sea pens, anemones, hydroids.)</p>
+<p><strong>Corals</strong> also feed on particles in the water, and many attach to hard substrate. Cold-water corals also depend on temperature, which falls with depth. (<code>corals</code> is shorthand: the column counts all cnidarians, but at least 79 of the 116 cnidarian morphospecies on these dives are corals.)</p>
 <div class="type-it">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href aria-hidden="true" tabindex="-1"></a>c_nb <span class="ot">&lt;-</span> <span class="fu">mle2</span>(corals <span class="sc">~</span> <span class="fu">dnbinom</span>(<span class="at">mu =</span> <span class="fu">exp</span>(log_d) <span class="sc">*</span> area <span class="sc">/</span> <span class="dv">100</span>, <span class="at">size =</span> <span class="fu">exp</span>(log_k)),</span>
@@ -1910,6 +1910,7 @@ display:block!important;
 </div>
 <p><strong>Before you fit:</strong> predict which model wins. <strong>Check:</strong> <code>c_both</code> is best, and <code>c_depth</code> beats <code>c_sub</code> by 87 units.</p>
 <aside class="notes">
+<p>On the shorthand, in case someone asks: Keogh et al. (2022) list 116 cnidarian morphospecies from these dives, of which 26 are black corals (Antipatharia), 37 are Alcyonacea (gorgonians and soft corals), 16 are sea pens (Pennatulacea, which are octocorals), and at least one is a stony coral (Solenosmilia variabilis). The rest are sea anemones, cerianthids and hydroids. That is a count of species, not individuals: the dataset only gives the phylum total, so we cannot say what share of the individuals are corals.</p>
 <p>Ten minutes, in pairs. Ask each pair to write their prediction down first, step 1 again. Then the three missing models are copies of the sponge models with “corals” in place of “sponges”.</p>
 <p>The surprise for most: for corals, depth matters far more than substrate. The substrate effect is still there, but depth alone beats substrate alone by a wide margin, the reverse of the sponges.</p>
 <p>For anyone fast: steps 2 and 3 for corals (zeros, variance, and whether the negative binomial still wins), which the solutions show.</p>
