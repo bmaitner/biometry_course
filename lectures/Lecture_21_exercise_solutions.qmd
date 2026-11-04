@@ -1,0 +1,202 @@
+---
+title: "Confidence limits on what you predict: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 21"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 21, run, with the numbers it produces, and the exercises
+solved.
+
+. . .
+
+The draws are random, so your last decimal place may differ from mine, more so
+if you ran extra random code in between. Anything beyond that is worth asking
+about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+
+base <- "https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/class_examples/"
+occ <- read.csv(paste0(base, "bobwhite_occupancy.csv"))
+counts <- read.csv(paste0(base, "bobwhite_counts.csv"))
+
+m_occ <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * elapsed)),
+              start = list(a = 2, b = -0.05), data = occ)
+coef(m_occ)
+```
+
+With the course package installed, `bobwhite_occupancy` and `bobwhite_counts`
+give the same tables.
+
+## The plug-in corners {.smaller}
+
+```{r}
+ci <- confint(m_occ)
+corners <- expand.grid(a = ci["a", ], b = ci["b", ])
+corners$occ_2019 <- plogis(corners$a + 22 * corners$b)
+corners
+cov2cor(vcov(m_occ))
+```
+
+Two of the corners go against the correlation of $a$ and $b$, so the data rule
+them out.
+
+## The recipe: occupancy in 2019 {.smaller}
+
+```{r}
+set.seed(21)
+draws <- MASS::mvrnorm(1000, mu = coef(m_occ), Sigma = vcov(m_occ))
+cor(draws)
+
+occ19 <- plogis(draws[, "a"] + 22 * draws[, "b"])
+quantile(occ19, c(0.025, 0.975))
+```
+
+## Your turn: how much was lost? {.smaller}
+
+```{r}
+occ97 <- plogis(draws[, "a"])
+drop <- occ97 - occ19
+quantile(drop, c(0.025, 0.975))
+```
+
+Occupancy fell by about 22 percentage points between 1997 and 2019, and the data
+are consistent with a drop of anywhere from about 15 to 28.
+
+## Two other ways {.smaller}
+
+Rewrite the model so occupancy in 2019 is a parameter:
+
+```{r}
+occ$from2019 <- occ$elapsed - 22
+m_2019 <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * from2019)),
+               start = list(a = 1, b = -0.05), data = occ)
+plogis(confint(m_2019, parm = "a"))
+```
+
+The delta method, for the curious:
+
+```{r}
+g <- function(th){ plogis(th[1] + 22 * th[2]) }
+est <- g(coef(m_occ))
+slopes <- sapply(1:2, function(i){
+  th <- coef(m_occ)
+  th[i] <- th[i] + 1e-6
+  (g(th) - est) / 1e-6
+})
+se <- sqrt(drop(t(slopes) %*% vcov(m_occ) %*% slopes))
+est + c(-1.96, 1.96) * se
+```
+
+## The band {.smaller}
+
+```{r}
+#| fig-height: 3.2
+years <- occ$elapsed
+curves <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  curves[i, ] <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+}
+lower <- apply(curves, 2, quantile, 0.025)
+upper <- apply(curves, 2, quantile, 0.975)
+
+obs <- occ$n_occupied / occ$n_routes
+plot(occ$year, obs, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction of routes occupied")
+lines(occ$year, plogis(coef(m_occ)["a"] + coef(m_occ)["b"] * years), lwd = 2)
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+```
+
+## The prediction interval {.smaller}
+
+```{r}
+#| fig-height: 3
+preds <- matrix(NA, nrow = 1000, ncol = length(years))
+for (i in 1:1000) {
+  p_i <- plogis(draws[i, "a"] + draws[i, "b"] * years)
+  preds[i, ] <- rbinom(length(years), size = occ$n_routes, prob = p_i) / occ$n_routes
+}
+pred_lower <- apply(preds, 2, quantile, 0.025)
+pred_upper <- apply(preds, 2, quantile, 0.975)
+
+plot(occ$year, obs, pch = 16, ylim = c(0.5, 1),
+     xlab = "year", ylab = "fraction of routes occupied")
+lines(occ$year, lower, lty = 2)
+lines(occ$year, upper, lty = 2)
+lines(occ$year, pred_lower, lty = 3, col = "red")
+lines(occ$year, pred_upper, lty = 3, col = "red")
+c(inside_confidence = sum(obs >= lower & obs <= upper),
+  inside_prediction = sum(obs >= pred_lower & obs <= pred_upper))
+```
+
+## Counts and development {.smaller}
+
+```{r}
+m_nb <- mle2(count ~ dnbinom(mu = exp(log_mu0 + b * frac_built), size = exp(log_k)),
+             start = list(log_mu0 = 2.5, b = -3, log_k = 0), data = counts)
+coef(m_nb)
+
+set.seed(22)
+draws_nb <- MASS::mvrnorm(1000, mu = coef(m_nb), Sigma = vcov(m_nb))
+
+log(2) / -coef(m_nb)["b"]
+log(2) / -confint(m_nb)["b", ]
+quantile(log(2) / -draws_nb[, "b"], c(0.025, 0.975))    # the recipe agrees
+```
+
+## Your turn: the band for development {.smaller}
+
+```{r}
+#| fig-height: 3
+built <- seq(0, 0.5, by = 0.01)
+counts_curves <- matrix(NA, nrow = 1000, ncol = length(built))
+for (i in 1:1000) {
+  counts_curves[i, ] <- exp(draws_nb[i, "log_mu0"] + draws_nb[i, "b"] * built)
+}
+nb_lower <- apply(counts_curves, 2, quantile, 0.025)
+nb_upper <- apply(counts_curves, 2, quantile, 0.975)
+
+plot(counts$frac_built, counts$count, col = "grey", ylim = c(0, 40),
+     xlab = "fraction developed", ylab = "bobwhite counted")
+lines(built, exp(coef(m_nb)["log_mu0"] + coef(m_nb)["b"] * built), lwd = 2)
+lines(built, nb_lower, lty = 2)
+lines(built, nb_upper, lty = 2)
+c(nb_lower[21], nb_upper[21])
+```
+
+## Your turn: one route {.smaller}
+
+```{r}
+mu_20 <- exp(draws_nb[, "log_mu0"] + draws_nb[, "b"] * 0.2)
+quantile(mu_20, c(0.025, 0.975))
+
+one_route <- rnbinom(1000, mu = mu_20, size = exp(draws_nb[, "log_k"]))
+quantile(one_route, c(0.025, 0.975))
+```
+
+We know the average route at 20% developed to within about a bird, but a single
+route could turn up anywhere from none to around twenty. Both are true: the
+first is a confidence interval, the second a prediction interval.
