@@ -32,6 +32,17 @@ source and license here whenever a new one is added.**
 |---|---|---|---|---|---|
 | `northern_cardinal.jpg` | Male Northern Cardinal (*Cardinalis cardinalis*), used in Lecture 13 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Male_Northern_Cardinal_(41590411245).jpg) | U.S. Fish and Wildlife Service, Midwest Region | Public domain | 2026-10-06 |
 | `northern_bobwhite.jpg` | Northern Bobwhite pair (*Colinus virginianus*), used in Lecture 14 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Colinus_virginianus_USFWS.jpg) | U.S. Fish and Wildlife Service Headquarters | Public domain | 2026-10-06 |
+| `22_sponge_aggregation.jpg` | Dense sponge aggregation, Dive 9, Charlie-Gibbs Fracture Zone (Fig. 3g), used in Lecture 22 | [Keogh et al. 2022, *Marine Biodiversity* 52:55](https://doi.org/10.1007/s12526-022-01285-1) | Keogh, Command, Edinger, Georgiopoulou and Robert | CC BY 4.0 | 2026-11-04 |
+| `22_substrates.jpg` | The five substrate types of the TOSCA ROV dives (Fig. 5a to e), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
+| `22_glass_sponge.jpg` | Hexactinellida sp. (Fig. 3i), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
+| `22_paragorgia.jpg` | *Paragorgia* sp. apparently attached to *Solenosmilia variabilis* (Fig. 3d), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
+
+The four Lecture 22 images are cropped from the paper's figures, with the panel
+letters removed and the authors' identifications added as labels. They are the
+same ROV dives as the `tosca_rov` dataset, which is why they were used over
+public domain alternatives: no public domain imagery exists from this site. The
+slides credit them, and the substrates slide carries the full citation and
+license link.
 
 ### Rules for adding images
 

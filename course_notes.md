@@ -158,6 +158,12 @@ From midterm feedback, Fall 2025:
 
 - [ ] Add in more content about model interpretation
 - [ ] Add in more content about visualizing model predictions for complicated models
+  - Partly covered from Fall 2026: Lecture 22 (Step 8) draws an mle2 model with a
+    factor and a continuous predictor in ggplot, with Lecture 21's recipe for the
+    band on a grid. bbmle's `predict()` gives no intervals, and fails outright on
+    `dzinbinom` fits (no `szinbinom`), so the recipe is the general route. Still
+    missing: the `glm()` version with `predict(se.fit = TRUE)` (Lecture 24), and
+    interactions or more than two predictors.
 - [ ] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
   shortcuts for Lecture 21.** Lecture 21 (Fall 2026) built confidence bands and
   prediction intervals by hand: draw parameter sets with `MASS::mvrnorm()` from
