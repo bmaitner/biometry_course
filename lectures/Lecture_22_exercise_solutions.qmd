@@ -1,0 +1,251 @@
+---
+title: "One question, start to finish: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 22"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 22, run, with the numbers it produces, and the coral
+exercises solved.
+
+. . .
+
+The simulations and draws are random, so your last decimal place may differ from
+mine. Anything beyond that is worth asking about.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+library(emdbook)
+
+tosca_rov <- read.csv("https://github.com/bmaitner/biometry_course/raw/refs/heads/main/data/Deep_sea_megabenthos/TOSCA_ROV.csv")
+
+rov <- data.frame(dive = tosca_rov$Dive.no,
+                  depth = tosca_rov$Depth.water..m.,
+                  substrate = tosca_rov$Substrate,
+                  fov = tosca_rov$FOV.camera..m.,
+                  sponges = tosca_rov$Porifera....,
+                  corals = tosca_rov$Cnidaria....)      # all cnidarians, mostly corals
+rov <- rov[!is.na(rov$fov), ]
+rov$area <- 50 * rov$fov
+rov$depth_km <- (rov$depth - 1500) / 1000
+nrow(rov)
+```
+
+With the course package installed, `library(biometrydata)` gives the same
+`tosca_rov` table.
+
+## Step 2: the data {.smaller}
+
+```{r}
+table(rov$substrate)
+mean(rov$sponges == 0)
+rov$density <- 100 * rov$sponges / rov$area
+tapply(rov$density, rov$substrate, median)
+```
+
+## Step 3: the distribution {.smaller}
+
+```{r}
+m_pois <- mle2(sponges ~ dpois(lambda = exp(log_d) * area / 100),
+               start = list(log_d = 0), data = rov)
+m_nb   <- mle2(sponges ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
+               start = list(log_d = 0, log_k = 0), data = rov)
+m_zinb <- mle2(sponges ~ dzinbinom(mu = exp(log_d) * area / 100, size = exp(log_k),
+                                   zprob = plogis(logit_z)),
+               start = list(log_d = 0, log_k = 0, logit_z = -2), data = rov)
+AICtab(m_pois, m_nb, m_zinb)
+```
+
+## Step 4: build {.smaller}
+
+```{r}
+m_sub <- mle2(sponges ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
+              start = list(log_d = 0, log_k = 0),
+              parameters = list(log_d ~ substrate - 1), data = rov)
+m_depth <- mle2(sponges ~ dnbinom(mu = exp(log_d + b * depth_km) * area / 100,
+                                  size = exp(log_k)),
+                start = list(log_d = 0, b = 0, log_k = 0), data = rov)
+m_both <- mle2(sponges ~ dnbinom(mu = exp(log_d + b * depth_km) * area / 100,
+                                 size = exp(log_k)),
+               start = list(log_d = 0, b = 0, log_k = 0),
+               parameters = list(log_d ~ substrate - 1), data = rov)
+```
+
+## Steps 5 and 6: check and compare {.smaller}
+
+```{r}
+m_both_2 <- update(m_both, start = list(log_d = 3, b = -1, log_k = 1))
+c(m_both@details$convergence, m_both@min, m_both_2@min)
+
+AICtab(m_nb, m_sub, m_depth, m_both, weights = TRUE)
+round(exp(coef(m_both)), 2)
+```
+
+## Step 7: the zeros check {.smaller}
+
+```{r}
+set.seed(7)
+mu_hat <- predict(m_both)
+k_hat <- exp(coef(m_both)["log_k"])
+fake_zeros <- replicate(1000, {
+  fake <- rnbinom(nrow(rov), mu = mu_hat, size = k_hat)
+  tapply(fake == 0, rov$substrate, mean)
+})
+round(cbind(observed = tapply(rov$sponges == 0, rov$substrate, mean),
+            lower = apply(fake_zeros, 1, quantile, 0.025),
+            upper = apply(fake_zeros, 1, quantile, 0.975)), 3)
+```
+
+Sand has far more empty sections than the model can produce, boulders a few
+more, and gravel sits at the top of its range.
+
+## Step 7: the zero model {.smaller}
+
+```{r}
+rov$sediment <- as.numeric(rov$substrate %in% c("sand", "gravel", "boulders"))
+# the on/off switch: sediment * plogis(logit_z) is 0 on rock, plogis(logit_z) on sediment
+m_zero <- mle2(sponges ~ dzinbinom(mu = exp(log_d + b * depth_km) * area / 100,
+                                   size = exp(log_k), zprob = sediment * plogis(logit_z)),
+               start = list(log_d = 3, b = 0.5, log_k = -0.7, logit_z = -2),
+               parameters = list(log_d ~ substrate - 1), data = rov)
+AICtab(m_both, m_zero)
+```
+
+## Step 7: checking the zero model {.smaller}
+
+```{r}
+# predict() does not work for dzinbinom fits, so compute the mean by hand
+cz <- coef(m_zero)
+mu_zero <- exp(cz[paste0("log_d.substrate", rov$substrate)] + cz["b"] * rov$depth_km) *
+  rov$area / 100
+set.seed(8)
+fake_zeros2 <- replicate(1000, {
+  fake <- rzinbinom(nrow(rov), mu = mu_zero, size = exp(cz["log_k"]),
+                    zprob = rov$sediment * plogis(cz["logit_z"]))
+  tapply(fake == 0, rov$substrate, mean)
+})
+round(cbind(observed = tapply(rov$sponges == 0, rov$substrate, mean),
+            lower = apply(fake_zeros2, 1, quantile, 0.025),
+            upper = apply(fake_zeros2, 1, quantile, 0.975)), 3)
+```
+
+Every substrate is now inside its simulated range.
+
+## Step 8: intervals {.smaller}
+
+```{r}
+set.seed(22)
+draws <- MASS::mvrnorm(1000, mu = coef(m_zero), Sigma = vcov(m_zero))
+
+quantile(exp(draws[, "log_d.substratebedrock"] - draws[, "log_d.substratesand"]),
+         c(0.025, 0.975))
+quantile(exp(draws[, "b"]), c(0.025, 0.975))
+quantile(plogis(draws[, "logit_z"]), c(0.025, 0.975))
+```
+
+## Step 8: a band for the figure {.smaller}
+
+```{r}
+library(ggplot2)
+grid <- expand.grid(depth = seq(900, 2900, by = 50), substrate = c("bedrock", "sand"))
+grid$depth_km <- (grid$depth - 1500) / 1000
+col_d <- paste0("log_d.substrate", grid$substrate)
+curves <- matrix(NA, nrow = 1000, ncol = nrow(grid))
+for (i in 1:1000) {
+  curves[i, ] <- exp(draws[i, col_d] + draws[i, "b"] * grid$depth_km)
+}
+grid$lower <- apply(curves, 2, quantile, 0.025)
+grid$upper <- apply(curves, 2, quantile, 0.975)
+grid$density <- exp(coef(m_zero)[col_d] + coef(m_zero)["b"] * grid$depth_km)
+grid[grid$depth == 1500, ]
+```
+
+## Step 8: the figure {.smaller}
+
+```{r}
+#| fig-height: 3.6
+#| fig-width: 8
+ggplot(grid, aes(x = depth, y = density, color = substrate, fill = substrate)) +
+  geom_point(data = rov[rov$substrate %in% c("bedrock", "sand"), ], alpha = 0.3) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, color = NA) +
+  geom_line(linewidth = 1) +
+  scale_y_continuous(trans = "log1p", breaks = c(0, 1, 10, 100, 1000)) +
+  labs(x = "depth (m)", y = "sponges per 100 m²")
+```
+
+## Step 8: in biology {.smaller}
+
+Where sponges can settle, they are about
+`r round(exp(coef(m_zero)["log_d.substratebedrock"] - coef(m_zero)["log_d.substratesand"]))`
+times as dense on bedrock as on sand; about 1 in
+`r round(1 / plogis(coef(m_zero)["logit_z"]))` sections on sand, gravel or boulders
+has none at all; and on the same substrate, density rises about
+`r sprintf("%.1f", exp(coef(m_zero)["b"]))` times per km deeper.
+
+## Your turn: corals, the four models {.smaller}
+
+```{r}
+c_nb <- mle2(corals ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
+             start = list(log_d = 0, log_k = 0), data = rov)
+c_sub <- mle2(corals ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
+              start = list(log_d = 0, log_k = 0),
+              parameters = list(log_d ~ substrate - 1), data = rov)
+c_depth <- mle2(corals ~ dnbinom(mu = exp(log_d + b * depth_km) * area / 100,
+                                 size = exp(log_k)),
+                start = list(log_d = 0, b = 0, log_k = 0), data = rov)
+c_both <- mle2(corals ~ dnbinom(mu = exp(log_d + b * depth_km) * area / 100,
+                                size = exp(log_k)),
+               start = list(log_d = 0, b = 0, log_k = 0),
+               parameters = list(log_d ~ substrate - 1), data = rov)
+AICtab(c_nb, c_sub, c_depth, c_both, weights = TRUE)
+```
+
+## Your turn: how much does depth matter? {.smaller}
+
+```{r}
+set.seed(23)
+c_draws <- MASS::mvrnorm(1000, mu = coef(c_both), Sigma = vcov(c_both))
+exp(coef(c_both)["b"])
+quantile(exp(c_draws[, "b"]), c(0.025, 0.975))
+```
+
+On the same substrate, coral density falls by about 92% for every kilometer of
+depth (89% to 94%).
+
+## For anyone fast: corals, steps 2 and 3 {.smaller}
+
+```{r}
+mean(rov$corals == 0)
+c(mean = mean(rov$corals), variance = var(rov$corals))
+
+c_pois <- mle2(corals ~ dpois(lambda = exp(log_d) * area / 100),
+               start = list(log_d = 0), data = rov)
+c_zinb <- mle2(corals ~ dzinbinom(mu = exp(log_d) * area / 100, size = exp(log_k),
+                                  zprob = plogis(logit_z)),
+               start = list(log_d = 0, log_k = 0, logit_z = -2), data = rov)
+AICtab(c_pois, c_nb, c_zinb)
+```
+
+The negative binomial wins again, and zero inflation adds nothing with one
+density everywhere, the same as for sponges.
