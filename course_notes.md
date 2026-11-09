@@ -161,7 +161,11 @@ From midterm feedback, Fall 2025:
   - Partly covered from Fall 2026: Lecture 22 (Step 8) draws an mle2 model with a
     factor and a continuous predictor in ggplot, with Lecture 21's recipe for the
     band on a grid. bbmle's `predict()` gives no intervals, and fails outright on
-    `dzinbinom` fits (no `szinbinom`), so the recipe is the general route. Still
+    `dzinbinom` fits (no `szinbinom`), so the recipe is the general route.
+    Lecture 23 draws an `lm()` fit the quick way (`predict(interval = ...)` on an
+    `expand.grid()` grid, two `geom_ribbon()` layers, `facet_wrap()`) and uses the
+    figure as a model check: share of species inside the prediction band, and
+    which side the misses fall on. Still
     missing: the `glm()` version with `predict(se.fit = TRUE)` (Lecture 24), and
     interactions or more than two predictors.
 - [ ] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
@@ -183,8 +187,13 @@ From midterm feedback, Fall 2025:
   - `confint()` on `lm()` and `glm()` fits, the same as on `mle2()`.
   - The grey ribbon from `geom_smooth()` (seen in Lecture 8) is a **confidence**
     band, not a prediction band.
+  - **Done in Lecture 23 (Fall 2026):** the `lm()` items above (`predict()` with
+    both intervals, checked against the recipe; `confint()`; the `geom_smooth()`
+    ribbon, in the notes). **Still owed by Lecture 24:** the `glm()` items.
 - [ ] **Show that `lm()` and `glm()` are also maximizing a likelihood**, by fitting
-  one model both ways and comparing estimates and `logLik()`. Raised while
+  one model both ways and comparing estimates and `logLik()`. **`lm()` done in
+  Lecture 23** (identical estimates and `logLik()` to `mle2()` on the
+  hand-wing index regression); `glm()` still owed by Lecture 24. Raised while
   planning Lecture 19 and deferred until those functions are introduced
   (Lectures 23 and 24). Lecture 20's challenge already does this once, with
   `glm.nb()`.

@@ -36,6 +36,13 @@ source and license here whenever a new one is added.**
 | `22_substrates.jpg` | The five substrate types of the TOSCA ROV dives (Fig. 5a to e), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
 | `22_glass_sponge.jpg` | Hexactinellida sp. (Fig. 3i), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
 | `22_paragorgia.jpg` | *Paragorgia* sp. apparently attached to *Solenosmilia variabilis* (Fig. 3d), used in Lecture 22 | as above | as above | CC BY 4.0 | 2026-11-04 |
+| `23_tree_swallow_flight.jpg` | Tree Swallow (*Tachycineta bicolor*) in flight, Oregon, used in Lecture 23 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tree_Swallows,_Oregon_(204489371).jpg) | Derald Grimwood | CC0 | 2026-11-09 |
+| `23_blue_jay_flight.jpg` | Blue Jay (*Cyanocitta cristata*) in flight, Stirling, Ontario, used in Lecture 23 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Blue_Jay_in_Flight_0566_(4511292119).jpg) | Robert Taylor | CC BY 2.0 | 2026-11-09 |
+
+The two Lecture 23 photos are cropped to matching frames around the spread
+wings. The Blue Jay is CC BY, so the slide credits the photographer and names
+the license; no public domain photo of a rounded-winged songbird in flight was
+found on Commons.
 
 The four Lecture 22 images are cropped from the paper's figures, with the panel
 letters removed and the authors' identifications added as labels. They are the
