@@ -1,0 +1,244 @@
+---
+title: "General linear models: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 23"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 23, run, with the numbers it produces, and the habitat
+exercise solved.
+
+. . .
+
+`lm()` gives exact answers, so your numbers should match these. The recipe's
+draws are random, so those may differ in the last decimal place.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## Setting up {.smaller}
+
+```{r}
+library(bbmle)
+library(biometrydata)
+
+songbirds <- avonet[avonet$Order1 == "Passeriformes", ]
+birds <- data.frame(species = songbirds$Species1,
+                    family = songbirds$Family1,
+                    hwi = songbirds$Hand.Wing.Index,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    migration_code = songbirds$Migration,
+                    habitat_code = songbirds$Habitat.Density)
+birds <- na.omit(birds)
+nrow(birds)
+```
+
+## Regression, two ways {.smaller}
+
+```{r}
+m_lat <- mle2(hwi ~ dnorm(mean = a + b * lat, sd = s),
+              start = list(a = 15, b = 0, s = 5), data = birds)
+lm_lat <- lm(hwi ~ lat, data = birds)
+
+coef(m_lat)
+coef(lm_lat)
+c(logLik(m_lat), logLik(lm_lat))
+```
+
+## Reading the fit {.smaller}
+
+```{r}
+summary(lm_lat)
+confint(lm_lat)
+sigma(lm_lat)
+```
+
+## The number trap {.smaller}
+
+```{r}
+lm_num <- lm(hwi ~ migration_code, data = birds)
+coef(lm_num)
+
+birds$migration <- factor(birds$migration_code, levels = 1:3,
+                          labels = c("sedentary", "partial", "migratory"))
+lm_mig <- lm(hwi ~ migration, data = birds)
+coef(lm_mig)
+coef(lm(hwi ~ migration - 1, data = birds))
+AIC(lm_num, lm_mig)
+```
+
+## Latitude and migration together {.smaller}
+
+```{r}
+lm_add <- lm(hwi ~ lat + migration, data = birds)
+lm_int <- lm(hwi ~ lat * migration, data = birds)
+
+AICtab(lm_lat, lm_mig, lm_add, lm_int)
+coef(lm_add)
+confint(lm_add)
+```
+
+## Are the assumptions met? {.smaller}
+
+```{r}
+#| fig-height: 3.0
+#| fig-width: 8
+par(mfrow = c(1, 2))
+plot(lm_add, which = 2)
+plot(lm_add, which = 1)
+```
+
+## Who is in the long tail? {.smaller}
+
+```{r}
+# average residual by family: how much more pointed than predicted
+head(sort(tapply(resid(lm_add), birds$family, mean), decreasing = TRUE), 5)
+
+# one fix: model log(hwi), which pulls in the long upper tail
+lm_log <- lm(log(hwi) ~ lat + migration, data = birds)
+```
+
+Swallows (Hirundinidae) catch insects on the wing, and their wings are far more
+pointed than the model expects.
+
+## On the log scale {.smaller}
+
+```{r}
+#| fig-height: 3.2
+#| fig-width: 5
+plot(lm_log, which = 2)
+```
+
+Much closer to the line, with the long upper tail gone. Thursday's generalized
+linear models are the other route.
+
+## Intervals, the quick way {.smaller}
+
+```{r}
+new_bird <- data.frame(lat = 45,
+                       migration = factor("migratory", levels = levels(birds$migration)))
+
+predict(lm_add, newdata = new_bird, interval = "confidence")
+predict(lm_add, newdata = new_bird, interval = "prediction")
+```
+
+## The same intervals, by Lecture 21's recipe {.smaller}
+
+```{r}
+set.seed(23)
+draws <- MASS::mvrnorm(1000, mu = coef(lm_add), Sigma = vcov(lm_add))
+
+# the mean for a migratory bird at 45 degrees, for each draw
+mu_draws <- draws[, "(Intercept)"] + draws[, "lat"] * 45 + draws[, "migrationmigratory"]
+quantile(mu_draws, c(0.025, 0.975))
+
+# add the scatter of one new species
+quantile(rnorm(1000, mean = mu_draws, sd = sigma(lm_add)), c(0.025, 0.975))
+```
+
+## Drawing the predictions {.smaller}
+
+```{r}
+library(ggplot2)
+
+grid <- expand.grid(lat = 0:70, migration = levels(birds$migration))
+conf <- predict(lm_add, newdata = grid, interval = "confidence")
+pred <- predict(lm_add, newdata = grid, interval = "prediction")
+grid <- data.frame(grid, conf, pred_lwr = pred[, "lwr"], pred_upr = pred[, "upr"])
+head(grid, 3)
+```
+
+## The figure {.smaller}
+
+```{r}
+#| fig-height: 3.4
+#| fig-width: 9
+ggplot(grid, aes(x = lat)) +
+  geom_point(data = birds, aes(y = hwi), size = 0.3, alpha = 0.2) +
+  geom_ribbon(aes(ymin = pred_lwr, ymax = pred_upr), fill = "#2a7ab0", alpha = 0.2) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), fill = "#2a7ab0", alpha = 0.6) +
+  geom_line(aes(y = fit)) +
+  facet_wrap(~ migration) +
+  labs(x = "degrees from the equator", y = "hand-wing index")
+```
+
+## Does the model match the data? {.smaller}
+
+```{r}
+# each species' own prediction interval
+pi_data <- predict(lm_add, newdata = birds, interval = "prediction")
+inside <- birds$hwi > pi_data[, "lwr"] & birds$hwi < pi_data[, "upr"]
+
+mean(inside)                                           # share inside: about 0.95?
+mean(birds$hwi[!inside] > pi_data[!inside, "upr"])     # share of misses above
+```
+
+Close to 95% inside, but nearly all the misses are above the band: the
+band is symmetric and the data have a long upper tail, as the Q-Q plot showed.
+
+## Good enough? {.smaller}
+
+```{r}
+exp(confint(lm_log))   # each effect is now "times"
+exp(predict(lm_log, newdata = new_bird, interval = "prediction"))
+predict(lm_add, newdata = new_bird, interval = "prediction")
+```
+
+Migrants still have more pointed wings, and latitude still points the same way.
+What changes is the prediction for one new species: the log model's interval
+reaches much higher, where the swallows are.
+
+## Your turn: habitat {.smaller}
+
+```{r}
+lm_hab_num <- lm(hwi ~ lat + migration + habitat_code, data = birds)
+
+birds$habitat <- factor(birds$habitat_code, levels = 1:3,
+                        labels = c("dense", "semi-open", "open"))
+lm_hab_fac <- lm(hwi ~ lat + migration + habitat, data = birds)
+
+AICtab(lm_add, lm_hab_num, lm_hab_fac)
+confint(lm_hab_fac)
+```
+
+## Your turn, in biology {.smaller}
+
+Habitat matters on top of migration and latitude, and it has to go in as a
+factor: forest and semi-open songbirds differ by only
+`r sprintf("%.1f", coef(lm_hab_fac)["habitatsemi-open"])` HWI points, while
+open-country songbirds have wings about
+`r sprintf("%.1f", coef(lm_hab_fac)["habitatopen"])` points more pointed than forest
+birds. The numeric version forces those two steps to be equal.
+
+## For anyone fast {.smaller}
+
+```{r}
+# does the habitat effect depend on migration?
+lm_hab_int <- lm(hwi ~ lat + migration * habitat, data = birds)
+
+# is the latitude effect curved?
+lm_quad <- lm(hwi ~ lat + I(lat^2) + migration, data = birds)
+
+AICtab(lm_hab_fac, lm_hab_int)
+AICtab(lm_add, lm_quad)
+coef(lm_quad)
+```
+
+Both help. The squared term is positive: wings change little across the tropics
+and become more pointed beyond them.
