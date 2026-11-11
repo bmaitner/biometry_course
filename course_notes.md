@@ -165,10 +165,11 @@ From midterm feedback, Fall 2025:
     Lecture 23 draws an `lm()` fit the quick way (`predict(interval = ...)` on an
     `expand.grid()` grid, two `geom_ribbon()` layers, `facet_wrap()`) and uses the
     figure as a model check: share of species inside the prediction band, and
-    which side the misses fall on. Still
-    missing: the `glm()` version with `predict(se.fit = TRUE)` (Lecture 24), and
-    interactions or more than two predictors.
-- [ ] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
+    which side the misses fall on. Lecture 24 (Fall 2026) draws a `glm()` fit:
+    `predict(type = "link", se.fit = TRUE)` on a grid, `plogis()` on the fit and
+    both ends, two ribbons for two HWI values. Still missing: interactions or more
+    than two predictors.
+- [x] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
   shortcuts for Lecture 21.** Lecture 21 (Fall 2026) built confidence bands and
   prediction intervals by hand: draw parameter sets with `MASS::mvrnorm()` from
   `coef()` and `vcov()`, compute, take the middle 95%, and simulate the scatter
@@ -189,11 +190,17 @@ From midterm feedback, Fall 2025:
     band, not a prediction band.
   - **Done in Lecture 23 (Fall 2026):** the `lm()` items above (`predict()` with
     both intervals, checked against the recipe; `confint()`; the `geom_smooth()`
-    ribbon, in the notes). **Still owed by Lecture 24:** the `glm()` items.
-- [ ] **Show that `lm()` and `glm()` are also maximizing a likelihood**, by fitting
+    ribbon, in the notes). **Done in Lecture 24 (Fall 2026):** the `glm()`
+    items: the silent `interval =` trap (and its logit-scale answer), the band
+    from `se.fit = TRUE` on the link scale checked against Lecture 21's recipe on
+    the same bobwhite occupancy model, and the recipe named as the only route to
+    a GLM prediction interval.
+- [x] **Show that `lm()` and `glm()` are also maximizing a likelihood**, by fitting
   one model both ways and comparing estimates and `logLik()`. **`lm()` done in
   Lecture 23** (identical estimates and `logLik()` to `mle2()` on the
-  hand-wing index regression); `glm()` still owed by Lecture 24. Raised while
+  hand-wing index regression); **`glm()` done in Lecture 24** (Lecture 16's
+  bobwhite occupancy model, `mle2()` and `glm()`, same estimates and `logLik()`).
+  Raised while
   planning Lecture 19 and deferred until those functions are introduced
   (Lectures 23 and 24). Lecture 20's challenge already does this once, with
   `glm.nb()`.

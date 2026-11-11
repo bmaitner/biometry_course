@@ -164,7 +164,7 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | 23 | Nov 10 T | General Linear Models | 9.1 – 9.2 |
 | 24 | Nov 12 Th | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
 | 25 | Nov 17 T | Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5 |
-| 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3>; **Assignment 4 Due** |
+| 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3>; **Assignment 4 Due Fri Nov 20, 11:59 pm** |
 | 27 | Nov 24 T | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6 |
 | — | Nov 26 Th | *Thanksgiving — No classes* |  |
 | 28 | Dec 1 T | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
