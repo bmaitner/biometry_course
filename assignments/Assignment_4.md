@@ -17,9 +17,9 @@ The goal of this assignment is to apply the modeling techniques discussed in cha
 
 For each model, you should provide documentation as to why you constructed the model as you did (e.g., why did you pick a given functional form and distribution, why did you include those variables, etc.), and what the biological or ecological interpretation of that model would be (e.g., this model assumes that *some variable* is a function of *some other variable*, and that intercepts vary by *some other variable*). For a `glm()`, interpret effects on the original scale, not the link scale: undo the link (`exp()` for a log link, `plogis()` for a logit) and report effects as multipliers, odds ratios, or predicted values, as in Lecture 24.
 
-When you compare models with AIC, they must use the same response, on the same scale, fitted to the same rows of data. AIC cannot compare `log(y)` with `y`, an `lm()` with a binomial `glm()` on 0/1 data, or a quasi-Poisson model with anything (it has no AIC). If adding a predictor drops rows because of missing values, remove those rows before fitting any of the models.
+When you compare models with AIC, they must use the same response, on the same scale, fitted to the same rows of data. AIC cannot compare `log(y)` with `y`, or an `lm()` with a binomial `glm()` on 0/1 data. If adding a predictor drops rows because of missing values, remove those rows before fitting any of the models.
 
-For the model (or models) you keep, show at least one check that it describes your data: residual plots for an `lm()`, the dispersion check for counts, or a figure of its predictions with a confidence band over the data. Say what the check shows.
+For the model (or models) you keep, show at least one check that it describes your data: residual plots for an `lm()`, a figure of its predictions with a confidence band over the data, or, for counts, how many observations fall inside the model's 95% range (as in Lecture 24). Say what the check shows.
 
 You are free to convert models from previous assignments into the `lm()` / `glm()` formatting, but you should also test a few new models as part of this exercise.
 

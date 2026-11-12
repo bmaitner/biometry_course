@@ -58,12 +58,16 @@ m_occ <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * elapsed
               start = list(a = 2, b = -0.05), data = occ)
 g_occ <- glm(cbind(n_occupied, n_routes - n_occupied) ~ elapsed,
              family = binomial, data = occ)
-trap <- predict(g_occ, newdata = data.frame(elapsed = 22), interval = "confidence")
+trap <- predict(g_occ, newdata = data.frame(elapsed = c(0, 22)), interval = "confidence")
 p19 <- predict(g_occ, newdata = data.frame(elapsed = 22), type = "link", se.fit = TRUE)
-band19 <- plogis(p19$fit + c(-1.96, 0, 1.96) * p19$se.fit)
+ends19 <- p19$fit + c(-1.96, 0, 1.96) * p19$se.fit
+band19 <- plogis(ends19)
 set.seed(21)                                  # Lecture 21's seed and draws
 draws <- MASS::mvrnorm(1000, mu = coef(m_occ), Sigma = vcov(m_occ))
 recipe19 <- quantile(plogis(draws[, "a"] + 22 * draws[, "b"]), c(0.025, 0.975))
+library(marginaleffects)
+library(emmeans)
+me19 <- predictions(g_occ, newdata = data.frame(elapsed = 22))
 
 # --- songbirds: which ones migrate? -------------------------------------------
 songbirds <- avonet[avonet$Order1 == "Passeriformes", ]
@@ -79,9 +83,9 @@ g_lat <- glm(migratory ~ lat, family = binomial, data = birds)
 g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
 g_int <- glm(migratory ~ lat * hwi, family = binomial, data = birds)
 aic_mig <- AIC(g_lat) - AIC(g_add)
-or_lat <- exp(10 * coef(g_add)["lat"])
-or_hwi <- exp(10 * coef(g_add)["hwi"])
-ci_or <- exp(10 * confint.default(g_add))
+or_lat <- exp(coef(g_add)["lat"])
+or_hwi <- exp(coef(g_add)["hwi"])
+ci_or <- exp(confint.default(g_add))
 p45 <- predict(g_add, newdata = data.frame(lat = 45, hwi = c(15, 30)), type = "response")
 
 grid <- expand.grid(lat = 0:70, hwi = c(15, 30))
@@ -99,12 +103,18 @@ fit_band <- tapply(fitted(g_add), birds$band, mean)
 reef <- reef_surveys
 g_pois <- glm(richness ~ depth + I(depth^2), family = poisson, data = reef)
 disp <- deviance(g_pois) / df.residual(g_pois)
-g_quasi <- glm(richness ~ depth + I(depth^2), family = quasipoisson, data = reef)
 g_nb <- MASS::glm.nb(richness ~ depth + I(depth^2), data = reef)
 se_p <- summary(g_pois)$coefficients[, 2]
-se_q <- summary(g_quasi)$coefficients[, 2]
 se_nb <- summary(g_nb)$coefficients[, 2]
 aic_nb <- AIC(g_pois) - AIC(g_nb)
+# where 95% of surveys should fall, under each model
+lo_p <- qpois(0.025, fitted(g_pois)); hi_p <- qpois(0.975, fitted(g_pois))
+lo_n <- qnbinom(0.025, mu = fitted(g_nb), size = g_nb$theta)
+hi_n <- qnbinom(0.975, mu = fitted(g_nb), size = g_nb$theta)
+in_p <- mean(reef$richness >= lo_p & reef$richness <= hi_p)
+above_p <- mean(reef$richness > hi_p)
+below_p <- mean(reef$richness < lo_p)
+in_n <- mean(reef$richness >= lo_n & reef$richness <= hi_n)
 peak_nb <- -coef(g_nb)["depth"] / (2 * coef(g_nb)["I(depth^2)"])
 
 # --- nls: wing allometry -----------------------------------------------------
@@ -183,8 +193,8 @@ relatives.
     - what it means biologically ("*y* depends on *x*, with an intercept for
       each *group*")
 4. Say which model(s) you would keep, and **why**
-5. **Check** the one you keep against the data: residuals, dispersion, or its
-   predictions with a band
+5. **Check** the one you keep against the data: residuals, its predictions
+   with a band, or (for counts) how many fall inside its 95% range
 
 Reusing Assignment 3's models is fine, but try **new** ones too. **Due Friday,
 November 20.**
@@ -274,10 +284,52 @@ not a different kind of statistics; it is mle2() for a menu of common models.
 
 Lecture 16 showed the glm() line once, at the end; now students write it.
 
-cbind(successes, failures) is how glm() takes "k out of n" data: the number of
-routes with bobwhite, and the number without. For 0/1 data, one row per
-individual, the response is just the 0/1 column (the songbirds, in a few
-minutes).
+The cbind() on the left is new notation; the next slide explains it.
+:::
+
+## Why `cbind()`? {.smaller}
+
+Elsewhere the left side is one column: `y ~ x`. A binomial needs **two
+numbers** per row: successes, and **out of how many** (`size` in `dbinom()`).
+
+```{r}
+head(cbind(occ$n_occupied, occ$n_routes - occ$n_occupied), 2)
+```
+
+. . .
+
+| Your data | In `glm()` |
+|---|---|
+| successes out of trials, per group | `cbind(successes, failures) ~ x` |
+| the same, stored as a proportion | `proportion ~ x, weights = trials` |
+| 0 or 1, one row per individual | as usual: `migratory ~ lat` |
+
+::: {.plain}
+cbind(successes, failures): failures, not the total.
+:::
+
+::: {.notes}
+Two minutes. cbind() means "column bind": it makes a two-column matrix, and
+glm() reads the first column as successes and the second as failures. In 1997,
+`r occ$n_occupied[1]` routes had bobwhite and `r occ$n_routes[1] - occ$n_occupied[1]`
+did not.
+
+The common mistake: cbind(n_occupied, n_routes). R does not complain; it
+treats the total as the number of failures, so 1997 becomes
+`r occ$n_occupied[1]` out of `r occ$n_occupied[1] + occ$n_routes[1]` instead of
+`r occ$n_occupied[1]` out of `r occ$n_routes[1]`. Occupancy comes out at about
+half its true value, and the slope is wrong too. Point at the "failures, not
+the total" box.
+
+The weights row is the form they will meet in other people's code:
+glm(n_occupied / n_routes ~ elapsed, weights = n_routes, family = binomial).
+It gives the same coefficients, standard errors and AIC as the cbind() version.
+The weights are what tell glm() each proportion is out of a different number of
+routes; leave them off and every year counts as one trial, which R warns about
+("non-integer #successes"). cbind() is easier to read and harder to get wrong.
+
+The 0/1 version is the same model with every trial in its own row: a
+binomial with size 1 for each species. The songbirds in a few minutes use it.
 :::
 
 ## What `glm()` writes for you {.smaller}
@@ -339,7 +391,59 @@ works on a whole logit (intercept plus slope times x), which is what predict()
 does on the next slides.
 
 For a Poisson GLM (log link) the same idea is simpler: exp(slope) is how much
-the expected count is multiplied by per unit of x.
+the expected count is multiplied by per unit of x. The next slide has the whole
+reference.
+:::
+
+## Undoing the link: a reference {.smaller}
+
+| Model (link) | Intercept $a$, at $x = 0$ | Slope $b$, per unit of $x$ |
+|---|---|---|
+| `lm()` (none) | as is: the mean | as is: **added** to the mean |
+| `poisson`, `glm.nb()` (log) | `exp(a)`: the mean count | `exp(b)`: the mean is **multiplied** by it |
+| `binomial` (logit) | `plogis(a)`: the probability | `exp(b)`: the **odds** are multiplied by it |
+
+. . .
+
+- **$k$ units:** `exp(k * b)`. **A group:** the same transform, against the
+  baseline group
+- **An interval:** transform the two ends from `confint()`
+- **Squared terms or interactions:** no single number; use
+  `predict(type = "response")` at values you choose
+
+::: {.notes}
+The slide to photograph for Assignment 4, which asks them to interpret glm()
+effects on the original scale.
+
+Examples from today, to point at:
+
+- binomial: bobwhite occupancy in 1997 is plogis(`r f2(coef(g_occ)[1])`) =
+  `r pct(plogis(coef(g_occ)[1]))`; the odds fall to `r f2(exp(coef(g_occ)[2]))`
+  of themselves each year. Songbirds: the odds of migrating are multiplied by
+  `r f2(or_lat)` per degree, exp(b); per 10 degrees it is exp(10 * b) =
+  `r f1(or_lat^10)`.
+- log link: the reef fish model has a squared depth term, so depth has no single
+  multiplier: the last bullet. Peak richness and predictions at chosen depths
+  are the way to describe it.
+
+Odds versus probability: odds are p / (1 - p). An odds ratio of 3 does not
+mean 3 times as likely, except when the probability is small (below about 10%),
+where odds and probability are nearly the same. To say "how much more likely",
+compare predicted probabilities.
+
+Percent change from a multiplier: (exp(b) - 1) x 100. exp(b) = 1.10 is 10%
+more per unit of x; exp(b) = 0.94 is a 6% drop.
+
+exp(k * b), not k * exp(b): multipliers compound, so ten steps of x1.1 is
+x2.6, not x11. A factor's coefficient transforms the same way and compares
+that group with the baseline group (the ratio of mean counts, or the odds
+ratio). For an interval, transform the ends of confint(), never plus or minus
+the standard error after transforming.
+
+Other families, if anyone asks: Gamma's default link is the inverse (1/mean),
+which has no easy reading; family = Gamma(link = "log") reads exactly like the
+Poisson row. binomial(link = "log") makes exp(b) a ratio of probabilities (a
+risk ratio) instead of an odds ratio.
 :::
 
 # Intervals for a GLM
@@ -349,20 +453,27 @@ the expected count is multiplied by per unit of x.
 `predict()` on an `lm()` takes `interval = "confidence"`. On a `glm()`:
 
 ```{r}
-predict(g_occ, newdata = data.frame(elapsed = 22), interval = "confidence")
+# 1997 and 2019
+predict(g_occ, newdata = data.frame(elapsed = c(0, 22)), interval = "confidence")
 ```
 
 . . .
 
 - **No interval**, and no warning: `glm()` ignores the argument
-- That number is not a probability. It is on the **logit** scale: occupancy in
-  2019 is `plogis()` of it, `r pct1(plogis(trap))`
+- These are **logits**, not probabilities. `r f2(trap[1])` cannot be a
+  probability; occupancy in 1997 is `plogis()` of it, `r pct1(plogis(trap[1]))`
+- 2019's `r f3(trap[2])` only *looks* right (`r pct1(plogis(trap[2]))`): a
+  logit and its probability agree only near 66%
 
 ::: {.notes}
-Two minutes. Both traps bite silently, which is why they get a slide. The
-second is worse here than usual, because this logit happens to be between 0 and
-1 and looks like a probability. For 1997 (elapsed = 0) it would be 2.02, which
-at least looks wrong.
+Two minutes. Both traps bite silently, which is why they get a slide.
+
+Why two years: a logit equals its own probability at only one point, p = 0.659,
+and the bobwhite curve passes almost exactly through it in 2019. Predict at 2019
+alone and the wrong number looks right, which is the most dangerous version of
+the trap. Elsewhere the gap is obvious: 2007 is 1.40 (80%), and a projection to
+2037 gives -0.46, a negative "probability" (39%). Logits are negative whenever
+the probability is below 50%.
 
 type = "response" gives the probability. It also gives an se.fit, but on the
 probability scale, where the estimate is not close to normal; an interval
@@ -377,9 +488,12 @@ built from it can run past 0 or 1. The next slide is the safe way.
 # 2019 is 22 years after 1997
 p19 <- predict(g_occ, newdata = data.frame(elapsed = 22),
                type = "link", se.fit = TRUE)
+p19$fit        # the estimate for 2019, on the logit scale
+p19$se.fit     # its standard error, also on the logit scale
 
-# build the interval on the link scale, then undo the link
-plogis(p19$fit + c(-1.96, 0, 1.96) * p19$se.fit)
+# lower end, estimate, upper end: all still logits
+ends <- p19$fit + c(-1.96, 0, 1.96) * p19$se.fit
+plogis(ends)   # undo the link: back to probabilities
 ```
 :::
 
@@ -387,16 +501,13 @@ plogis(p19$fit + c(-1.96, 0, 1.96) * p19$se.fit)
 `r pct1(band19[2])`. Lecture 21's recipe gave `r pct1(recipe19[1])` to
 `r pct1(recipe19[2])`.
 
-::: {.plain}
-Build the interval where the estimate is roughly normal, on the link scale; then transform the two ends.
-:::
-
 ::: {.notes}
-Three minutes. This is the shortcut promised at the end of Lecture 21, for
-glm(). Same idea as Lecture 17's back-transformed endpoints: plus or minus
-1.96 standard errors is fair on the logit scale, and plogis() then carries the
-two ends to the probability scale, where the interval comes out lopsided, as it
-should near 0 or 1.
+Three minutes to type and run; the next two slides take it apart. This is the
+shortcut promised at the end of Lecture 21, for glm().
+
+type = "link" asks for the logit, not the probability, and se.fit = TRUE adds
+its standard error. predict() then returns a list, which is why the pieces are
+p19$fit and p19$se.fit.
 
 Agreement with the recipe to within a few tenths of a percent: two routes to the
 same answer.
@@ -404,6 +515,139 @@ same answer.
 What there is NOT: a built-in prediction interval for a GLM (where the next
 year's count of occupied routes will land). For that, Lecture 21's recipe is
 still the way: draw, compute, then simulate rbinom() around each draw.
+:::
+
+## What that line does {.smaller}
+
+`c(-1.96, 0, 1.96) * p19$se.fit` makes three numbers at once: minus 1.96
+standard errors, zero, plus 1.96 standard errors. Adding `p19$fit` centers them
+on the estimate.
+
+| | On the logit scale | `plogis()`: probability |
+|---|---|---|
+| lower end | `r f3(p19$fit)` − 1.96 × `r f3(p19$se.fit)` = `r f3(ends19[1])` | `r pct1(band19[1])` |
+| estimate | `r f3(p19$fit)` | `r pct1(band19[2])` |
+| upper end | `r f3(p19$fit)` + 1.96 × `r f3(p19$se.fit)` = `r f3(ends19[3])` | `r pct1(band19[3])` |
+
+. . .
+
+- The `0` is only there to keep the estimate in the middle of the printout
+- Symmetric as logits, slightly lopsided as probabilities (`r sprintf("%.1f", 100 * (band19[2] - band19[1]))`
+  points below, `r sprintf("%.1f", 100 * (band19[3] - band19[2]))` above)
+- Transform the **ends**, never the standard error (Lecture 17):
+  `plogis(p19$se.fit)` means nothing
+
+::: {.notes}
+Two minutes. Walk the table row by row; it is the same arithmetic R just did,
+with the numbers shown.
+
+R works through c(-1.96, 0, 1.96) * se element by element, so one line gives
+all three. Writing them out separately is fine too:
+p19$fit - 1.96 * p19$se.fit and so on.
+
+Lopsided: plogis() squeezes more as it nears 1, so the upper end is pulled in
+more than the lower one. At 66% the effect is small; near 0 or 1 it is large,
+and that is the point of building the interval as logits: an interval
+transformed this way can never run past 0 or 1.
+:::
+
+## Why 1.96? {.smaller}
+
+:::: {.columns}
+::: {.column width="45%"}
+```{r}
+#| echo: false
+#| fig-width: 4.2
+#| fig-height: 3.2
+par(mar = c(3.4, 0.6, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+zz <- seq(-3.5, 3.5, length.out = 400)
+plot(zz, dnorm(zz), type = "n", yaxt = "n", bty = "n", ylab = "",
+     xlab = "standard errors from the estimate", xaxt = "n", ylim = c(0, 0.42))
+axis(1, at = c(-3, -1.96, 0, 1.96, 3), labels = c("-3", "-1.96", "0", "1.96", "3"))
+mid <- zz[abs(zz) <= 1.96]
+polygon(c(-1.96, mid, 1.96), c(0, dnorm(mid), 0), col = "#cfe2f0", border = NA)
+lines(zz, dnorm(zz), lwd = 2)
+text(0, 0.17, "95%", cex = 1.4)
+text(c(-2.6, 2.6), 0.05, "2.5%", cex = 0.9)
+```
+:::
+::: {.column width="55%"}
+- 95% of a **normal** distribution lies within 1.96 standard deviations of its
+  middle: `qnorm(0.975)` is `r sprintf("%.6f", qnorm(0.975))`, rounded to 1.96
+- **The approximation:** that the estimate is roughly normal, so the
+  likelihood is close to Lecture 17's **parabola**
+- True with plenty of data, away from edges. The logit scale has **no edges**;
+  the probability scale stops at 0 and 1
+:::
+::::
+
+. . .
+
+::: {.plain}
+Build the interval on the link scale, where "roughly normal" is closest to true; then transform the two ends.
+:::
+
+::: {.notes}
+Three minutes. The standard error is the standard deviation of the estimate:
+how much it would vary if the survey were repeated. If those repeats would form
+a normal curve, 95% of them land within 1.96 standard errors of the truth, which
+is where the 95% comes from. For 90%, use qnorm(0.95) = 1.64; for 99%,
+qnorm(0.995) = 2.58.
+
+Why it is an approximation: the estimate is only roughly normal, and the
+standard error comes from how sharply the likelihood bends at its minimum, as if
+it were a parabola (Lecture 17, Bolker 6.5). With about 70 routes a year for 23
+years it is very close; with a handful of observations it is not.
+
+Why on the logit scale: Lecture 17's pewee, 3 of 71, got a negative lower limit
+from plus or minus 1.96 SE on the probability scale. As logits, nothing stops at
+0 or 1, so the parabola fits better, and plogis() keeps both ends between 0
+and 1.
+
+How to know it worked: compare with Lecture 21's recipe, which does not assume
+normality for the probability. Here they agree to within half a percentage
+point. When they disagree, trust the recipe, or the profile interval from
+confint().
+:::
+
+## The same band, the easy way {background-color="#f0f4f8" .smaller}
+
+Two packages build the same band for you:
+
+::: {.type-it}
+```{r}
+#| eval: false
+# once: install.packages(c("marginaleffects", "emmeans"))
+library(marginaleffects)
+predictions(g_occ, newdata = data.frame(elapsed = 22))
+
+library(emmeans)
+emmeans(g_occ, ~ elapsed, at = list(elapsed = 22), type = "response")
+```
+:::
+
+**Check:** both give `r pct1(me19$estimate)`, `r pct1(me19$conf.low)` to
+`r pct1(me19$conf.high)`: the same as by hand. emmeans says why: "Intervals are
+back-transformed from the logit scale".
+
+::: {.notes}
+Three minutes, more if the installs are slow; anyone still installing can
+watch and type it later. Both are on CRAN and install as binaries on Windows
+and Mac.
+
+Do it by hand first, then the easy way, as with lm() on Tuesday: now that
+students have built the interval on the link scale themselves, they know what
+the package is doing, and can check it.
+
+Which to use: marginaleffects is the more general (predictions, comparisons,
+slopes, for almost any model, and the songbird figure later today). emmeans
+is the standard for comparing group means ("estimated marginal means"), and is
+handy for factors: emmeans(fit, ~ group, type = "response") gives every group's
+mean or probability with an interval in one line. A third package, ggeffects
+(predict_response()), is common in ecology papers and does the same job.
+
+None of them gives a prediction interval for a GLM. That is still Lecture 21's
+recipe.
 :::
 
 # Yes/no data: which songbirds migrate?
@@ -527,10 +771,12 @@ from the equator.
 
 ## What the coefficients mean {.smaller}
 
-| | On the logit scale | Undo the link: odds ratio per 10 units |
+| | `coef()`: logit scale | `exp(coef())`: odds ratio |
 |---|---|---|
-| latitude | `r f3(coef(g_add)["lat"])` per degree | × **`r f1(or_lat)`** per 10 degrees (`r f1(ci_or["lat", 1])` to `r f1(ci_or["lat", 2])`) |
-| HWI | `r f3(coef(g_add)["hwi"])` per point | × **`r f1(or_hwi)`** per 10 points (`r f1(ci_or["hwi", 1])` to `r f1(ci_or["hwi", 2])`) |
+| latitude | `r f3(coef(g_add)["lat"])` per degree | × **`r f2(or_lat)`** per degree (`r f2(ci_or["lat", 1])` to `r f2(ci_or["lat", 2])`) |
+| HWI | `r f3(coef(g_add)["hwi"])` per unit | × **`r f2(or_hwi)`** per unit (`r f2(ci_or["hwi", 1])` to `r f2(ci_or["hwi", 2])`) |
+
+One unit of HWI: Kipp's distance is 1% more of the wing length.
 
 . . .
 
@@ -538,14 +784,23 @@ At 45° from the equator, the chance a songbird migrates is
 `r pct(p45[1])` with an HWI of 15, and `r pct(p45[2])` with an HWI of 30.
 
 ::: {.notes}
-Three minutes. Per 10 units, because one degree or one HWI point is too small a
-step to talk about. exp(10 * slope) is the odds ratio for a 10-unit step.
+Three minutes. Per unit, so each odds ratio is just exp() of the number they
+see in summary(g_add): `r f3(coef(g_add)["lat"])` becomes `r f2(or_lat)`. Say
+it as "the odds of migrating rise about `r sprintf("%.0f%%", 100 * (or_lat - 1))`
+per degree from the equator".
+
+If someone asks about a bigger step: exp(k * b), the reference slide. Ten
+degrees multiplies the odds by `r f1(or_lat^10)`, ten HWI units by
+`r f1(or_hwi^10)`.
+
+One HWI unit: Kipp's distance is 1% more of the wing length (HWI is
+100 × Kipp's distance / wing length, from Tuesday).
 
 The probabilities come from predict(g_add, newdata = ..., type = "response").
 Odds ratios are what papers report; probabilities are what people understand.
 Give both when you can, in Assignment 4 too.
 
-The intervals here are Wald intervals, exp(10 * confint.default(g_add)), which
+The intervals here are Wald intervals, exp(confint.default(g_add)), which
 are what summary() implies; confint(g_add) profiles instead, as for mle2(), and
 with 6,583 species the two agree.
 :::
@@ -610,6 +865,41 @@ species. The bands are narrow because there are 6,583 species; the same
 caution as Tuesday applies, that related species are not independent.
 :::
 
+## The same figure, the easy way {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+plot_predictions(g_add, condition = list("lat", hwi = c(15, 30))) +
+  labs(x = "degrees from the equator", y = "probability of migrating")
+```
+:::
+
+```{r}
+#| echo: false
+#| fig-height: 3.0
+#| fig-width: 7.5
+plot_predictions(g_add, condition = list("lat", hwi = c(15, 30))) +
+  labs(x = "degrees from the equator", y = "probability of migrating")
+```
+
+**Check:** the same curves and bands as yours.
+
+::: {.notes}
+Two minutes. condition = names the predictor for the x-axis first, then the
+values to draw separate lines for. Any predictor left out is held at its mean
+(or, for a factor, its most common level), which is worth saying in a methods
+section.
+
+It returns an ordinary ggplot, so + labs(), + theme() and the rest work as
+usual. The bands are built on the link scale and back-transformed, exactly like
+the hand-made grid two slides back; draw = FALSE returns the numbers instead of
+the plot.
+
+For Assignment 4: with three or four predictors the grid by hand gets tedious,
+and this is the sensible way to draw it.
+:::
+
 # Counts: reef fish
 
 ## Poisson first {background-color="#f0f4f8" .smaller}
@@ -623,66 +913,132 @@ reef <- reef_surveys
 g_pois <- glm(richness ~ depth + I(depth^2), family = poisson, data = reef)
 coef(g_pois)
 
-# is there more scatter than a Poisson allows? (about 1 if not)
-deviance(g_pois) / df.residual(g_pois)
+# if the scatter really is Poisson, about 95% of surveys fall in this range
+mu <- fitted(g_pois)              # expected richness for each survey
+lo <- qpois(0.025, mu)
+hi <- qpois(0.975, mu)
+mean(reef$richness >= lo & reef$richness <= hi)
 ```
 :::
 
-**Check:** `r f1(disp)`: more than four times the scatter a Poisson expects.
+**Check:** `r pct(in_p)`, not 95%. `r pct(above_p)` of surveys are above the
+range and `r pct(below_p)` below: the curve is in the right place, but the
+scatter is far wider than a Poisson allows.
 
 ::: {.notes}
-Two minutes. The log link is the default for Poisson, so the coefficients are
+Three minutes. The log link is the default for Poisson, so the coefficients are
 logs: exp() turns them into multipliers of the expected count.
 
-The check is Bolker's rule of thumb: residual deviance divided by residual
-degrees of freedom should be near 1 for a Poisson (or binomial with more than
-one trial). Lecture 19 found the same thing a different way: the variance of
-richness is about 4.4 times its mean.
+The check is Tuesday's idea ("does the model match the data?") with Lecture
+12's q functions: qpois(0.975, mu) is the count that 97.5% of Poisson draws
+fall below. If the model were right, about 2.5% of surveys would miss on each
+side. Misses split evenly above and below say the spread is wrong, not the
+shape of the curve.
+
+If a student has read ahead: Bolker's rule of thumb is residual deviance over
+residual degrees of freedom, deviance(g_pois) / df.residual(g_pois), which
+should be near 1 for a Poisson. Here it is `r f1(disp)`. Lecture 19 found the
+same thing from the raw counts: the variance of richness is about 4.4 times its
+mean. All three say the same thing; the range check is the one that shows
+where the misses are.
 
 Why it matters: a Poisson assumes variance equals the mean. With four times
 the scatter, its standard errors are too small, its intervals too narrow, and
 every term looks more important than it is.
 :::
 
-## Two fixes {background-color="#f0f4f8" .smaller}
+## The fix: a negative binomial {background-color="#f0f4f8" .smaller}
+
+Lecture 18's answer to extra scatter, as a `glm()`:
 
 ::: {.type-it}
 ```{r}
 #| eval: false
-g_quasi <- glm(richness ~ depth + I(depth^2), family = quasipoisson, data = reef)
 g_nb <- MASS::glm.nb(richness ~ depth + I(depth^2), data = reef)
 
-summary(g_quasi)
-summary(g_nb)
+AICtab(g_pois, g_nb)      # as in Lecture 18: Poisson against negative binomial
+summary(g_nb)             # glm.nb() calls Lecture 18's k "theta"
 ```
 :::
 
-| | Poisson | quasi-Poisson | negative binomial |
-|---|---|---|---|
-| estimates | the starting point | the same as Poisson | slightly different |
-| standard errors | too small | × `r f1(se_q["depth"] / se_p["depth"])` | × `r f1(se_nb["depth"] / se_p["depth"])` |
-| AIC | `r big(AIC(g_pois))` | none | `r big(AIC(g_nb))` |
+| | Poisson | negative binomial |
+|---|---|---|
+| AIC | `r big(AIC(g_pois))` | `r big(AIC(g_nb))` |
+| surveys inside the 95% range | `r pct(in_p)` | `r pct(in_n)` |
+| standard errors | too small | `r f1(se_nb["depth"] / se_p["depth"])` times the Poisson's |
 
 ::: {.plain}
-Counts almost always scatter more than a Poisson allows. Check every time, and use glm.nb() when they do.
+Counts almost always scatter more than a Poisson allows: check, and use glm.nb() when they do.
 :::
 
 ::: {.notes}
 Four minutes. Bolker 9.4.1.
 
-Quasi-Poisson keeps the Poisson estimates and inflates the variance by a
-factor, here `r f1(summary(g_quasi)$dispersion)`, so standard errors grow by
-its square root, about `r f1(sqrt(summary(g_quasi)$dispersion))`. It is not a
-real likelihood: no logLik(), no AIC, no likelihood ratio tests. Bolker
-mentions quasi-AIC and F tests as workarounds.
+The negative binomial's estimates differ only slightly from the Poisson's; the
+curve barely moves. What changes is the uncertainty: with the extra scatter
+accounted for, the standard errors are about twice as large, so the Poisson's
+intervals were far too narrow.
 
 The negative binomial is a real likelihood with one extra parameter, k (glm.nb
 calls it theta, here `r f1(g_nb$theta)`), so AIC works: it beats the Poisson by
 `r big(aic_nb)` units. Lecture 20 fitted this same model by hand and checked it
 against glm.nb().
 
+The range row is the same check as the last slide, with qnbinom(0.025, mu =
+fitted(g_nb), size = g_nb$theta) and 0.975 in place of qpois().
+
+If a student has read Bolker 9.4.1 and asks about quasi-Poisson,
+glm(family = quasipoisson): it keeps the Poisson estimates and inflates the
+standard errors by the same factor. It is not a real likelihood, so it has no
+AIC and no distribution to draw a range from, which is why we skip it:
+glm.nb() does the same job and keeps every tool they know.
+
 The biology: richness peaks at about `r round(peak_nb)` m, from
 -b1 / (2 b2) on the negative binomial fit.
+:::
+
+## Does the fix match the data? {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+#| fig-width: 8.5
+dgrid <- data.frame(depth = seq(min(reef$depth), max(reef$depth), length.out = 200))
+mu_p <- predict(g_pois, newdata = dgrid, type = "response")
+mu_n <- predict(g_nb, newdata = dgrid, type = "response")
+lab_p <- paste0("Poisson: ", pct(in_p), " of surveys inside")
+lab_n <- paste0("negative binomial: ", pct(in_n), " inside")
+ranges <- rbind(
+  data.frame(dgrid, model = lab_p, mu = mu_p,
+             lo = qpois(0.025, mu_p), hi = qpois(0.975, mu_p)),
+  data.frame(dgrid, model = lab_n, mu = mu_n,
+             lo = qnbinom(0.025, mu = mu_n, size = g_nb$theta),
+             hi = qnbinom(0.975, mu = mu_n, size = g_nb$theta)))
+ranges$model <- factor(ranges$model, levels = c(lab_p, lab_n))
+pts <- rbind(data.frame(reef[, c("depth", "richness")], model = lab_p),
+             data.frame(reef[, c("depth", "richness")], model = lab_n))
+pts$model <- factor(pts$model, levels = c(lab_p, lab_n))
+ggplot() +
+  geom_point(data = pts, aes(depth, richness), alpha = 0.08, size = 0.6,
+             position = position_jitter(height = 0.3, width = 0, seed = 1)) +
+  geom_ribbon(data = ranges, aes(depth, ymin = lo, ymax = hi),
+              fill = "#2c7fb8", alpha = 0.25) +
+  geom_line(data = ranges, aes(depth, mu), color = "#2c7fb8", linewidth = 1) +
+  facet_wrap(~ model) +
+  labs(x = "depth (m)", y = "fish species per survey") +
+  theme_bw(base_size = 13)
+```
+
+Nearly the same curve in both panels; only the negative binomial's range is
+wide enough for real reefs.
+
+::: {.notes}
+One minute. Shaded: where 95% of surveys should fall under each model. The
+Poisson band is too narrow everywhere, and the misses fall on both sides. The
+negative binomial band holds `r pct(in_n)`, close to the 95% it promises.
+
+The same picture works for Assignment 4 with any count model: fitted means,
+qpois() or qnbinom() for the range, and the data on top.
 :::
 
 # Curves with normal scatter: `nls()`
@@ -859,13 +1215,17 @@ wrangling:
 in 2016 and `r pct(yrs$prob[4])` (`r pct(yrs$lwr[4])` to `r pct(yrs$upr[4])`) in
 2022.
 
-**For anyone fast:** do other corals (`"Siderastrea|Montastraea|Porites"`), which
-are less susceptible, drop as much? A comparison like that guards against "the
-survey changed".
+**For anyone fast:** check your intervals the easy way, with `emmeans()`. Then:
+do other corals (`"Siderastrea|Montastraea|Porites"`), which are less
+susceptible, drop as much? That guards against "the survey changed".
 
 ::: {.notes}
-Fifteen minutes, in pairs. The hint for the years: newdata =
-data.frame(year = factor(levels(stations$year), levels = levels(stations$year))).
+Fifteen minutes, in pairs. By hand first, on purpose. The hint for the years:
+newdata = data.frame(year = factor(levels(stations$year), levels =
+levels(stations$year))).
+
+The easy way, once they have it by hand: emmeans(g_year, ~ year, type =
+"response") gives all four years with intervals in one line, and should match.
 
 The answer: `r paste0(levels(stations$year), " ", pct(yrs$prob), collapse = ", ")`.
 2021 is in between, which makes sense: the disease was found in May 2021, and
@@ -896,7 +1256,8 @@ before it died. A presence/absence GLM is a first look, not the whole story.
 | anything else | `mle2()` |
 
 An interval on a `glm()` prediction: `se.fit = TRUE` on the link scale, then
-undo the link. For a prediction interval, Lecture 21's recipe.
+undo the link, or `predictions()` and `emmeans()`. For a prediction interval,
+Lecture 21's recipe.
 
 ::: {.notes}
 The slide to photograph, with Tuesday's "Which formula, when". Every row above
