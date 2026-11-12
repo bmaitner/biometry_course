@@ -163,12 +163,12 @@ I'll aim to have work graded within two weeks of the assignment closing date. In
 | 22 | Nov 5 Th | Likelihood Examples; Work through examples in class | Skim chapter 8; **Assignment 3 Due** |
 | 23 | Nov 10 T | General Linear Models | 9.1 – 9.2 |
 | 24 | Nov 12 Th | **Assignment 4: GLMs.** Generalized Linear Models | 9.3 – 9.4 |
-| 25 | Nov 17 T | Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5 |
-| 26 | Nov 19 Th | Final project explained; Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3>; **Assignment 4 Due Fri Nov 20, 11:59 pm** |
-| 27 | Nov 24 T | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6 |
+| 25 | Nov 17 T | Mixed-effects models: when observations come in groups (`lmer()`, `glmer()`) | Read 10.1 and 10.4 |
+| 26 | Nov 19 Th | Final project explained; Data tidying, making code readable, pseudocode, annotation, etc. | *R for Data Science*: Chapters 4, 5; **Assignment 4 Due Fri Nov 20, 11:59 pm** |
+| 27 | Nov 24 T | Debugging and where to go for help; Debugging practice | *R for Data Science*: Chapter 8; <https://doi.org/10.1038/s41559-023-02063-3> |
 | — | Nov 26 Th | *Thanksgiving — No classes* |  |
-| 28 | Dec 1 T | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030> |
-| 29 | Dec 3 Th | Catch-up; Work on final projects in class | Test free week; last T/Th class meeting |
+| 28 | Dec 1 T | Reproducibility; Work on making .rmd files | *R for Data Science*: Chapter 6; Test free week |
+| 29 | Dec 3 Th | Code and Data sharing; Work on projects in class | Test free week; <https://doi.org/10.1126/science.aab2374>; <https://doi.org/10.1002/ece3.70030>; last T/Th class meeting |
 | — | TBD | **Presentations of Final Project** (during the scheduled final exam block, Dec 5 – 10 — exact day and time TBD) | **Final Project Due** |
 
 \* Note: The Schedule is subject to revision.

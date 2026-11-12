@@ -43,7 +43,7 @@ jobs:
       # What the student path needs, which is NOT what renv::dependencies()
       # reports. The type-and-run blocks carry `eval: false` so the deck does
       # not run student code at render time, and renv skips chunks it will not
-      # evaluate, so it never sees Lecture 26's tidyverse and reprex. The
+      # evaluate, so it never sees Lecture 27's tidyverse and reprex. The
       # checker runs those blocks, so it needs them.
       #
       # Keep this list in step with Rscript -e 'source(
@@ -68,6 +68,7 @@ jobs:
             any::bbmle
             any::emdbook
             any::emmeans
+            any::lme4
             any::marginaleffects
             any::reprex
             local::./biometrydata

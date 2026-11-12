@@ -934,7 +934,7 @@ Every analysis has limits. Saying what they are is part of the answer, not an ad
 
 ::: {.notes}
 The first point is the important one, and it previews mixed models, which are
-beyond this course: sections are not independent replicates, because the
+Lecture 25: sections are not independent replicates, because the
 sections from one dive share a site, a day, and a stretch of ridge. Treating
 729 sections as independent overstates how much information there is, so the
 real intervals would be wider. Adding dive as a predictor is a partial fix; a

@@ -343,7 +343,7 @@ the whole of chapter 5.
 set.seed() is worth the thirty seconds: without it a script that simulates gives
 different answers each run, which makes it hard to tell a real change from
 noise. With it, the work is reproducible, which is the Assignment 2 criterion
-and the Lecture 27 topic.
+and the Lecture 28 topic.
 
 Ask what happens without the seed. Run it twice.
 :::

@@ -1,162 +1,136 @@
-# Lecture 26: Getting help
+# Code for lecture 26
 
-library(tidyverse)
-library(reprex)
-
-  traits <- read_rds("https://tinyurl.com/amniotetraits")
-
-# basic issues ------------------------------------------------------------
-
-  
-# Calculate mean mass
-  
-  traits |>
-    group_by(class) |>
-    summarise(mean_mass = mean(adult_body_mass_g))
-  
-# Make a new data frame containing scientific name in "Genus species" format
-  # (note: what this calls "species" is actually the specific epithet)
-  
-  data.frame(scientific_name = paste(traits[4,],traits[5,]))
-  
-# Calculate SD in length 
-  
-  traits |>
-    group_by(class) |>
-    summarise(SD_svl = sd(adult_svl))
-
-# Calculate svl/mass ratio
-  
-  traits >
-    mutate(svl_mass_ratio = adult_svl_cm/adult_body_mass_g)
+  library(tidyverse)
+  library(styler) # style package
+  library(lintr) # style package
   
 
-# more advanced issues ----------------------------------------------------
+#let's get some data
+
+  avo <- read_rds("https://tinyurl.com/avonetbirddata")
 
 
-  # Calculate offspring per year, skipping those with NA data
-  
-  annual_fecundity <- NULL
-  
-  for(i in 1:length(unique(traits$species))){
-    
-    
-    species_i <- paste(traits$genus[i]," ",traits$species[i],sep = "")
-    
-    offspring_per_clutch <- traits$litter_or_clutch_size_n[i]
-    
-    clutches_per_year <- traits$litters_or_clutches_per_y[i]
-    
-    # Don't include values with NAs
-    
-    if(is.na(offspring_per_clutch) &
-       is.na(clutches_per_year)){
-      next
-    }
-      
-    offspring_per_clutch*clutches_per_year
-    
-    out <- data.frame(species = species_i,
-                      annual_offspring = offspring_per_clutch*clutches_per_year)
-    
-    annual_fecundity <- bind_rows(annual_fecundity,out)
-    
-  }# end i loop
-  
-  
-# Break data into family-sized batches and save them
-  
-  # make a temp folder
-  family_folder <- tempdir()
-  
-  # Get data for each family and save as an RDS file
-  
-  for(i in 1:length(unique(traits[,4]))){
-    
-    group_i <-   unique(traits[,4])[i]
-    
-    data_i <- traits[which(traits[,4] == group_i),]
-    
-    data_i |>
-    saveRDS(file.path(genus_folder,
-                      paste(unique(data_i[,3]),
-                      ".rds",sep = "")))
-    
-  }
-  
-  # Look at output files
-  
-    family_files <- list.files(family_folder,pattern = ".rds",full.names = TRUE)
+# naming ------------------------------------------------------------------
 
-  # Load an example
+  # Which is best?
+  
+    parrot_data <- avo |> filter(Family1 == "Psittacidae")
+
+    parrot-data <- avo |> filter(Family1 == "Psittacidae")
     
-    test <- readRDS(family_files[i])
+    parrot data <- avo |> filter(Family1 == "Psittacidae")
     
 
-# reproducible examples ---------------------------------------------------
+# spacing -----------------------------------------------------------------
 
-  ?reprex
+  a <- 1 + 2 #space between these
+  b <- 2^3 # no space with ^
+  
+  avo$Beak.Length_Culmen >= avo$Beak.Length_Nares # use space with logical operators (==, &, |)
+  
+  mean(x = avo$Mass, na.rm =  TRUE) # space after comma, but not next to parentheses
+
+  
+  # Both of the following are fine: 
+  
+    avo |>
+      group_by(Family1) |>
+      summarise(mean_mass        = mean(Mass),
+                sd_mass          = sd(Mass),
+                mean_wing_length = mean(Wing.Length),
+                sd_wing_length   = sd(Wing.Length))
     
     
-reprex({
-  
-  traits <- read_rds("https://tinyurl.com/amniotetraits")
-  
-  traits |>
-  ggplot(mapping = aes(x=adult_body_mass_g,
-                       y=adult_svl_cm))+
-    geom_point()+
-    scale_y_log10()+
-    scale_x_log10()+
-    geom_smooth(method = "lm")
-  
-  
-  })    
+    avo |>
+      group_by(Family1) |>
+      summarise(mean_mass = mean(Mass),
+                sd_mass = sd(Mass),
+                mean_wing_length = mean(Wing.Length),
+                sd_wing_length = sd(Wing.Length))
     
-# dput(data_i)
 
-reprex({
-  
-  traits <- read_rds("https://tinyurl.com/amniotetraits")
-  
-  traits |>
-    ggplot(mapping = aes(x=adult_body_mass_g,
-                         y=adult_svl_cm))+
-    geom_point()+
-    scale_y_log10()+
-    scale_x_log10()+
-    geom_smooth(method = "lm")
-  
+# pipes and arguments -----------------------------------------------------
+
+  # see previous example
+    
+
+# code chunks -------------------------------------------------------------
+
+  # ctrl+shift+R (or cmd+shift+R on Mac) inserts a section divider
+    
+  # you can also make your own using comments
+    
+###########################################################################    
+    
+
+# automated style guides --------------------------------------------------
+
+    
+  lint("R_scripts/Chapter_2_examples.R") # checks your style
+    
+  lint("R_scripts/Lecture_26_examples.R") # checks your style  
+
+  style_file("R_scripts/Chapter_2_examples.R") # automatically restyles
+
   
 
-  })    
+# Data style --------------------------------------------------------------
+
+avo_wide <- 
+  avo |>
+      select(Species1, Mass, Wing.Length) |>
+      slice_head(n = 3)
+  
+avo_long <-  
+  avo |>
+  select(Species1, Mass, Wing.Length) |>
+  slice_head(n = 3) |>
+  pivot_longer(cols = c(Mass, Wing.Length),
+               names_to = "trait",
+               values_to = "trait_value")
 
 
-# Below is ChatGPT's suggested fix, which seems to work:
+avo_wide <- 
+  avo |>
+  select(Species1, Mass, Wing.Length, Beak.Width, Beak.Length_Culmen)
 
-reprex({
+avo_long <-  
+  avo_wide |>
+  pivot_longer(cols = Mass:Beak.Length_Culmen,
+               names_to = "trait",
+               values_to = "trait_value")
+
+# If you want to compare sizes of the two formats
+  object.size(avo_wide)
+  object.size(avo_long)
+
+# make the data wide again
   
-  library(ggplot2)
+  avo_wide2 <-
+    avo_long |>
+    pivot_wider(id_cols = Species1,
+                names_from = trait,
+                values_from = trait_value)
   
-  # Load the dataset correctly from URL
-  traits <- readRDS(url("https://tinyurl.com/amniotetraits"))
+
+# pseudocode --------------------------------------------------------------
+
+  # Say we wanted to identify largest, mass-corrected, difference in beak lengths
+  # Our pseudocode might be:
   
-  # Quick look
-  dplyr::glimpse(traits)
+# Calculate difference in beak lengths (culmen vs nares)
+# Divide difference by body mass
+# Identify largest mass-corrected difference in beak lengths
+    
+  # We can then start to fill in the steps:
   
-  # Plot: body mass vs SVL with log scales + linear smooth
-  traits |>
-    ggplot(aes(x = adult_body_mass_g,
-               y = adult_svl_cm)) +
-    geom_point(alpha = 0.3) +
-    scale_x_log10() +
-    scale_y_log10() +
-    geom_smooth(method = "lm") +
-    labs(
-      x = "Adult body mass (g, log10 scale)",
-      y = "Adult snout–vent length (cm, log10 scale)",
-      title = "Body size relationships in amniotes"
-    ) +
-    theme_minimal()
-  
-})
+avo |>
+# Calculate difference in beak lengths (culmen vs nares)
+  mutate(delta_beak_length = Beak.Length_Culmen - Beak.Length_Nares) |>
+# Divide difference by body mass
+  mutate(mass_corrected_delta_beak_length = delta_beak_length / Mass) |>
+# Identify largest mass-corrected difference in beak lengths
+  slice_max(order_by = mass_corrected_delta_beak_length,
+            n = 1) |>
+    select(Species1, mass_corrected_delta_beak_length)
+    

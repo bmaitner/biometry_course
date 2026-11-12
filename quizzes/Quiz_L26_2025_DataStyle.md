@@ -1,4 +1,4 @@
-# Quiz, Lecture 25
+# Quiz, Lecture 26
 Name: ______________________________
 
 1.  What do we mean by "tidy" data?\

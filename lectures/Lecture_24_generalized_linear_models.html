@@ -2303,7 +2303,7 @@ display:block!important;
 <p>Optional: skip if time is short. Read each study out loud, take answers from the room, then click. Each click reveals one cell. Ask “why?” before every click; the reasons are what Assignment 4 grades.</p>
 <p>Body temperature: continuous, with no bound anywhere near the data, so normal scatter is reasonable. The question names an interaction (“track the air less closely” is a slope) so it needs *; + would force parallel lines and could not answer it. The biology: a lizard that only matches its surroundings has a slope near 1 against air temperature; one that basks to hold its temperature up has a shallower slope. That difference in slopes is thermoregulation.</p>
 <p>If someone proposes a percentage instead (leaf nitrogen, percent cover): it is bounded at 0 and 100 but is not successes out of trials, so binomial does not apply. The strict answer is beta regression (the betareg package, logit link); the practical one, when the values sit far from both bounds, is lm() on the log. Worth saying for Assignment 4, where percent cover is common.</p>
-<p>Turtles: successes out of trials, so cbind(successes, failures), not the clutch size. A good student will add temperature^2: hatching fails when sand is too cold or too hot. Beach as a factor gives each beach its own intercept. If someone asks about nests within beaches being alike, that is a mixed model, beyond this course.</p>
+<p>Turtles: successes out of trials, so cbind(successes, failures), not the clutch size. A good student will add temperature^2: hatching fails when sand is too cold or too hot. Beach as a factor gives each beach its own intercept. If someone asks about nests within beaches being alike, that is a mixed model, Tuesday’s topic.</p>
 <p>Seedlings: counts, so Poisson first, then the range check from today; seedling counts are almost always clumped, so expect glm.nb(). Whether to interact is a biology question: fire opens the canopy and changes the soil, so it is defensible either way, and AIC can decide between the two.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
@@ -2368,10 +2368,10 @@ display:block!important;
 </section>
 <section id="before-next-class" class="slide level2">
 <h2>Before next class</h2>
-<p>Read <em>R for Data Science</em>, <strong>chapters 4 and 5</strong> (code style, tidy data)</p>
+<p>Read Bolker <strong>chapter 10, sections 10.1 and 10.4</strong> (mixed models: when observations come in groups)</p>
 <p><strong>Assignment 4</strong> is due Friday, November 20, 11:59 pm</p>
 <aside class="notes">
-<p>Tuesday changes gear: making code and data readable, which matters for Assignment 4’s reproducibility points and for the final project.</p>
+<p>Tuesday: mixed-effects models, lmer() and glmer(). The same routes counted year after year, species from the same family: rows that are not independent. Many of their Assignment 4 datasets have exactly this structure, so Tuesday is in time for it. Code style and tidy data move to Thursday.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;

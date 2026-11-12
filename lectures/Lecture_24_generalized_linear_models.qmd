@@ -1298,7 +1298,7 @@ Turtles: successes out of trials, so cbind(successes, failures), not the
 clutch size. A good student will add temperature^2: hatching fails when sand is
 too cold or too hot. Beach as a factor gives each beach its own intercept. If
 someone asks about nests within beaches being alike, that is a mixed model,
-beyond this course.
+Tuesday's topic.
 
 Seedlings: counts, so Poisson first, then the range check from today; seedling
 counts are almost always clumped, so expect glm.nb(). Whether to interact is a
@@ -1334,11 +1334,14 @@ the range check to fail.
 
 ## Before next class
 
-Read *R for Data Science*, **chapters 4 and 5** (code style, tidy data)
+Read Bolker **chapter 10, sections 10.1 and 10.4** (mixed models: when
+observations come in groups)
 
 **Assignment 4** is due Friday, November 20, 11:59 pm
 
 ::: {.notes}
-Tuesday changes gear: making code and data readable, which matters for
-Assignment 4's reproducibility points and for the final project.
+Tuesday: mixed-effects models, lmer() and glmer(). The same routes counted year
+after year, species from the same family: rows that are not independent. Many
+of their Assignment 4 datasets have exactly this structure, so Tuesday is in
+time for it. Code style and tidy data move to Thursday.
 :::

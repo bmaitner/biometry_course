@@ -1064,7 +1064,7 @@ border-radius: 4px; vertical-align: middle;
 
 <section id="title-slide" class="quarto-title-block center">
   <h1 class="title">Getting help</h1>
-  <p class="subtitle">PCB 6455 / BSC 4933: Biometry   |   Lecture 26</p>
+  <p class="subtitle">PCB 6455 / BSC 4933: Biometry   |   Lecture 27</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -1078,7 +1078,7 @@ Dr. Brian Maitner
 <section id="todays-agenda" class="slide level2 smaller">
 <h2>Today’s agenda</h2>
 <ul>
-<li>The final project, explained</li>
+<li>Final project: questions from Thursday</li>
 <li>Debugging: what to do when your code breaks</li>
 <li>Where to go for help, from people and from machines</li>
 </ul>
@@ -1086,7 +1086,7 @@ Dr. Brian Maitner
 <p><span class="type-badge">Type and run</span> on a code block: type it into your script and run it. You will need it later. Code without the label is there to watch.</p>
 <aside class="notes">
 <p>Reading was R4DS chapter 8, on getting help, plus the Merow et al. paper on AI and scientific coding.</p>
-<p>Three unrelated things in one class, held together loosely by “what do you do when you are stuck”. The final project section is the one they came for.</p>
+<p>Two things in one class, held together loosely by “what do you do when you are stuck”. The final project was explained on Thursday (Lecture 26, in Lecture_26_final_project); today only takes questions about it.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1100,13 +1100,13 @@ display:block!important;
 }</style></aside>
 </div>
 </section>
-<section id="assignment-4-is-due-friday" class="slide level2">
-<h2>Assignment 4 is due Friday</h2>
-<p><strong>Friday, November 20, 11:59 pm.</strong> Submit on Canvas.</p>
-<div class="fragment">
-<p>Everything after today is the final project.</p>
+<section id="from-here-on-the-final-project" class="slide level2">
+<h2>From here on: the final project</h2>
+<p>Assignment 4 is in. Everything after today is the final project, explained on Thursday.</p>
+<p><strong>Questions about it?</strong></p>
 <aside class="notes">
-<p>Worth saying plainly that the remaining classes are project work, reproducibility and code sharing, so this is the last new statistical material.</p>
+<p>Five minutes at most. If someone missed Thursday, the slides are in Lecture_26_final_project.</p>
+<p>Worth saying plainly that the remaining classes are project work, reproducibility and code sharing. Mixed models (Lecture 25) were the last new statistical material.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1118,168 +1118,6 @@ width: 1px!important;
 overflow: hidden!important;
 display:block!important;
 }</style></aside>
-</div>
-</section>
-<section id="the-final-project" class="slide level2 center">
-<h2>The final project</h2>
-</section>
-<section id="three-parts" class="slide level2 smaller">
-<h2>Three parts</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Part</th>
-<th>Format</th>
-<th>Builds on</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>Code</strong></td>
-<td><code>.R</code> or <code>.Rmd</code>, or a GitHub link</td>
-<td>every assignment so far</td>
-</tr>
-<tr class="even">
-<td><strong>Writing</strong></td>
-<td>a document</td>
-<td>your midterm Part 1</td>
-</tr>
-<tr class="odd">
-<td><strong>Presentation</strong></td>
-<td>about 5 minutes</td>
-<td>the whole thing</td>
-</tr>
-</tbody>
-</table>
-<div class="fragment">
-<p><strong>Due at the presentation</strong>, during the scheduled final exam block. Exact day and time to be confirmed.</p>
-<aside class="notes">
-<p>Check the registrar’s assigned exam slot before this class and fill in the date. The course meets T/Th 2:00 to 3:50, which is not a pattern on the USF standard matrix, so the slot is assigned rather than predictable. Finals week is Dec 5 to 10.</p>
-<p>The design principle to state out loud: nothing here is new work. Every piece is an extension of something they have already submitted and had feedback on.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
-<section id="part-1-the-code" class="slide level2 smaller">
-<h2>Part 1: the code</h2>
-<p>A <strong>full analysis</strong>, not a fragment:</p>
-<ul>
-<li>loading the data</li>
-<li>any transformations, and the reason for them</li>
-<li>the code behind any modeling decision you made</li>
-<li>the model itself</li>
-<li>the figures</li>
-</ul>
-<div class="fragment">
-<p><strong>Fully reproducible and well documented.</strong> Someone else should be able to run it and get your results.</p>
-<aside class="notes">
-<p>“Reproducible” has a specific meaning here, and it is the one from Assignment 2: someone else, on another machine, with your code and your data, gets your numbers.</p>
-<p>The most common failure is an absolute path to their own Desktop. The second is data that only exists on their laptop.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
-<section id="part-2-the-writing" class="slide level2 smaller">
-<h2>Part 2: the writing</h2>
-<p>An updated draft of your midterm writing, same three sections:</p>
-<ul>
-<li><strong>Introduction</strong>: the question, and why it matters</li>
-<li><strong>Methods</strong>: the data, and what you did to it</li>
-<li><strong>Results</strong>: including the results of a <strong>statistical model</strong>, not just plots</li>
-</ul>
-<div class="fragment">
-<p>Figures should be better than the midterm’s. You know ggplot2 now.</p>
-<aside class="notes">
-<p>The upgrade from the midterm is the model. At midterm they were plotting; now they fit something and report it.</p>
-<p>Remind them that the text is theirs: the syllabus allows AI for code, not for the writing in this section. That comes up again at the end of today.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
-<section id="part-3-the-presentation" class="slide level2 smaller">
-<h2>Part 3: the presentation</h2>
-<p>About <strong>five minutes</strong>, during the final exam block.</p>
-<p>A format that works:</p>
-<ul>
-<li>Title slide</li>
-<li>Background, 1 to 2 slides: what is your question, why does it matter</li>
-<li>Methods, 1 to 2 slides</li>
-<li>Results, 1 to 2 slides</li>
-<li>What you would do next</li>
-</ul>
-<aside class="notes">
-<p>Five minutes is short. The commonest mistake is three slides of background and no results.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</section>
-<section id="presenting-well" class="slide level2 smaller">
-<h2>Presenting well</h2>
-<ul>
-<li><strong>Minimize text.</strong> Roughly seven lines, seven words each, as an upper bound</li>
-<li><strong>Practice the timing</strong>, out loud, with a clock</li>
-<li><strong>Going long costs points</strong>, because it takes time from the next speaker</li>
-</ul>
-<div class="fragment">
-<p>Your figures are the presentation. If a figure needs a paragraph of explanation, fix the figure.</p>
-<aside class="notes">
-<p>The 7x7 rule is a ceiling and not a target. Most good slides have less.</p>
-<p>If anyone wants to go further on figures, the figures supplement covers palettes, combining panels, and plotting model predictions.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</div>
-</section>
-<section id="any-questions-about-the-project" class="slide level2 center">
-<h2>Any questions about the project?</h2>
 </section>
 <section id="debugging" class="slide level2 center">
 <h2>Debugging</h2>
@@ -2069,7 +1907,7 @@ display:block!important;
 <p>Next time: <strong>reproducibility</strong>, and making your project run on someone else’s machine</p>
 <p>May be a quiz.</p>
 <aside class="notes">
-<p>Assignment 4 is due Friday, November 20.</p>
+<p>Thursday is Thanksgiving, so the next class is Tuesday, December 1.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;

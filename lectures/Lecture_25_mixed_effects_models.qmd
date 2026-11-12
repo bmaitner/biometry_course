@@ -1,0 +1,929 @@
+---
+title: "Mixed-effects models"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 25"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+knitr::knit_hooks$set(small_mar = function(before, options, envir) {
+  if (before) par(mar = c(3.4, 3.4, 0.6, 0.6), mgp = c(2.1, 0.6, 0))
+})
+knitr::opts_chunk$set(small_mar = TRUE)
+
+library(lme4)
+library(bbmle)
+library(biometrydata)
+library(ggplot2)
+
+pct <- function(x){ paste0(round(100 * x), "%") }
+pct1 <- function(x){ paste0(sprintf("%.1f", 100 * x), "%") }
+f1 <- function(x){ sprintf("%.1f", x) }
+f2 <- function(x){ sprintf("%.2f", x) }
+f3 <- function(x){ sprintf("%.3f", x) }
+f4 <- function(x){ sprintf("%.4f", x) }
+big <- function(x){ format(round(x), big.mark = ",") }
+se_of <- function(m, term){
+  summary(m)$coefficients[term, 2]
+}
+
+# --- songbirds: wing shape within families ----------------------------------
+songbirds <- avonet[avonet$Order1 == "Passeriformes", ]
+birds <- data.frame(species = songbirds$Species1,
+                    family = songbirds$Family1,
+                    hwi = songbirds$Hand.Wing.Index,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    migratory = as.numeric(songbirds$Migration == 3))
+birds <- na.omit(birds)
+n_birds <- nrow(birds)
+n_fam <- length(unique(birds$family))
+
+lm_lat <- lm(hwi ~ lat, data = birds)
+mm_lat <- lmer(hwi ~ lat + (1 | family), data = birds)
+lm_fam <- lm(hwi ~ lat + family, data = birds)
+vc <- as.data.frame(VarCorr(mm_lat))
+sd_fam <- vc$sdcor[vc$grp == "family"]
+sd_res <- vc$sdcor[vc$grp == "Residual"]
+var_fam <- vc$vcov[vc$grp == "family"]
+var_res <- vc$vcov[vc$grp == "Residual"]
+icc <- var_fam / (var_fam + var_res)
+
+mm_lat_ml <- lmer(hwi ~ lat + (1 | family), data = birds, REML = FALSE)
+mm_null_ml <- lmer(hwi ~ 1 + (1 | family), data = birds, REML = FALSE)
+aic_vs_lm <- AIC(lm_lat) - AIC(mm_lat_ml)
+aic_vs_null <- AIC(mm_null_ml) - AIC(mm_lat_ml)
+ci_lat <- confint(mm_lat_ml, quiet = TRUE)
+
+# the twelve biggest families, for the "wings run in families" figure
+top_fam <- names(sort(table(birds$family), decreasing = TRUE))[1:12]
+big_fams <- birds[birds$family %in% top_fam, ]
+big_fams$family <- reorder(factor(big_fams$family), big_fams$hwi, median)
+
+# shrinkage: each family's raw mean against the model's estimate
+mm0 <- lmer(hwi ~ 1 + (1 | family), data = birds)
+fam_n <- table(birds$family)
+fam_raw <- tapply(birds$hwi, birds$family, mean)
+shrink <- data.frame(family = names(fam_raw),
+                     n = as.vector(fam_n[names(fam_raw)]),
+                     raw = as.vector(fam_raw),
+                     est = coef(mm0)$family[names(fam_raw), 1])
+grand <- fixef(mm0)[[1]]
+vc0 <- as.data.frame(VarCorr(mm0))
+var_fam0 <- vc0$vcov[1]
+var_res0 <- vc0$vcov[2]
+keep1 <- var_fam0 / (var_fam0 + var_res0)
+eup <- shrink[shrink$family == "Eupetidae", ]
+tyr <- shrink[shrink$family == "Tyrannidae", ]
+
+# --- bobwhite: the same routes, every year -----------------------------------
+bw <- bobwhite_counts
+bw$route <- factor(bw$route)
+bw$decade <- bw$elapsed / 10
+n_bw <- nrow(bw)
+n_routes <- length(unique(bw$route))
+max_years <- max(table(bw$route))
+
+g_nb <- MASS::glm.nb(count ~ decade, data = bw)
+mm_pois <- glmer(count ~ decade + (1 | route), family = poisson, data = bw)
+mm_nb <- glmer.nb(count ~ decade + (1 | route), data = bw)
+aics_bw <- c(g_nb = AIC(g_nb), mm_pois = AIC(mm_pois), mm_nb = AIC(mm_nb))
+daic_bw <- aics_bw - min(aics_bw)
+
+per_year <- function(b){ exp(b / 10) }
+yr_g <- per_year(c(coef(g_nb)["decade"], confint.default(g_nb)["decade", ]))
+yr_p <- per_year(c(fixef(mm_pois)["decade"],
+                   confint(mm_pois, parm = "beta_", method = "Wald")["decade", ]))
+yr_n <- per_year(c(fixef(mm_nb)["decade"],
+                   confint(mm_nb, parm = "beta_", method = "Wald")["decade", ]))
+decl <- function(x){ pct1(1 - x[1]) }
+decl_ci <- function(x){ paste0(pct1(1 - x[3]), " to ", pct1(1 - x[2])) }
+
+# share of counts inside each model's 95% range (Lecture 24's check)
+inside <- function(lo, hi){ mean(bw$count >= lo & bw$count <= hi) }
+mu_g <- fitted(g_nb)
+in_g <- inside(qnbinom(0.025, mu = mu_g, size = g_nb$theta),
+               qnbinom(0.975, mu = mu_g, size = g_nb$theta))
+mu_p <- fitted(mm_pois)
+in_p <- inside(qpois(0.025, mu_p), qpois(0.975, mu_p))
+th_n <- getME(mm_nb, "glmer.nb.theta")
+mu_n <- fitted(mm_nb)
+in_n <- inside(qnbinom(0.025, mu = mu_n, size = th_n),
+               qnbinom(0.975, mu = mu_n, size = th_n))
+
+# how much routes differ, and which routes are left in later years
+sd_route <- as.data.frame(VarCorr(mm_nb))$sdcor[1]
+re_route <- ranef(mm_nb)$route
+bw$route_effect <- re_route[as.character(bw$route), 1]
+early <- exp(mean(bw$route_effect[bw$year <= 2001]))
+late <- exp(mean(bw$route_effect[bw$year >= 2015]))
+routes_early <- mean(tapply(bw$route, bw$year, function(x){ length(unique(x)) })[as.character(1997:2001)])
+routes_late <- mean(tapply(bw$route, bw$year, function(x){ length(unique(x)) })[as.character(2015:2019)])
+
+# three routes to highlight: high, middle and low, each counted at least 15 years
+long_routes <- names(which(table(bw$route) >= 15))
+re_long <- re_route[long_routes, 1]
+names(re_long) <- long_routes
+pick <- c(names(which.max(re_long)),
+          names(sort(re_long))[ceiling(length(re_long) / 2)],
+          names(which.min(re_long)))
+bw$show <- ifelse(as.character(bw$route) %in% pick,
+                  paste("route", as.character(bw$route)), "other routes")
+
+# random slopes: does each route decline at its own rate?
+mm_slope <- glmer.nb(count ~ decade + (1 + decade | route), data = bw)
+aic_slope <- AIC(mm_nb) - AIC(mm_slope)
+b_slope <- fixef(mm_slope)["decade"]
+sd_slope <- as.data.frame(VarCorr(mm_slope))$sdcor[2]
+slope_lo <- per_year(b_slope - 1.96 * sd_slope)
+slope_hi <- per_year(b_slope + 1.96 * sd_slope)
+route_lines <- do.call(rbind, lapply(split(bw, bw$route), function(d){
+  data.frame(route = d$route[1], decade = range(d$decade))
+}))
+route_lines$fit <- predict(mm_slope, newdata = route_lines, type = "response")
+
+# --- your turn: migration, with families -------------------------------------
+g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
+mm_mig <- glmer(migratory ~ lat + hwi + (1 | family), family = binomial, data = birds)
+or_g <- exp(coef(g_add))
+or_m <- exp(fixef(mm_mig))
+aic_mig <- AIC(g_add) - AIC(mm_mig)
+```
+
+## Today's agenda {.smaller}
+
+1. Rows that come in **groups**
+2. What a **random effect** is
+3. `lmer()`: wing shape within bird families
+4. `glmer()`: bobwhite routes, counted every year
+5. Your turn: which songbirds migrate, with families
+6. Random or fixed? Which tool, when
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+Code without the label is there to watch.
+
+::: {.notes}
+Bolker 10.1 and 10.4. The point of the day: the models from the last two
+lectures assume every row is independent, and most real biological data break
+that, because the same site, animal or lineage shows up many times. A mixed
+model is lm() or glm() plus one term that says "rows come in groups".
+
+This is the last new statistical tool of the semester, and it is in time for
+Assignment 4 (due Friday): many of their datasets have repeated sites or years.
+:::
+
+## The story so far {.smaller}
+
+- Lecture 23: `lm()`, for normal scatter around a linear mean
+- Lecture 24: `glm()`, for yes/no data and counts, through a link
+- **Today:** what to do when the rows **come in groups** and are not independent
+
+::: {.notes}
+Thirty seconds.
+:::
+
+# Rows that come in groups
+
+## The same routes, every year {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.4
+ggplot(bw, aes(x = year, y = count, group = route)) +
+  geom_line(data = bw[bw$show == "other routes", ], color = "grey80") +
+  geom_line(data = bw[bw$show != "other routes", ], aes(color = show), linewidth = 1) +
+  geom_point(data = bw[bw$show != "other routes", ], aes(color = show), size = 1.4) +
+  scale_y_log10() +
+  scale_color_manual(values = c("#d95f02", "#1b9e77", "#7570b3")) +
+  labs(x = NULL, y = "bobwhite counted (log scale)", color = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top")
+```
+
+Lecture 15's `r big(n_bw)` bobwhite counts come from just **`r n_routes` routes**,
+each counted for up to `r max_years` years. A good route **stays** good.
+
+::: {.notes}
+Two minutes. The data from Lecture 15, where students estimated a decline of
+2.9% a year with a negative binomial. Each grey line is one Breeding Bird Survey
+route; the three colored ones are a high, a middle and a low route.
+
+Ask the room: how many independent pieces of information are here? Not 1,360.
+Two counts from the same route share its habitat, its observer and its roadside,
+so knowing one tells you a lot about the other. The truth is somewhere between
+100 and 1,360, and the model has to know that.
+
+These data hold only route-years where bobwhite were seen; the zeros are in
+bobwhite_occupancy (Lecture 24). That matters later.
+:::
+
+## Groups are everywhere {.smaller}
+
+| The group | Rows within it |
+|---|---|
+| a survey route, a reef, a site | counted every year |
+| an animal | weighed, tracked or sampled again and again |
+| a plot | quadrats or seedlings within it |
+| a family or genus | species that share an ancestor |
+| Lecture 22's ROV dives | 729 video sections from 5 dives |
+
+. . .
+
+::: {.plain}
+Rows from the same group are more alike than rows from different groups, so
+they carry less new information than their number suggests.
+:::
+
+::: {.notes}
+Two minutes. Ask: does your Assignment 4 dataset have a column like this? Most
+do: site, plot, individual, year, transect.
+
+Lecture 22's notes said the ROV sections were not independent replicates, and
+that a random effect for dive was the standard fix. Today is that fix. (With
+only 5 dives it is not a good one; the last section says why.)
+
+The name for analyzing grouped rows as if they were independent is
+pseudoreplication (Hurlbert 1984). It is one of the most common criticisms
+reviewers make of ecology papers.
+:::
+
+## Three ways to handle a group {.smaller}
+
+| | Ignore it | A **fixed** effect | A **random** effect |
+|---|---|---|---|
+| in R | <code>count ~ decade</code> | <code>count ~ decade + route</code> | <code>count ~ decade + (1 &#124; route)</code> |
+| estimates | nothing about routes | `r n_routes - 1` route differences | **one** number: how much routes differ |
+| the catch | treats every row as independent | many parameters; nothing to say about a new route | needs enough groups (about 5 or more) |
+
+::: {.notes}
+Three minutes. The middle column is what students already know: route as a
+factor, like habitat in Lecture 23 or beach in Lecture 24's turtles. It is a
+legitimate fix, and it was the partial fix suggested for Lecture 22's dives.
+
+The random effect is the new idea. Instead of estimating 99 separate route
+differences, it assumes the routes' differences come from one normal
+distribution, and estimates that distribution's spread: one parameter. The next
+slide draws it.
+
+The fixed-effect version also cannot include anything measured at the route
+level, like how developed the route is, because the route factor already uses up
+every difference between routes.
+:::
+
+## What a random effect is {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 2.6
+xs <- seq(-3, 3, length.out = 200) * sd_route
+ggplot(re_route, aes(x = `(Intercept)`)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "#9ecae1", color = "white") +
+  geom_line(data = data.frame(x = xs, y = dnorm(xs, 0, sd_route)), aes(x = x, y = y),
+            linewidth = 1, color = "#08519c") +
+  labs(x = "how far each route sits above or below the average route (log scale)",
+       y = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(axis.text.y = element_blank())
+```
+
+Each route gets its **own intercept**, drawn from a **normal distribution**
+centered on the average route. The model estimates that distribution's **standard
+deviation**: here `r f2(sd_route)` on the log scale, so a route one standard
+deviation above average has `r f1(exp(sd_route))` times the birds.
+
+::: {.plain}
+A random effect says the groups differ, and estimates how much, instead of
+estimating every group separately.
+:::
+
+::: {.notes}
+Three minutes. The bars are the 100 routes' estimated intercepts from the model
+we fit later; the curve is the normal distribution the model assumes they came
+from. One parameter, the standard deviation, describes all 100.
+
+Bolker 10.4's language: the model has two levels of variation, among routes and
+among years within a route. That is why these are also called multilevel or
+hierarchical models. "Mixed" means a mix of fixed effects (decade, the thing we
+want to estimate) and random effects (route, the grouping).
+
+The "random" in random effect does not mean the routes were chosen by lottery.
+It means we treat them as a sample from a larger population of routes, and we
+want to say something about that population.
+:::
+
+# `lmer()`: wings within families
+
+## Wings run in families {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.3
+ggplot(big_fams, aes(x = hwi, y = family)) +
+  geom_boxplot(fill = "#c6dbef", outlier.size = 0.6) +
+  labs(x = "hand-wing index (HWI): higher means a more pointed wing", y = NULL) +
+  theme_minimal(base_size = 12)
+```
+
+Lecture 23 fit `hwi ~ lat` across `r big(n_birds)` songbirds as if each species
+were independent. But **relatives share a wing**: a swallow has pointed wings
+partly because its ancestors did.
+
+::: {.notes}
+Two minutes. The twelve largest songbird families. Swallows (Hirundinidae) are
+not among the twelve biggest, but they are the familiar example: every
+swallow has long pointed wings, wherever it lives.
+
+This is the comparative-method problem: species are not independent data points
+because they share ancestry. A random effect for family is the simplest
+version of the fix. The full version uses the whole phylogeny (phylogenetic
+regression, for example the phylolm or MCMCglmm packages), which is beyond this
+course, but the logic is the same.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(lme4)      # mixed models: install it first if you need to
+library(bbmle)
+library(biometrydata)
+
+songbirds <- avonet[avonet$Order1 == "Passeriformes", ]
+birds <- data.frame(species = songbirds$Species1,
+                    family = songbirds$Family1,
+                    hwi = songbirds$Hand.Wing.Index,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    migratory = as.numeric(songbirds$Migration == 3))
+birds <- na.omit(birds)
+
+nrow(birds)                     # species
+length(unique(birds$family))    # families
+```
+:::
+
+**Check:** `r big(n_birds)` species in `r n_fam` families.
+
+::: {.notes}
+Two minutes. The same songbirds as Lectures 23 and 24, with one new column:
+family. lme4 is the standard package for mixed models in R, written by Doug
+Bates, Martin Maechler, Ben Bolker (our textbook's author) and Steve Walker.
+:::
+
+## Fit it {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# names: lm_ for lm() fits, mm_ for mixed models
+lm_lat <- lm(hwi ~ lat, data = birds)                   # every species independent
+mm_lat <- lmer(hwi ~ lat + (1 | family), data = birds)  # each family its own intercept
+
+coef(lm_lat)
+summary(mm_lat)
+```
+:::
+
+`(1 | family)`: "an intercept (`1`) that varies by (`|`) family".
+
+**Check:** the latitude slope drops from `r f3(coef(lm_lat)["lat"])` to
+`r f3(fixef(mm_lat)["lat"])` HWI units per degree.
+
+::: {.notes}
+Three minutes. lmer() is lm() with one extra piece in the formula. Everything
+else (data =, the fixed part of the formula) is the same.
+
+The bar is read "given" or "by": the intercept, by family. The next slides read
+the output and then decode the bar more generally.
+:::
+
+## Reading the output {.smaller}
+
+| From `summary(mm_lat)` | Value | What it means |
+|---|---|---|
+| Random effects: family, Std.Dev. | `r f2(sd_fam)` | how much **families** differ in average HWI |
+| Random effects: Residual, Std.Dev. | `r f2(sd_res)` | how much **species within a family** differ |
+| Fixed effects: lat | `r f3(fixef(mm_lat)["lat"])` | HWI units per degree from the equator |
+
+. . .
+
+Square the standard deviations to get variances, and ask what share is between families:
+
+$$\frac{`r f1(var_fam)`}{`r f1(var_fam)` + `r f1(var_res)`} = `r pct(icc)`$$
+
+`r pct(icc)` of the variation in wing shape is **between families**: two species from
+the same family are much alike.
+
+::: {.notes}
+Three minutes. That share has a name, the intraclass correlation (ICC), and it is
+worth reporting: it says how strongly the grouping matters. Near 0, the groups
+barely differ and the mixed model will match lm(). Near 1, rows within a group
+are nearly copies of each other.
+
+No p-values in summary(): the lme4 authors left them out on purpose, because the
+right degrees of freedom are not well defined for mixed models. We do not need
+them; the intervals come in two slides.
+
+If someone asks: fitting route or family as a fixed factor, lm(hwi ~ lat +
+family), gives a slope of `r f3(coef(lm_fam)["lat"])`, the same as the mixed model
+here, but with `r length(coef(lm_fam))` coefficients instead of 2 plus one
+standard deviation.
+:::
+
+## The bar, decoded {.smaller}
+
+| Term | Says |
+|---|---|
+| <code>(1 &#124; family)</code> | each family has its own **intercept** |
+| <code>(1 + lat &#124; family)</code> | each family has its own intercept **and its own slope** for latitude |
+| <code>(1 &#124; site/plot)</code> | plots **nested** within sites: plot 1 at site A is not plot 1 at site B |
+| <code>(1 &#124; site) + (1 &#124; year)</code> | **crossed**: every site was visited in every year |
+
+::: {.notes}
+Two minutes. For Assignment 4 and the final project. Most student datasets need
+only the first line. Nested is the common second case (quadrats within plots
+within sites). Crossed is common in monitoring data, where the same sites are
+revisited every year, and a bad year affects all sites at once.
+
+Rule of thumb from Bolker's GLMM FAQ: start with random intercepts, add random
+slopes only if the question is about whether slopes differ, and only with enough
+groups and enough rows per group.
+:::
+
+## Small families borrow from big ones {.smaller}
+
+```{r}
+#| echo: false
+#| fig-height: 3.3
+keep <- function(n){ var_fam0 * n / (var_fam0 * n + var_res0) }
+ns <- 10^seq(0, log10(max(shrink$n)), length.out = 200)
+ggplot(shrink, aes(x = n, y = keep(n))) +
+  geom_line(data = data.frame(n = ns), color = "#08519c", linewidth = 1) +
+  geom_point(color = "#08519c", size = 1.6, alpha = 0.6) +
+  scale_x_log10() +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(x = "species in the family (log scale)",
+       y = "share of its own difference
+from average the model keeps") +
+  theme_minimal(base_size = 13)
+```
+
+Eupetidae has one species, with an HWI of `r f1(eup$raw)`, far below the
+average of `r f1(grand)`. The model keeps only `r pct(keep1)` of that difference
+and puts the family at `r f1(eup$est)`. **Small families are pulled toward the
+average; big ones keep their own.**
+
+::: {.plain}
+A family with one species is mostly guesswork, so the model trusts it less and
+leans on what all the other families say.
+:::
+
+::: {.notes}
+Three minutes. This is called shrinkage, or partial pooling. "Ignore the
+groups" pools everything together (every family gets the overall average).
+"A fixed effect" pools nothing (every family gets its own raw average, however
+few species). The random effect is in between, and how far each family moves
+depends on how much information it has.
+
+Eupetidae is the rail-babbler, a ground bird of New Guinea forests with very
+rounded wings. The tyrant flycatchers, with `r tyr$n` species, barely move: from
+`r f1(tyr$raw)` to `r f1(tyr$est)`.
+
+The curve is var_family * n / (var_family * n + var_residual): the more species,
+the more the family's own average counts. Every family sits exactly on it in
+this simple model.
+
+This figure uses a model with no latitude (hwi ~ 1 + (1 | family)), so the
+raw averages and the estimates are on the same footing. coef(mm_lat)$family
+gives each family's intercept from the real model.
+:::
+
+## Why did the slope change? {.smaller}
+
+| | <code>lm(hwi ~ lat)</code> | <code>lmer(hwi ~ lat + (1 &#124; family))</code> |
+|---|---|---|
+| slope, HWI per degree | `r f3(coef(lm_lat)["lat"])` | `r f3(fixef(mm_lat)["lat"])` |
+| standard error | `r f4(se_of(lm_lat, "lat"))` | `r f4(se_of(mm_lat, "lat"))` |
+
+. . .
+
+- `lm()` compares **any two species**: part of its slope is "families far from
+  the equator have pointier wings"
+- `lmer()` leans on comparisons **within families**: "a species that lives
+  farther from the equator than its relatives has pointier wings than they do"
+- Here the interval got **narrower**: family soaks up variation that was noise to
+  `lm()`. Your turn shows it can go the other way.
+
+::: {.notes}
+Three minutes. Both slopes are positive, so the biology holds: farther from the
+equator, pointier wings, which fits longer migrations. But the within-family
+version is the cleaner claim, because a family-level difference could be about
+anything that family shares, not latitude.
+
+The standard error shrank because the residual standard deviation fell from
+`r f2(sigma(lm_lat))` to `r f2(sd_res)`: family explains a lot of what lm() treated
+as unexplained scatter. Ignoring groups does not always make you overconfident.
+It makes you wrong about how confident to be, in either direction.
+:::
+
+## Compare, and get intervals {background-color="#f0f4f8" .smaller}
+
+`lmer()` fits by **REML** by default, which gives better standard deviations but
+cannot compare models with different fixed effects. For **AIC**, refit with
+`REML = FALSE`.
+
+::: {.type-it}
+```{r}
+#| eval: false
+mm_lat_ml  <- lmer(hwi ~ lat + (1 | family), data = birds, REML = FALSE)
+mm_null_ml <- lmer(hwi ~ 1 + (1 | family), data = birds, REML = FALSE)
+AICtab(lm_lat, mm_null_ml, mm_lat_ml)
+
+confint(mm_lat_ml)     # profile intervals, as in Lecture 17
+```
+:::
+
+**Check:** `mm_lat_ml` wins by `r big(aic_vs_null)` over no latitude and by
+`r big(aic_vs_lm)` over `lm_lat`. Slope `r f3(ci_lat["lat", 1])` to
+`r f3(ci_lat["lat", 2])`.
+
+::: {.notes}
+Four minutes. REML (restricted maximum likelihood) corrects the standard
+deviations for the fact that the fixed effects were estimated too, the same
+reason the sample variance divides by n - 1. The price is that its likelihood
+depends on the fixed effects in a way that makes AIC comparisons between
+different fixed effects meaningless. So: REML = FALSE whenever you compare fixed
+effects with AIC; REML (the default) for the final estimates. With 6,583 rows,
+the two give nearly identical numbers.
+
+Comparing lm_lat with mm_lat_ml is legitimate: same response, same rows, both
+fit by maximum likelihood. A gap of `r big(aic_vs_lm)` says family matters a lot.
+
+confint() profiles the likelihood, as in Lectures 17 and 21. It labels the
+random effects .sig01 (the family standard deviation, `r f2(ci_lat[1, 1])` to
+`r f2(ci_lat[1, 2])`) and .sigma (the residual standard deviation). It takes a
+few seconds.
+:::
+
+# `glmer()`: bobwhite routes
+
+## `glmer()` is `glm()` with groups {background-color="#f0f4f8" .smaller}
+
+Same `family =`, same link, plus a bar term. Back to the routes:
+
+::: {.type-it}
+```{r}
+#| eval: false
+bw <- bobwhite_counts
+bw$route <- factor(bw$route)    # route numbers are names, not amounts
+bw$decade <- bw$elapsed / 10    # decades since 1996: glmer() prefers numbers near 1
+
+nrow(bw)
+length(unique(bw$route))
+```
+:::
+
+**Check:** `r big(n_bw)` counts on `r n_routes` routes.
+
+::: {.notes}
+Two minutes. factor(route) is Lecture 23's number trap: route 56 is not "more"
+than route 1. lme4 would treat a numeric grouping column as a factor anyway, but
+being explicit is safer.
+
+Decades instead of years: glmer() finds its answer by numerical optimization,
+like mle2(), and it struggles when one predictor runs from 0 to 23 while the
+intercept is near 2 (Lecture 20's scaling problem). With years it fits but
+warns "Model is nearly unidentifiable: very large eigenvalue. Rescale
+variables?". Decades fix that. We convert back to years in two slides.
+:::
+
+## Fit it {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Lecture 15's model: a negative binomial, every count independent
+g_nb <- MASS::glm.nb(count ~ decade, data = bw)
+
+# the same decline, with a random intercept for route
+mm_pois <- glmer(count ~ decade + (1 | route), family = poisson, data = bw)
+mm_nb <- glmer.nb(count ~ decade + (1 | route), data = bw)
+
+AICtab(g_nb, mm_pois, mm_nb)
+```
+:::
+
+**Check:** `mm_nb` wins, by `r big(daic_bw["g_nb"])` over ignoring routes and by
+`r big(daic_bw["mm_pois"])` over the Poisson.
+
+::: {.notes}
+Three minutes. glmer.nb() is lme4's negative binomial version, as glm.nb() is
+for glm(). It is slower: it fits the model again and again to find theta.
+
+Why the Poisson loses even with routes: routes explain part of the extra
+scatter, but not all of it. Lecture 24's range check says the same: the share of
+counts inside each model's 95% range is `r pct(in_g)` for g_nb, `r pct(in_p)` for
+mm_pois and `r pct(in_n)` for mm_nb. Same code as Lecture 24, with fitted()
+from each model (and getME(mm_nb, "glmer.nb.theta") for theta); in the
+solutions.
+:::
+
+## Undo the link {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+b <- fixef(mm_nb)["decade"]    # fixef(): the fixed effects, on the log scale, per decade
+exp(b)                         # birds multiplied by this per decade
+exp(b / 10)                    # ... and per year
+
+ci <- confint(mm_nb, parm = "beta_", method = "Wald")
+exp(ci["decade", ] / 10)       # per year, with a 95% interval
+
+exp(coef(g_nb)["decade"] / 10) # Lecture 15's answer, for comparison
+```
+:::
+
+**Check:** `r f3(yr_n[1])` a year: **`r decl(yr_n)` fewer birds each year**
+(`r decl_ci(yr_n)`), against `r decl(yr_g)` when routes are ignored.
+
+::: {.notes}
+Three minutes. Lecture 24's move: a log link, so exp() turns the coefficient into
+a multiplier. Dividing by 10 before exp() turns a per-decade multiplier into a
+per-year one, because exp(b)^(1/10) = exp(b / 10).
+
+parm = "beta_" asks for the fixed effects only. method = "Wald" is the fast,
+quadratic approximation (Lecture 24's 1.96 standard errors); confint(mm_nb)
+without it profiles, which is better and takes about a minute here.
+:::
+
+## Why is the decline steeper? {.smaller}
+
+| | ignore routes, `glm.nb()` | `glmer(poisson)` | `glmer.nb()` |
+|---|---|---|---|
+| decline per year | `r decl(yr_g)` | `r decl(yr_p)` | **`r decl(yr_n)`** |
+| 95% interval | `r decl_ci(yr_g)` | `r decl_ci(yr_p)` | `r decl_ci(yr_n)` |
+| inside the 95% range | `r pct(in_g)` | `r pct(in_p)` | `r pct(in_n)` |
+
+. . .
+
+- Routes **leave these data** when no bobwhite are seen: about `r round(routes_early)`
+  routes a year in 1997 to 2001, `r round(routes_late)` in 2015 to 2019
+- The routes left are the **good** ones: `r pct(late - 1)` above an average route,
+  against `r pct(early - 1)` early on
+- Ignoring routes, good routes in later years **hide** part of the decline. With
+  a random effect, **each route is compared with itself**.
+
+::: {.notes}
+Four minutes. This is the payoff of the lecture, so slow down. The 2.9% from
+Lecture 15 was not wrong arithmetic; it answered a muddier question. Across all
+rows, later years are dominated by the routes that still have birds, which
+makes the average count fall more slowly than the count on any one route.
+
+The "above an average route" numbers are the route intercepts (from ranef())
+averaged over the counts in each period and turned into multipliers with exp().
+
+The Poisson mixed model gets close on the estimate but its interval is too
+narrow, for the reason Lecture 24 gave: it allows too little scatter (only
+`r pct(in_p)` of counts fall inside its 95% range).
+
+Caveat worth saying: routes that lose bobwhite entirely drop out of these data,
+so even the mixed model only sees the routes where birds were found. The
+occupancy model in Lecture 24 handles the other half of the story.
+:::
+
+## Does each route decline at its own rate? {.smaller}
+
+```{r}
+#| eval: false
+mm_slope <- glmer.nb(count ~ decade + (1 + decade | route), data = bw)
+```
+
+```{r}
+#| echo: false
+#| fig-height: 2.5
+ggplot(route_lines, aes(x = 1996 + 10 * decade, y = fit, group = route)) +
+  geom_line(color = "grey55", alpha = 0.7) +
+  scale_y_log10() +
+  labs(x = NULL, y = "expected count (log scale)") +
+  theme_minimal(base_size = 13)
+```
+
+AIC prefers it by `r big(aic_slope)`. The average route loses
+`r pct1(1 - per_year(b_slope))` a year, but routes vary: most fall between
+`r pct1(1 - slope_lo)` fewer and `r if (slope_hi > 1) paste0(pct1(slope_hi - 1), " more") else paste0(pct1(1 - slope_hi), " fewer")` birds a year.
+
+::: {.notes}
+Three minutes, to watch. (1 + decade | route) gives every route its own slope as
+well as its own intercept, with the slopes drawn from a normal distribution
+too. That costs two more parameters (the slopes' standard deviation, and how
+slopes and intercepts correlate).
+
+The biology: some routes are being developed and some are not. Lecture 16 found
+counts fall with the share of a route that is built up; a route-level predictor
+like frac_built could explain why the slopes differ, and only a random effect
+leaves room for it.
+
+It takes several seconds and prints an odd internal warning from glmer.nb(),
+which is why it is not type-and-run. The "most routes" range is the average
+slope plus and minus 1.96 of the slopes' standard deviation.
+:::
+
+## When `lmer()` and `glmer()` complain {.smaller}
+
+| Message | Usually means | Try |
+|---|---|---|
+| "very large eigenvalue: Rescale variables?" | predictors on very different scales | decades not years; `scale(x)` |
+| "Model failed to converge" | the optimizer stopped early (Lecture 20) | rescale; fewer random slopes |
+| "boundary (singular) fit" | a standard deviation estimated at 0 | too few groups, or that term does not vary: drop it |
+
+::: {.notes}
+Two minutes. These are the three messages they will see in Assignment 4 and the
+final project. None is an error: R still returns a model, which is exactly why
+they need to read the warnings rather than ignore them.
+
+Example: lmer(hwi ~ lat + (1 + lat | family)) fails to converge with latitude
+in degrees.
+
+Bolker's GLMM FAQ (bbolker.github.io/mixedmodels-misc/glmmFAQ.html) is the
+place to look. Also ?lme4::convergence and ?lme4::troubleshooting, which the
+warning itself names.
+:::
+
+# Your turn
+
+## Your turn: migration, with families {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Lecture 24's model: every species independent
+g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
+
+# mm_mig: the same model, plus a random intercept for family
+# (hint: glmer() takes the same family = as glm())
+
+# odds ratios side by side: exp(coef()) for g_add, exp(fixef()) for mm_mig
+
+# standard errors: the second column of summary(...)$coefficients, for each
+```
+:::
+
+**Before you fit:** with `lmer()`, family made the latitude slope's standard
+error **smaller**. Will these get bigger or smaller?
+
+**Check:** per unit of HWI, the odds ratio goes from `r f2(or_g["hwi"])` to
+`r f2(or_m["hwi"])`. Both standard errors **grow**: latitude's
+`r f1(se_of(mm_mig, "lat") / se_of(g_add, "lat"))` times, HWI's
+`r f1(se_of(mm_mig, "hwi") / se_of(g_add, "hwi"))` times.
+
+::: {.notes}
+Ten to fifteen minutes, in pairs. The answer:
+
+mm_mig <- glmer(migratory ~ lat + hwi + (1 | family), family = binomial, data = birds)
+
+Odds ratios: latitude `r f3(or_g["lat"])` to `r f3(or_m["lat"])` per degree; HWI
+`r f3(or_g["hwi"])` to `r f3(or_m["hwi"])` per unit. Standard errors: latitude
+`r f4(se_of(g_add, "lat"))` to `r f4(se_of(mm_mig, "lat"))`, HWI
+`r f4(se_of(g_add, "hwi"))` to `r f4(se_of(mm_mig, "hwi"))`.
+
+For anyone fast: AICtab(g_add, mm_mig). Family wins by `r big(aic_mig)`.
+:::
+
+## What your turn shows {.smaller}
+
+- **Both intervals widen.** `glm()` counted `r big(n_birds)` species as
+  independent evidence; relatives are not, so it was **too sure**
+- **The HWI effect doubles.** Within a family, the species with more pointed
+  wings are much more likely to migrate
+- **Family matters:** it wins by `r big(aic_mig)` AIC units
+
+::: {.plain}
+Ignoring groups makes a model wrong about how sure it is: sometimes too sure
+(here), sometimes not sure enough (the wing-shape slope earlier).
+:::
+
+::: {.notes}
+Three minutes. Why the direction differs between the two examples: in the
+lmer() model, family soaked up a large share of what lm() had treated as
+residual scatter (the residual standard deviation fell from
+`r f2(sigma(lm_lat))` to `r f2(sd_res)`), and less scatter means a sharper slope.
+A binomial model has no residual standard deviation to shrink, so the main
+effect of adding family is to discount the evidence that comes from comparing
+different families, and the intervals widen. The general rule for Assignment
+4: a predictor measured at the group level (a site's elevation) gets roughly one
+piece of information per group, so expect its interval to widen most.
+
+Why the HWI effect grows: glmer() estimates the effect within a family, and in
+a logit model a within-group effect is generally larger than the
+across-everyone effect glm() estimates, because the between-family scatter
+flattens glm()'s curve. Worth one sentence if someone asks why the estimate
+changed so much.
+:::
+
+# Wrapping up
+
+## Random or fixed? {.smaller}
+
+| A **random** effect when | A **fixed** effect (a factor) when |
+|---|---|
+| the groups are a **sample** (routes, families, sites) | you care about **these** groups (the three beaches you manage) |
+| there are **about 5 or more** groups | there are only a few (Lecture 22's 5 dives is borderline) |
+| you want to say something about a **new** group | you only predict for these groups |
+| something is measured **at the group level** | |
+
+::: {.notes}
+Two minutes. Bolker 10.4 and the GLMM FAQ give the same advice: with fewer than
+about five groups, the standard deviation among groups cannot be estimated well
+(it often comes out as exactly 0, the "singular fit" warning), so a fixed effect
+is the honest choice. That is why Lecture 22's five dives were handled by adding
+dive as a predictor.
+
+Year is a common hard case: a random effect if years are a sample of
+weather, a fixed effect or a trend if you care about change over time. Both
+can be in the same model, as here: decade as a trend, route as random.
+:::
+
+## Which tool, when {.smaller}
+
+| Your response | Rows independent | Rows in groups |
+|---|---|---|
+| continuous, normal scatter | `lm()` | `lmer()` |
+| yes/no, or successes out of trials | `glm(family = binomial)` | `glmer(family = binomial)` |
+| counts | `glm(family = poisson)` | `glmer(family = poisson)` |
+| counts with extra scatter | `MASS::glm.nb()` | `glmer.nb()` |
+
+Compare with `AIC`, using `REML = FALSE` in `lmer()`. Intervals with `confint()`.
+Undo the link as in Lecture 24.
+
+::: {.notes}
+The slide to photograph, next to Lecture 24's "Which tool, when". Each row is the
+same model with one extra term.
+
+Beyond this course, for Assignment 4 or the final project if needed: nlme's
+nlme() for nonlinear mixed models (Bolker 10.4), glmmTMB for more distributions
+(zero-inflated counts, beta for percentages), and Bolker 10.5 for writing a
+mixed model's likelihood by hand.
+:::
+
+## Assignment 4 and your data {.smaller}
+
+Look at your dataset for a column like **site, plot, individual, transect or year**.
+
+- If your rows come in groups, say so in Assignment 4, and say how you handled it
+- A mixed model is **welcome** as one of your candidate models, not required
+- Compare it with AIC against the same model without the random effect, on the
+  same rows
+
+::: {.notes}
+One minute. The assignment page asks for chapter 9's tools; a mixed model is a
+bonus, and naming the grouping in the write-up is good practice either way.
+Grading stays as announced on Thursday.
+:::
+
+## Before next class
+
+Read *R for Data Science*, **chapters 4 and 5** (code style, tidy data)
+
+**Assignment 4** is due Friday, November 20, 11:59 pm
+
+Thursday: the **final project**, explained, then code style
+
+May be a quiz.
+
+::: {.notes}
+Thursday changes gear: the final project brief first, then making code and
+data readable, which matters for Assignment 4's reproducibility points and for
+the final project.
+:::

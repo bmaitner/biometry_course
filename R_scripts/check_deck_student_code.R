@@ -230,7 +230,7 @@ check_all_characters <- function() {
 # Not the same question as what renv::dependencies() answers. The type-and-run
 # blocks carry `#| eval: false`, because the deck must not run student code at
 # render time, and renv skips chunks it will not evaluate. So renv reports that
-# Lecture 26 needs nothing but knitr, while a student following it needs
+# Lecture 27 needs nothing but knitr, while a student following it needs
 # tidyverse and reprex.
 #
 # This scans the blocks the checker actually executes, which is the only

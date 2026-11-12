@@ -56,6 +56,7 @@ jobs:
             any::bbmle
             any::emdbook
             any::emmeans
+            any::lme4
             any::marginaleffects
             any::dplyr
             any::tibble

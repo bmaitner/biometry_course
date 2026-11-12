@@ -288,7 +288,7 @@ From midterm feedback, Fall 2025:
   Quarto's `revealjs` format is the obvious target: plain-text source, code
   chunks that actually execute, HTML for teaching and PDF for the repo from one
   file. It also dogfoods what the course teaches — hard to argue for
-  reproducibility in Lecture 27 while the lectures themselves are binary blobs
+  reproducibility in Lecture 28 while the lectures themselves are binary blobs
   edited in a browser.
 
   What it would fix:
@@ -366,7 +366,7 @@ Two things that made it work and are worth preserving:
 (plain text, metadata, long/wide, the readxl block, and the −999 demo) fit the
 session. The margin is thinner though: it depends on debugging going quickly, and
 a larger class or a slower room could push it over. If it needs trimming, the
-long/wide pair is the most cuttable — it previews Lecture 25 rather than covering
+long/wide pair is the most cuttable — it previews Lecture 26 (code and data style) rather than covering
 assigned reading.
 
 **Lecture 5 ran tight but held.** The rebuilt deck (the git block, the moved-up
