@@ -1266,6 +1266,72 @@ for when the shortcuts run out, which happens in real biology more often than
 textbooks suggest.
 :::
 
+## Your call: which model? (1 of 2) {.smaller}
+
+Which function, which link, which predictors? Then click.
+
+| The biology | Model and link | Predictors |
+|----------------------|---------------|-------------|
+| Lizard body temperature (°C) against air temperature, for a basking species and a shade-dwelling one. Do baskers track the air less closely? | [`lm()`, no link]{.fragment} | [`air_temp * species`: different slopes]{.fragment} |
+| Sea turtle nests: eggs hatched out of each clutch, against sand temperature, on three beaches | [`glm()`, binomial, logit; `cbind(hatched, clutch - hatched)`]{.fragment} | [`temperature + beach`]{.fragment} |
+| Seedlings per quadrat against canopy openness, in burned and unburned plots | [`glm()`, Poisson, log; `glm.nb()` if too scattered]{.fragment} | [`openness + burned` (`*` if fire changes the light response)]{.fragment} |
+
+::: {.notes}
+Optional: skip if time is short. Read each study out loud, take answers from
+the room, then click. Each click reveals one cell. Ask "why?" before every
+click; the reasons are what Assignment 4 grades.
+
+Body temperature: continuous, with no bound anywhere near the data, so normal
+scatter is reasonable. The question names an interaction ("track the air less
+closely" is a slope) so it needs *; + would force parallel lines and could not
+answer it. The biology: a lizard that only matches its surroundings has a slope
+near 1 against air temperature; one that basks to hold its temperature up has a
+shallower slope. That difference in slopes is thermoregulation.
+
+If someone proposes a percentage instead (leaf nitrogen, percent cover): it is
+bounded at 0 and 100 but is not successes out of trials, so binomial does not
+apply. The strict answer is beta regression (the betareg package, logit link);
+the practical one, when the values sit far from both bounds, is lm() on the
+log. Worth saying for Assignment 4, where percent cover is common.
+
+Turtles: successes out of trials, so cbind(successes, failures), not the
+clutch size. A good student will add temperature^2: hatching fails when sand is
+too cold or too hot. Beach as a factor gives each beach its own intercept. If
+someone asks about nests within beaches being alike, that is a mixed model,
+beyond this course.
+
+Seedlings: counts, so Poisson first, then the range check from today; seedling
+counts are almost always clumped, so expect glm.nb(). Whether to interact is a
+biology question: fire opens the canopy and changes the soil, so it is
+defensible either way, and AIC can decide between the two.
+:::
+
+## Your call: which model? (2 of 2) {.smaller}
+
+| The biology | Model and link | Predictors |
+|----------------------|---------------|-------------|
+| Cogongrass present or absent in 200 plots, against distance to a road and years since fire | [`glm()`, binomial, logit, on the 0/1 column]{.fragment} | [`distance + years_since_fire`]{.fragment} |
+| Lizard mass against snout-vent length, both sexes; mass grows as a power of length | [`nls(mass ~ a * svl^b)`, no link; or `lm(log(mass) ~ log(svl))`]{.fragment} | [`svl`; separate curves by sex if built differently]{.fragment} |
+| Mosquito larvae per dip, ponds with and without fish: mostly 0 to 3, a few over 50 | [`MASS::glm.nb()`, log link]{.fragment} | [`fish`, plus pond area if measured]{.fragment} |
+
+::: {.notes}
+Cogongrass: 0/1, one row per plot, so the response column as is, like the
+songbirds. Odds ratios per 100 m of distance and per year since fire are the
+numbers to report, on the original scale.
+
+Lizards: a power law, so a curved mean: Bolker 9.3's choice, as in today's
+nls() slide. The nls() fit assumes
+normal scatter of constant size; the log-log lm() assumes lognormal scatter
+that grows with size, which is usually closer for body mass. Both are
+defensible; say which and why. Different curves by sex: in nls(), a separate a
+and b for each sex, or fit each sex separately; in the log-log lm(),
+log(svl) * sex.
+
+Mosquitoes: counts, and the description gives away the overdispersion (most
+near 0, a few huge), hence glm.nb() directly. Poisson first is fine, but expect
+the range check to fail.
+:::
+
 ## Before next class
 
 Read *R for Data Science*, **chapters 4 and 5** (code style, tidy data)

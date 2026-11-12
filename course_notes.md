@@ -458,6 +458,22 @@ told them to type.
   which means they get said only if Brian remembers to say them; the ones that
   matter should be on the slides.
 
+**Lecture 24 backup activity, if it runs short (2026-11-12).** Lecture 23
+finished about 20 minutes early, so Lecture 24 may too. If it does: Brian gives
+the biology of a study out loud, and the class says what to fit:
+
+- which model: `lm()`, `glm()` and its family, `glm.nb()`, or `nls()`
+- which link, if any
+- which covariates, and which interactions
+
+It is the closing "Which tool, when" table run backwards, and it is practice for
+Assignment 4, which asks for exactly these choices and the reasons for them.
+It is in the deck as two optional slides after "Which tool, when" ("Your call:
+which model?"), six studies with the answers revealed one click at a time, so
+it can be skipped without editing anything. Record here whether it was used and
+how it went. If it works, consider making it
+a standing slide next year.
+
 **Lecture 18 ran a bit long (2026-10-22).** The deck had grown to 46 slides
 through same-day additions, on top of a quiz, the Assignment 3 introduction and
 an in-class package install. Trimmed afterwards to 41 by cutting slides that
