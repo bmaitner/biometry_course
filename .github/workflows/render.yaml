@@ -55,6 +55,8 @@ jobs:
             any::rmarkdown
             any::bbmle
             any::emdbook
+            any::emmeans
+            any::marginaleffects
             any::dplyr
             any::tibble
             any::MASS

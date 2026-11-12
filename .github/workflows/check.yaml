@@ -67,6 +67,8 @@ jobs:
             any::tidyverse
             any::bbmle
             any::emdbook
+            any::emmeans
+            any::marginaleffects
             any::reprex
             local::./biometrydata
 
