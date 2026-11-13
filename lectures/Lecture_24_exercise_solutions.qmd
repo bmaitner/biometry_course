@@ -1,0 +1,253 @@
+---
+title: "Generalized linear models: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 24"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    html-math-method: mathml
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The code from Lecture 24, run, with the numbers it produces, and the coral
+exercise solved.
+
+. . .
+
+`glm()` gives exact answers, so your numbers should match these. Lecture 21's
+recipe uses random draws, so those may differ in the last decimal place.
+
+::: {.notes}
+Posted after class so nobody is left wondering whether their answer was right.
+:::
+
+## You've already fit one {.smaller}
+
+```{r}
+library(bbmle)
+library(biometrydata)
+occ <- bobwhite_occupancy
+
+m_occ <- mle2(n_occupied ~ dbinom(size = n_routes, prob = plogis(a + b * elapsed)),
+              start = list(a = 2, b = -0.05), data = occ)
+g_occ <- glm(cbind(n_occupied, n_routes - n_occupied) ~ elapsed,
+             family = binomial, data = occ)
+coef(m_occ)
+coef(g_occ)
+c(logLik(m_occ), logLik(g_occ))
+g_occ$iter      # rounds of reweighting glm() needed
+```
+
+## Coefficients and the trap {.smaller}
+
+```{r}
+plogis(coef(g_occ)[1])    # share of routes occupied in 1997
+exp(coef(g_occ)[2])       # odds multiplied by this each year
+
+# interval is ignored, and the answer is a logit
+predict(g_occ, newdata = data.frame(elapsed = c(0, 22)), interval = "confidence")
+plogis(predict(g_occ, newdata = data.frame(elapsed = c(0, 22))))   # the probabilities
+```
+
+## The band, the quick way {.smaller}
+
+```{r}
+p19 <- predict(g_occ, newdata = data.frame(elapsed = 22),
+               type = "link", se.fit = TRUE)
+p19$fit
+p19$se.fit
+ends <- p19$fit + c(-1.96, 0, 1.96) * p19$se.fit
+ends
+plogis(ends)
+qnorm(0.975)    # where 1.96 comes from
+
+# Lecture 21's recipe, same seed
+set.seed(21)
+draws <- MASS::mvrnorm(1000, mu = coef(m_occ), Sigma = vcov(m_occ))
+quantile(plogis(draws[, "a"] + 22 * draws[, "b"]), c(0.025, 0.975))
+```
+
+## The same band, the easy way {.smaller}
+
+```{r}
+library(marginaleffects)
+predictions(g_occ, newdata = data.frame(elapsed = 22))
+
+library(emmeans)
+emmeans(g_occ, ~ elapsed, at = list(elapsed = 22), type = "response")
+```
+
+## Songbirds: set up and fit {.smaller}
+
+```{r}
+library(ggplot2)
+songbirds <- avonet[avonet$Order1 == "Passeriformes", ]
+birds <- data.frame(species = songbirds$Species1,
+                    hwi = songbirds$Hand.Wing.Index,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    migratory = as.numeric(songbirds$Migration == 3),
+                    mass = songbirds$Mass,
+                    wing = songbirds$Wing.Length)
+birds <- na.omit(birds)
+mean(birds$migratory)
+
+g_lat <- glm(migratory ~ lat, family = binomial, data = birds)
+g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
+AICtab(g_lat, g_add)
+coef(g_add)
+```
+
+## What the coefficients mean {.smaller}
+
+```{r}
+exp(coef(g_add)[-1])                  # odds ratios per degree and per HWI unit
+exp(confint.default(g_add)[-1, ])
+predict(g_add, newdata = data.frame(lat = 45, hwi = c(15, 30)), type = "response")
+
+# for anyone fast: does wing shape matter differently by latitude?
+g_int <- glm(migratory ~ lat * hwi, family = binomial, data = birds)
+AICtab(g_add, g_int)
+```
+
+## Draw it {.smaller}
+
+```{r}
+#| fig-height: 3.2
+grid <- expand.grid(lat = 0:70, hwi = c(15, 30))
+p <- predict(g_add, newdata = grid, type = "link", se.fit = TRUE)
+grid$prob <- plogis(p$fit)
+grid$lwr <- plogis(p$fit - 1.96 * p$se.fit)
+grid$upr <- plogis(p$fit + 1.96 * p$se.fit)
+
+ggplot(grid, aes(x = lat, y = prob, fill = factor(hwi))) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3) +
+  geom_line(aes(color = factor(hwi))) +
+  labs(x = "degrees from the equator", y = "probability of migrating",
+       fill = "HWI", color = "HWI")
+```
+
+## The same figure, the easy way {.smaller}
+
+```{r}
+#| fig-height: 3.2
+plot_predictions(g_add, condition = list("lat", hwi = c(15, 30))) +
+  labs(x = "degrees from the equator", y = "probability of migrating")
+```
+
+## Reef fish: Poisson first {.smaller}
+
+```{r}
+reef <- reef_surveys
+g_pois <- glm(richness ~ depth + I(depth^2), family = poisson, data = reef)
+
+# share of surveys inside the Poisson's 95% range (should be about 0.95)
+mu <- fitted(g_pois)
+lo <- qpois(0.025, mu)
+hi <- qpois(0.975, mu)
+mean(reef$richness >= lo & reef$richness <= hi)
+c(above = mean(reef$richness > hi), below = mean(reef$richness < lo))
+```
+
+## Reef fish: the fix {.smaller}
+
+```{r}
+g_nb <- MASS::glm.nb(richness ~ depth + I(depth^2), data = reef)
+AICtab(g_pois, g_nb)
+
+# the same range check for the negative binomial
+lo_n <- qnbinom(0.025, mu = fitted(g_nb), size = g_nb$theta)
+hi_n <- qnbinom(0.975, mu = fitted(g_nb), size = g_nb$theta)
+mean(reef$richness >= lo_n & reef$richness <= hi_n)
+
+# standard errors side by side
+cbind(poisson = summary(g_pois)$coefficients[, 2],
+      negbin = summary(g_nb)$coefficients[, 2])
+-coef(g_nb)["depth"] / (2 * coef(g_nb)["I(depth^2)"])    # depth of peak richness
+```
+
+## A power law with `nls()` {.smaller}
+
+```{r}
+start_ll <- coef(lm(log(wing) ~ log(mass), data = birds))
+n_wing <- nls(wing ~ a * mass^b, data = birds,
+              start = list(a = exp(start_ll[[1]]), b = start_ll[[2]]))
+coef(n_wing)
+confint.default(n_wing)
+confint(n_wing)        # profile intervals, slower
+
+# the same model in mle2()
+m_wing <- mle2(wing ~ dnorm(mean = a * mass^b, sd = s), data = birds,
+               start = list(a = exp(start_ll[[1]]), b = start_ll[[2]], s = 10))
+coef(m_wing)
+c(logLik(n_wing), logLik(m_wing))
+```
+
+## Your turn: build the data {.smaller}
+
+```{r}
+corals <- coral_cover[coral_cover$REGION == "Tortugas", ]
+corals$station <- paste(corals$PRIMARY_SAMPLE_UNIT, corals$STATION_NR, corals$YEAR)
+stations <- unique(corals[, c("station", "YEAR")])
+
+susceptible <- "Colpophyllia|Dendrogyra|Dichocoenia|Diploria|Eusmilia|Meandrina"
+found_at <- corals$station[grepl(susceptible, corals$COVER_CAT_NAME)]
+stations$found <- as.numeric(stations$station %in% found_at)
+stations$year <- factor(stations$YEAR)
+
+nrow(stations)
+tapply(stations$found, stations$year, mean)
+```
+
+## Your turn: fit it {.smaller}
+
+```{r}
+g_null <- glm(found ~ 1, family = binomial, data = stations)
+g_year <- glm(found ~ year, family = binomial, data = stations)
+AICtab(g_null, g_year)
+
+yrs <- data.frame(year = factor(levels(stations$year), levels = levels(stations$year)))
+pc <- predict(g_year, newdata = yrs, type = "link", se.fit = TRUE)
+yrs$prob <- plogis(pc$fit)
+yrs$lwr <- plogis(pc$fit - 1.96 * pc$se.fit)
+yrs$upr <- plogis(pc$fit + 1.96 * pc$se.fit)
+yrs
+
+# the easy way: the same numbers in one line
+emmeans(g_year, ~ year, type = "response")
+```
+
+## Your turn, in biology {.smaller}
+
+Highly susceptible corals were recorded at about a quarter of Tortugas stations
+in 2016 and 2018, fewer in 2021, the year the disease arrived, and at
+`r sprintf("%.0f%%", 100 * yrs$prob[4])` in 2022. The year model beats a single
+constant probability by `r sprintf("%.1f", AIC(g_null) - AIC(g_year))` AIC
+units.
+
+## For anyone fast: a control {.smaller}
+
+```{r}
+others <- corals$station[grepl("Siderastrea|Montastraea|Porites", corals$COVER_CAT_NAME)]
+stations$other <- as.numeric(stations$station %in% others)
+tapply(stations$other, stations$year, mean)
+
+g_other <- glm(other ~ year, family = binomial, data = stations)
+exp(coef(g_other)["year2022"])      # odds in 2022 relative to 2016
+exp(coef(g_year)["year2022"])       # the same for susceptible corals
+```
+
+Less susceptible corals dip in 2021 and mostly recover; the susceptible ones
+fall by far more. The survey design changed in 2021, so a drop in everything
+would have been hard to read; a drop in only the susceptible species points at
+the disease.
