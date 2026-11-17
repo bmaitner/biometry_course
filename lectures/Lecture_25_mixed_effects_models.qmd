@@ -117,6 +117,9 @@ g_nb <- MASS::glm.nb(count ~ decade, data = bw)
 mm_pois <- glmer(count ~ decade + (1 | route), family = poisson, data = bw)
 mm_nb <- glmer.nb(count ~ decade + (1 | route), data = bw)
 aics_bw <- c(g_nb = AIC(g_nb), mm_pois = AIC(mm_pois), mm_nb = AIC(mm_nb))
+trend_bw <- data.frame(year = 1996:2019)
+trend_bw$decade <- (trend_bw$year - 1996) / 10
+trend_bw$fit <- predict(g_nb, newdata = trend_bw, type = "response")
 daic_bw <- aics_bw - min(aics_bw)
 
 per_year <- function(b){ exp(b / 10) }
@@ -170,6 +173,16 @@ route_lines <- do.call(rbind, lapply(split(bw, bw$route), function(d){
   data.frame(route = d$route[1], decade = range(d$decade))
 }))
 route_lines$fit <- predict(mm_slope, newdata = route_lines, type = "response")
+# the ecological fallacy: each route's own trend, per year
+route_slopes <- coef(mm_slope)$route[, "decade"]
+route_change <- data.frame(change = per_year(route_slopes) - 1)
+share_up <- pnorm(0, mean = b_slope, sd = sd_slope, lower.tail = FALSE)
+n_up_blup <- sum(route_slopes > 0)
+long10 <- names(which(table(bw$route) >= 10))
+own_slopes <- sapply(long10, function(r){
+  coef(glm(count ~ decade, family = poisson, data = bw[bw$route == r, ]))[[2]]
+})
+n_up_own <- sum(own_slopes > 0)
 
 # --- your turn: migration, with families -------------------------------------
 g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
@@ -186,7 +199,8 @@ aic_mig <- AIC(g_add) - AIC(mm_mig)
 3. `lmer()`: wing shape within bird families
 4. `glmer()`: bobwhite routes, counted every year
 5. Your turn: which songbirds migrate, with families
-6. Random or fixed? Which tool, when
+6. Beyond groups: rows linked by space, time and ancestry
+7. Random or fixed? Which tool, when
 
 . . .
 
@@ -215,8 +229,64 @@ Thirty seconds.
 
 # Rows that come in groups
 
+## The independence assumption {.smaller}
+
+Every likelihood since Lecture 15 **adds up** one log-probability per row. That
+is only right if the rows are **independent**: knowing one row tells you
+nothing extra about another. Common ways that breaks:
+
+- **A good spot.** The plants in one plot are all large because the plot sits on
+  good soil. Twenty plants, but one lucky location.
+- **An unusual individual.** Thirty of your fifty foraging observations come from
+  one bold animal. Your "species behavior" is mostly its behavior.
+- **A few lineages dominate.** Most measured bird growth rates come from
+  pheasants and quail (Phasianidae) and ducks (Anatidae), so the overall trend
+  is mostly theirs.
+
+::: {.plain}
+Rows that share a place, an individual or an ancestry are partly repeats, but
+our tools count each one as new and let whoever has the most rows steer.
+:::
+
+::: {.notes}
+Three minutes. This is the foundation for the whole lecture, so say it slowly.
+Adding log-probabilities is the log of multiplying probabilities, and
+multiplying is the rule for independent events. Every mle2(), lm() and glm() fit
+this semester made that assumption without saying so.
+
+Each example has two problems. First, precision: twenty plants from one plot
+are not twenty independent looks at "plants", so intervals come out too narrow.
+Second, weighting: an ordinary model gives every row one vote, so the plot,
+the animal or the families with the most rows steer the answer.
+
+Each maps onto today's fix: a random intercept for plot, for individual
+(repeated measures), or for family (the songbird example later; the full
+version uses the phylogeny, as the "Beyond groups" section mentions).
+
+The growth-rate example is a realistic sampling bias rather than a dataset we
+have: poultry and game birds are raised and studied for food and hunting, so
+they are measured far more often than, say, warblers. The same pattern shows up
+in almost every comparative trait database, AVONET's measured traits included.
+:::
+
 ## The same routes, every year {.smaller}
 
+::: {.r-stack}
+```{r}
+#| echo: false
+#| fig-height: 3.4
+ggplot(bw, aes(x = year, y = count)) +
+  geom_jitter(aes(color = "one count"), width = 0.25, height = 0, alpha = 0.35, size = 1) +
+  geom_line(data = trend_bw, aes(y = fit, color = "overall trend"), linewidth = 1.3) +
+  scale_y_log10() +
+  scale_color_manual(values = c("grey40", "#d95f02")) +
+  labs(x = NULL, y = "bobwhite counted (log scale)", color = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top",
+        plot.background = element_rect(fill = "white", colour = NA))
+```
+
+::: {.fragment fragment-index=1}
 ```{r}
 #| echo: false
 #| fig-height: 3.4
@@ -228,16 +298,29 @@ ggplot(bw, aes(x = year, y = count, group = route)) +
   scale_color_manual(values = c("#d95f02", "#1b9e77", "#7570b3")) +
   labs(x = NULL, y = "bobwhite counted (log scale)", color = NULL) +
   theme_minimal(base_size = 13) +
-  theme(legend.position = "top")
+  theme(legend.position = "top",
+        plot.background = element_rect(fill = "white", colour = NA))
 ```
+:::
+:::
 
-Lecture 15's `r big(n_bw)` bobwhite counts come from just **`r n_routes` routes**,
-each counted for up to `r max_years` years. A good route **stays** good.
+Lecture 15: `r big(n_bw)` counts, one trend, about `r decl(yr_g)` fewer birds a year.
+
+::: {.fragment fragment-index=1}
+But they come from just **`r n_routes` routes**, each counted for up to
+`r max_years` years. Routes differ in **how many birds** they have, and in
+**how they change**.
+:::
 
 ::: {.notes}
-Two minutes. The data from Lecture 15, where students estimated a decline of
-2.9% a year with a negative binomial. Each grey line is one Breeding Bird Survey
-route; the three colored ones are a high, a middle and a low route.
+Two minutes. First view: the data as Lecture 15 treated them, every count a
+separate point, with the negative binomial trend students fitted (2.9% a year).
+It looks like a cloud with a gentle slope through it.
+
+Click: the same points, joined up by route. Each grey line is one Breeding Bird
+Survey route; the three colored ones are a high, a middle and a low route. The
+cloud is really 100 separate stories, and much of its spread is routes
+differing from each other, not years. The overall line hides that.
 
 Ask the room: how many independent pieces of information are here? Not 1,360.
 Two counts from the same route share its habitat, its observer and its roadside,
@@ -258,16 +341,11 @@ bobwhite_occupancy (Lecture 24). That matters later.
 | a family or genus | species that share an ancestor |
 | Lecture 22's ROV dives | 729 video sections from 5 dives |
 
-. . .
-
-::: {.plain}
-Rows from the same group are more alike than rows from different groups, so
-they carry less new information than their number suggests.
-:::
+Does your Assignment 4 dataset have a column like this?
 
 ::: {.notes}
-Two minutes. Ask: does your Assignment 4 dataset have a column like this? Most
-do: site, plot, individual, year, transect.
+Two minutes. Ask the question on the slide out loud. Most will: site, plot,
+individual, year, transect.
 
 Lecture 22's notes said the ROV sections were not independent replicates, and
 that a random effect for dive was the standard fix. Today is that fix. (With
@@ -760,6 +838,70 @@ which is why it is not type-and-run. The "most routes" range is the average
 slope plus and minus 1.96 of the slopes' standard deviation.
 :::
 
+## The average route is not every route {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-width: 4.2
+#| fig-height: 3.0
+ggplot(route_change, aes(x = change, fill = change > 0)) +
+  geom_histogram(binwidth = 0.01, boundary = 0, color = "white") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_x_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("#9ecae1", "#d95f02"), guide = "none") +
+  labs(x = "each route's change per year", y = "routes") +
+  theme_minimal(base_size = 14)
+```
+:::
+
+::: {.column width="50%"}
+"Bobwhite are declining `r pct1(1 - per_year(b_slope))` a year" describes the
+**average** route.
+
+Routes run from about `r pct(-min(route_change$change))` fewer birds a year to
+`r pct(max(route_change$change))` more, and the model puts about **1 route in
+`r round(1 / share_up)`** on the rise.
+:::
+::::
+
+- The **ecological fallacy**: assuming a pattern in the whole holds for each part
+- It runs the other way too: **across** routes the decline looked shallower
+  (`r decl(yr_g)`) than **within** them (`r decl(yr_n)`)
+
+::: {.plain}
+A trend in the average is not a trend in every member: the population can
+fall while some routes grow.
+:::
+
+::: {.notes}
+Three minutes. The nuance many people miss, including in the conservation
+literature: a statement about a population, a species or a region is a
+statement about an average. A manager of one route, one county or one
+reserve cannot read their own trend off the range-wide one, and a range-wide
+decline can hide places where the species is doing well, which are often the
+places worth studying.
+
+The bars are each route's own trend from the random-slopes model. These are
+shrunk toward the average (the small-families slide), so they understate how
+much routes differ: only `r n_up_blup` of them are above zero. The model's own
+estimate of the spread says about `r pct(share_up)` of routes are gaining birds.
+Fitting each route on its own, `r n_up_own` of the `r length(long10)` routes
+counted for 10 or more years go up. All three say the same thing: most routes
+decline, not all.
+
+The term comes from Robinson (1950), who showed that a correlation between
+literacy and immigration across US states had the opposite sign from the one
+among individuals. The bobwhite composition effect earlier (routes dropping out)
+and the songbirds' within-family versus across-family slopes are the same
+family of problem: the answer depends on the level you ask it at. Simpson's
+paradox is the extreme case, where the sign flips.
+
+For Assignment 4 and the final project: say which level your conclusion is
+about (each site, or the average site), and do not stretch it to the other.
+:::
+
 ## When `lmer()` and `glmer()` complain {.smaller}
 
 | Message | Usually means | Try |
@@ -850,6 +992,84 @@ a logit model a within-group effect is generally larger than the
 across-everyone effect glm() estimates, because the between-family scatter
 flattens glm()'s curve. Worth one sentence if someone asks why the estimate
 changed so much.
+:::
+
+# Beyond groups
+
+## Rows can be linked without a group {.smaller}
+
+A random effect handles rows that share a **label**. Rows can also be alike
+because they are **close**:
+
+| Close in | Why alike | In this course | Packages |
+|------|-------------|---------------|-----------------|
+| **ancestry** | relatives inherit traits | songbirds (family is a rough stand-in) | `phylolm`, `MCMCglmm`, `ape` + `nlme` |
+| **time** | each year builds on the last | bobwhite routes, year after year | `nlme` (`corAR1()`), `glmmTMB` |
+| **space** | neighbors share weather and habitat | reef surveys; Lecture 22's ROV dives | `spaMM`, `glmmTMB`, `mgcv` |
+
+::: {.plain}
+Things close together in space, time or ancestry tend to be alike, so they
+carry less independent evidence than their number suggests.
+:::
+
+::: {.notes}
+Three minutes. Flag, do not teach: the aim is that students recognize these in
+their own data and name them, not that they fit the models. Each has a whole
+literature; the packages are where to start if a final project needs one.
+
+Phylogenetic: the comparative-method problem from the "wings run in families"
+slide, done properly. phylolm() and phyloglm() fit lm()- and glm()-like models
+with a phylogenetic tree; nlme::gls() with ape's corBrownian() or corPagel() is
+the older route; MCMCglmm (and brms) handle phylogeny as a random effect.
+
+Temporal: a random intercept for route says all years on a route are alike by
+the same amount. Autocorrelation says neighboring years are more alike than
+distant ones: a good year for bobwhite is often followed by another. corAR1()
+in nlme and ar1() in glmmTMB model that.
+
+Spatial: Tobler's first law of geography, "near things are more related than
+distant things". BBS routes near each other share weather and land use; Lecture
+22's ROV sections were consecutive stretches of the same dive. spaMM and
+glmmTMB fit spatial correlation; mgcv's smooth over coordinates is often the
+easiest first step.
+
+The same consequence as today's: too-narrow intervals and too-confident AIC
+comparisons, because each row is not a fresh piece of evidence.
+:::
+
+## Is it in your data? {.smaller}
+
+Plot the **residuals** of your best model against the thing that might link them:
+
+| Check for | Look at | A quick test |
+|---|---|---|
+| time | residuals in time order, each site separately | `acf(residuals(m))` |
+| space | residuals on a map, colored by sign | `DHARMa::testSpatialAutocorrelation()` |
+| ancestry | residuals by clade, or on the tree | `phytools::phylosig()` |
+
+If neighbors' residuals look alike, **say so** in your write-up: name the
+problem, and say which way it likely biases your intervals (narrower than they
+should be).
+
+::: {.notes}
+Two minutes. Residuals, not the raw data: a trend over time or a gradient in
+space that the model already explains is fine. What matters is whether the
+leftovers still cluster.
+
+acf() is base R: bars beyond the blue dashed lines at lag 1, 2, ... mean
+neighboring time points are correlated. Run it within one site or route at a
+time, since stringing different routes together makes meaningless neighbors.
+
+DHARMa simulates residuals for glm(), glmer() and glmmTMB() fits and has tests
+for spatial and temporal autocorrelation (testSpatialAutocorrelation(),
+testTemporalAutocorrelation()), plus general dispersion checks. Moran's I
+(ape::Moran.I() or spdep::moran.test()) is the classic spatial test.
+
+phylosig() estimates phylogenetic signal (Pagel's lambda or Blomberg's K) on a
+trait or on residuals; it needs a tree, for example from birdtree.org for birds.
+
+For Assignment 4 and the final project, naming the issue honestly earns more
+than an elaborate fix done wrong.
 :::
 
 # Wrapping up
