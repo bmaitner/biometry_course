@@ -1,0 +1,1024 @@
+---
+title: "Code and data style"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 26"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(lintr)
+library(styler)
+library(biometrydata)
+
+big <- function(x){ format(round(x), big.mark = ",") }
+avo <- avonet
+
+# what lint() and style_text() say about one messy line
+messy_line <- "MeanMass=mean(x,na.rm=T)"
+lint_demo <- as.data.frame(lint(text = messy_line))
+styled_line <- as.character(style_text(messy_line))
+
+# the hawks exercise
+hawks <- avo |>
+  filter(Family1 == "Accipitridae")
+mean_hawk_mass <- mean(hawks$Mass, na.rm = TRUE)
+habitat_summary <- hawks |>
+  group_by(Habitat) |>
+  summarise(mean_mass = mean(Mass),
+            mean_wing = mean(Wing.Length))
+
+messy_hawks <- paste0('Hawks=avo|>filter(Family1=="Accipitridae")\n',
+                      'MeanMass<-mean(Hawks$Mass,na.rm=T)\n',
+                      'Hawks|>group_by(Habitat)|>summarise(m=mean(Mass),',
+                      'w=mean(Wing.Length))->HabitatSummary\n')
+n_lint_messy <- length(lint(text = messy_hawks))
+
+# wide and long
+avo_wide <- avo |>
+  select(Species1, Mass, Wing.Length, Beak.Width, Beak.Length_Culmen)
+avo_long <- avo_wide |>
+  pivot_longer(cols = Mass:Beak.Length_Culmen,
+               names_to = "trait",
+               values_to = "trait_value")
+
+# bobwhite, made wide
+bw_wide <- bobwhite_counts |>
+  select(route, year, count) |>
+  pivot_wider(names_from = year, values_from = count)
+n_empty <- sum(is.na(bw_wide))
+bw_back <- bw_wide |>
+  pivot_longer(cols = -route, names_to = "year", values_to = "count")
+bw_back_drop <- bw_wide |>
+  pivot_longer(cols = -route, names_to = "year", values_to = "count",
+               values_drop_na = TRUE)
+
+# pseudocode examples
+beak_top <- avo |>
+  mutate(delta_beak_length = Beak.Length_Culmen - Beak.Length_Nares) |>
+  mutate(mass_corrected_delta_beak_length = delta_beak_length / Mass) |>
+  slice_max(order_by = mass_corrected_delta_beak_length, n = 1)
+pointy <- avo |>
+  group_by(Family1) |>
+  filter(n() >= 10) |>
+  summarise(mean_hwi = mean(Hand.Wing.Index, na.rm = TRUE)) |>
+  arrange(desc(mean_hwi))
+```
+
+## Today's agenda {.smaller}
+
+1. The **final project**, explained
+2. **Code style**: names, spaces, pipes, and letting R check you
+3. **Data style**: tidy data, wide and long
+4. **Pseudocode and comments**: planning code, and saying why
+5. Tidy up your **Assignment 4** script before tomorrow
+
+. . .
+
+[Type and run]{.type-badge} on a code block: type it into your script and run it.
+Code without the label is there to watch.
+
+::: {.notes}
+R for Data Science chapters 4 (code style) and 5 (data tidying). No new
+statistics today: Tuesday's mixed models were the last. Everything from here on
+serves the final project, which is why it comes first.
+
+Assignment 4 is due tomorrow at 11:59 pm, and the last block of the class is
+time to apply today's ideas to it.
+:::
+
+# The final project
+
+## From here on: the final project
+
+Assignment 4 is due **tomorrow**, Friday, November 20, 11:59 pm. After that,
+everything is the final project, so here it is now.
+
+::: {.notes}
+Ten to fifteen minutes for this section. It used to sit in the getting-help
+lecture; it moved here so students have the full brief two weeks before the
+presentations rather than ten days.
+
+Worth saying plainly that the remaining classes are code style, getting help,
+reproducibility and code sharing, all in service of the project.
+:::
+
+## Three parts {.smaller}
+
+| Part | Format | Builds on |
+|---|---|---|
+| **Code** | `.R`, `.Rmd` or `.qmd` (grads: a GitHub link) | every assignment so far |
+| **Writing** | a document | your midterm Part 1 |
+| **Presentation** | about 5 minutes, in one shared Google Slides file | the whole thing |
+
+. . .
+
+**Due at the presentation**, during the scheduled final exam block.
+Exact day and time to be confirmed.
+
+::: {.notes}
+Check the registrar's assigned exam slot before this class and fill in the date.
+The course meets T/Th 2:00 to 3:50, which is not a pattern on the USF standard
+matrix, so the slot is assigned rather than predictable. Finals week is Dec 5
+to 10.
+
+The design principle to state out loud: nothing here is new work. Every piece is
+an extension of something they have already submitted and had feedback on.
+:::
+
+## Part 1: the code {.smaller}
+
+A **full analysis**, not a fragment:
+
+- loading the data
+- any transformations, and the reason for them
+- the code behind any modeling decision you made
+- the model itself
+- the figures
+
+. . .
+
+**Fully reproducible and well documented.** Someone else should be able to run
+it and get your results. The rest of today is how.
+
+::: {.notes}
+"Reproducible" has a specific meaning here, and it is the one from Assignment 2:
+someone else, on another machine, with your code and your data, gets your
+numbers.
+
+The most common failure is an absolute path to their own Desktop. The second is
+data that only exists on their laptop. Dec 1 (reproducibility) covers both.
+:::
+
+## Part 2: the writing {.smaller}
+
+An updated draft of your midterm writing, same three sections:
+
+- **Introduction**: the question, and why it matters
+- **Methods**: the data, and what you did to it
+- **Results**: including the results of a **statistical model**, not just plots
+
+. . .
+
+Figures should be better than the midterm's. You know ggplot2 now.
+
+::: {.notes}
+The upgrade from the midterm is the model. At midterm they were plotting; now
+they fit something and report it.
+
+Remind them that the text is theirs: the syllabus allows AI for code, not for
+the writing in this section. That comes up again on Tuesday, in getting help.
+
+Good comments make the Methods section easy to write; the comments section at
+the end of today shows how.
+:::
+
+## Part 3: the presentation {.smaller}
+
+About **five minutes**, during the final exam block, all from **one shared
+Google Slides file**: add your slides to it before the session. The link will
+be on Canvas.
+
+A format that works:
+
+- Title slide
+- Background, 1 to 2 slides: what is your question, why does it matter
+- Methods, 1 to 2 slides
+- Results, 1 to 2 slides
+- What you would do next
+
+::: {.notes}
+Five minutes is short. The commonest mistake is three slides of background and
+no results.
+
+Why one file: nobody spends their five minutes getting a laptop to talk to the
+projector, and talks follow each other without a gap. The link goes on Canvas
+only, never on these slides or in the assignment, because both are public and
+anyone with the link could edit the file. Ask them to check their slides in
+the shared file beforehand, since things pasted from PowerPoint can shift.
+:::
+
+## Presenting well {.smaller}
+
+- **Minimize text.** Roughly seven lines, seven words each, as an upper bound
+- **Practice the timing**, out loud, with a clock
+- **Going long costs points**, because it takes time from the next speaker
+
+. . .
+
+Your figures are the presentation. If a figure needs a paragraph of explanation,
+fix the figure.
+
+::: {.notes}
+The 7x7 rule is a ceiling and not a target. Most good slides have less.
+
+If anyone wants to go further on figures, the figures supplement covers
+palettes, combining panels, and plotting model predictions.
+:::
+
+## Any questions about the project? {.center}
+
+::: {.notes}
+Take questions, then move on to code style. Anything that needs a longer answer
+can wait for Tuesday, which opens with project questions.
+:::
+
+# Code style
+
+## Why style matters {.smaller}
+
+Your code will be read by:
+
+- **future you**, in three weeks, writing the final project
+- **me**, grading Assignment 4 and the final project
+- **anyone you ask for help** (Tuesday's lecture): a forum, a labmate, a chatbot
+- **reviewers and readers**, if you share it with a paper
+
+. . .
+
+Consistent style lets a reader see the **logic** instead of decoding the
+**layout**. Some style rules also prevent real bugs, as you will see.
+
+::: {.plain}
+Code is read far more often than it is written, so write it for the reader.
+:::
+
+::: {.notes}
+Two minutes. R for Data Science chapter 4 follows the tidyverse style guide
+(style.tidyverse.org), and that is the one we use. Other style guides exist
+(Google's, for one); the rule that matters most is to pick one and be
+consistent.
+:::
+
+## Get set up {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(tidyverse)
+library(lintr)        # checks your style: install it first if you need to
+library(styler)       # fixes your spacing: install it first if you need to
+library(biometrydata)
+
+avo <- avonet         # all 11,009 bird species, as in Lectures 23 and 24
+nrow(avo)
+```
+:::
+
+**Check:** `r big(nrow(avo))` rows.
+
+::: {.notes}
+Two minutes. lintr and styler are both on CRAN. The old version of this
+lecture read AVONET from a URL; the course package has it, so no internet is
+needed.
+:::
+
+## File names {.smaller}
+
+| Rule | Good | Bad |
+|---|---|---|
+| lowercase **snake case**: words joined by `_` | `avonet_traits.csv` | `BirdData.csv` |
+| letters, numbers, `_` and `.` only | `bobwhite_counts.csv` | `Bird data?.csv` |
+| describe what is inside | `clean_bobwhite.R` | `script2.R` |
+| number files that run in order, with a leading 0 | `01_download.R`, `02_clean.R` | `1_download.R`, ..., `10_plot.R` |
+| dates as year, month, day | `avonet_clean_20261119.rds` | `avonet_clean_11-19-26.rds` |
+| no "final" | `report_v2.docx` | `report_FINAL_really.docx` |
+
+::: {.notes}
+Three minutes. Why each one:
+
+- Spaces and symbols break file paths in code and on some operating systems;
+  `?` is not even allowed in a Windows file name.
+- Without a leading zero, 10_plot.R sorts before 2_clean.R.
+- Year-month-day dates sort in time order alphabetically; other orders do not.
+- "Final" is never final. Git keeps the history, so one file
+  name is enough; if you must keep versions, number or date them.
+
+Ask: of avonet_bird_trait_data.csv, BirdData.csv and Bird data?.csv, which is
+best, and what is wrong with the other two?
+:::
+
+## Object names {.smaller}
+
+- **Snake case**, lowercase: `parrot_data`, `mean_mass`
+- Objects are **nouns**: `hawks`, `habitat_summary`
+- Functions are **verbs**: `plot_wing_shape()`, `load_bbs_data()`
+- **Long and clear beats short and cryptic**: autocomplete does the typing
+- Related objects share a **prefix**: `avonet_parrots`, `avonet_tits`
+
+. . .
+
+**Quick:** name an object holding the penguins (Spheniscidae). A function that
+turns AVONET into family averages?
+
+::: {.notes}
+Three minutes, with the question to the room. Good answers: penguins or
+avonet_penguins; family_means() is fine, summarize_by_family() is clearer. Forest
+birds: forest_birds.
+
+Bolker and older R code use dots (words.separated), and so do AVONET's own
+columns (Wing.Length). Leave column names you did not make alone unless you
+have a reason; name your own things in snake case.
+:::
+
+## Why names matter: three tries {.smaller}
+
+```{r}
+parrot_data <- avo |> filter(Family1 == "Psittacidae")
+nrow(parrot_data)
+```
+
+```{r}
+#| error: true
+parrot-data <- avo |> filter(Family1 == "Psittacidae")
+```
+
+```{r}
+#| eval: false
+parrot data <- avo |> filter(Family1 == "Psittacidae")
+# Error: unexpected symbol in "parrot data"
+```
+
+::: {.notes}
+Two minutes. The first works. The second is read as "parrot minus data", and R
+complains that there is no object called parrot. The third does not even parse.
+Both errors are about the name, not the filtering, which is exactly why they are
+confusing when you meet them in your own code.
+:::
+
+## Do not reuse R's own names {.smaller}
+
+```{r}
+T <- 0                          # a reasonable name for a temperature...
+mean(c(4, NA, 6), na.rm = T)    # ...and now na.rm = T means na.rm = 0
+rm(T)
+```
+
+. . .
+
+- Write **`TRUE` and `FALSE`** in full: `T` and `F` are ordinary names anyone can overwrite
+- Avoid naming things `data`, `c`, `mean` or `t`: they are already functions
+
+::: {.notes}
+Two minutes. The point to land: a style rule can be a bug fix. T is just a
+variable that R sets to TRUE at startup; nothing stops you from changing it.
+TRUE cannot be overwritten. lintr flags every T and F for this reason.
+
+data <- read.csv(...) does work, because R finds the function data() when it
+needs a function, but it makes error messages confusing ("object of type
+'closure' is not subsettable" is the classic one, met on Tuesday).
+:::
+
+## Spaces {.smaller}
+
+| Do | Not |
+|---|---|
+| `a <- 1 + 2` | `a<-1+2` |
+| `b <- 2^3` | `b <- 2 ^ 3` |
+| `mean(x = avo$Mass, na.rm = TRUE)` | `mean( x=avo$Mass,na.rm=TRUE )` |
+| `avo$Mass >= 100 & avo$Habitat == "Forest"` | `avo$Mass>=100&avo$Habitat=="Forest"` |
+
+- Spaces around `<-`, `=`, `+`, `==`, `&` and friends; **not** around `^`, `$` or `:`
+- A space **after** each comma, none just inside parentheses
+- Extra spaces to **line things up** are fine
+
+::: {.notes}
+Two minutes. Spaces can also change meaning: x<-3 assigns 3 to x, but x < -3
+asks whether x is less than minus 3. The spaced version is never ambiguous.
+
+The alignment point is from the old slides: lining up the = signs in a long
+summarise() call is allowed, and many people find it easier to scan.
+:::
+
+## Pipes and arguments {.smaller}
+
+```{r}
+#| eval: false
+family_summary <- avo |>
+  group_by(Family1) |>
+  summarise(mean_mass = mean(Mass),
+            sd_mass = sd(Mass),
+            mean_wing_length = mean(Wing.Length))
+```
+
+- `|>` goes at the **end** of a line, and each step starts a new line
+- Named arguments that do not fit on one line get **one line each**
+- Assign with `<-` at the **start**, not `->` at the end
+- ggplot2's `+` follows the **same rules** as `|>`
+- A pipe longer than about **10 lines**: break it into named steps
+
+::: {.notes}
+Three minutes. Why each:
+
+- One step per line reads like a recipe, and you can comment out one step to
+  see what it does.
+- One argument per line makes a missing comma easy to spot.
+- `->` at the end reads naturally ("and call the result family_summary"), but
+  someone scanning the left edge of your script for where family_summary was
+  made will never find it. The tidyverse guide advises against it for that reason.
+- ggplot2 predates the pipe, so it chains layers with + instead; lay them out
+  the same way, one layer per line with + at the end.
+- A very long pipe is hard to check: if the answer is wrong, you cannot see
+  where. Save the result after a big change of shape (a summarise() or a
+  pivot) under a name that says what it holds, and start a new pipe from it.
+  R for Data Science chapter 4 suggests 10 to 15 lines as the point to split.
+
+RStudio indents for you: select the code and press Ctrl+I (Cmd+I on a Mac).
+:::
+
+## Sections {.smaller}
+
+Long scripts need **signposts**. Ctrl+Shift+R (Cmd+Shift+R on a Mac) inserts one:
+
+```{r}
+#| eval: false
+# load the data ------------------------------------------------------------
+```
+
+- RStudio lists sections in the **outline** (the button at the top right of the
+  script), so you can jump between them
+- Leave a **blank line** between steps that do different things
+
+**Try it now:** add a section label to your script for today's code.
+
+::: {.notes}
+One minute. Any comment ending in four or more dashes, equals signs or pound
+signs counts as a section; Ctrl+Shift+R just types it for you. For the final
+project, good sections are the same as the Methods section's paragraphs: load,
+clean, fit, compare, plot.
+:::
+
+## Let R check your style {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+lint(text = "MeanMass=mean(x,na.rm=T)")         # lintr: lists the problems
+style_text("MeanMass=mean(x,na.rm=T)")          # styler: fixes what it can
+```
+:::
+
+```{r}
+#| echo: false
+knitr::kable(data.frame(lint_says = lint_demo$message))
+```
+
+`style_text()` gives `` `r styled_line` ``: spacing fixed, but **not the name or the
+`T`**. Those need you.
+
+::: {.notes}
+Three minutes. Typing code in as text is only for seeing what the two packages
+do; the next slide is how they are really used.
+
+Why I prefer lintr: it tells you, and you decide. styler changes things
+silently, and it cannot fix anything that needs judgment, like a name. There are
+some style conventions I ignore, and with lintr I can see them and move on.
+:::
+
+## In practice: point them at your files {.smaller}
+
+Nobody types their code into `lint()`. You point it at a **script**, or a
+whole **folder** of them:
+
+```{r}
+#| eval: false
+lint("scripts/02_fit_models.R")   # one script: problems by line number
+lint_dir("scripts")               # every R script in a folder
+
+style_file("scripts/02_fit_models.R")   # restyles that file, in place
+style_dir("scripts")                    # ... and every file in the folder
+```
+
+- In RStudio, the **Addins** menu has "Lint current file" and "Style active
+  file", for the script you have open
+- `lint()` results open in the **Markers** pane: click one to jump to that line
+- `style_file()` and `style_dir()` **overwrite** your files: commit or copy first
+
+::: {.notes}
+Three minutes. Paths are relative to the project folder, as for data files.
+lint_dir() and style_dir() also look inside subfolders, and pick up R Markdown
+and Quarto files as well as .R scripts.
+
+The usual rhythm: lint the file you are working on before you share it or hand
+it in. Running style_dir() on a whole project rewrites everything at once,
+which makes a git diff very hard to read, so do that once at the start, not
+in the middle of a project.
+
+To switch off a rule you disagree with, put a file called .lintr in the
+project folder. For example, to allow lines up to 120 characters:
+
+    linters: linters_with_defaults(line_length_linter(120))
+
+The Addins menu is the button labelled Addins in RStudio's toolbar; both
+packages install their entries when installed.
+:::
+
+## Your turn: restyle the hawks {background-color="#f0f4f8" .smaller}
+
+This works, but it is hard to read:
+
+```{r}
+#| eval: false
+Hawks=avo|>filter(Family1=="Accipitridae")
+MeanMass<-mean(Hawks$Mass,na.rm=T)
+Hawks|>group_by(Habitat)|>summarise(m=mean(Mass),w=mean(Wing.Length))->HabitatSummary
+```
+
+::: {.type-it}
+```{r}
+#| eval: false
+# Open a new script (File > New File > R Script) and save it as hawks.R.
+# Rewrite the three lines above in good style, with clear names.
+# Then check it (or use Addins > Lint current file):
+# lint("hawks.R")
+```
+:::
+
+**Check:** `lint()` finds nothing. `r nrow(hawks)` hawk species, average mass
+`r big(mean_hawk_mass)` g, a summary row for each of `r nrow(habitat_summary)` habitats.
+
+::: {.notes}
+Eight minutes, in pairs. The original gets `r n_lint_messy` lint notes. One clean version:
+
+hawks <- avo |>
+  filter(Family1 == "Accipitridae")
+mean_hawk_mass <- mean(hawks$Mass, na.rm = TRUE)
+habitat_summary <- hawks |>
+  group_by(Habitat) |>
+  summarise(mean_mass = mean(Mass),
+            mean_wing = mean(Wing.Length))
+
+If lint() says "Missing terminal newline", put the cursor after the last line
+and press Enter: RStudio does not add one by default.
+
+The names are the part styler could not do: m and w say nothing, mean_mass and
+mean_wing say everything. The rock-dwelling species are the heaviest (five
+eagles and vultures, including the bearded vulture); the 138 forest species are
+the lightest.
+:::
+
+# Data style
+
+## Wide and long {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Wide:** one row per species
+
+```{r}
+#| echo: false
+knitr::kable(head(avo_wide[, c("Species1", "Mass", "Wing.Length")], 2))
+```
+
+Good for entering data and reading by eye
+:::
+
+::: {.column width="50%"}
+**Long:** one row per measurement
+
+```{r}
+#| echo: false
+long3 <- avo_wide |>
+  select(Species1, Mass, Wing.Length) |>
+  head(2) |>
+  pivot_longer(cols = c(Mass, Wing.Length),
+               names_to = "trait", values_to = "trait_value")
+knitr::kable(long3)
+```
+
+Good for plotting many traits at once, and adding new kinds of measurement
+:::
+::::
+
+::: {.notes}
+Three minutes. The same numbers, two shapes. Neither is wrong; which one you
+want depends on what you are about to do with it. Most of the time, for
+tidyverse functions and for models, the answer is the one where each row is
+one observation, which the next slide defines.
+:::
+
+## Tidy data {.smaller}
+
+Three rules (R for Data Science, chapter 5):
+
+1. Each **variable** is a column
+2. Each **observation** is a row
+3. Each **value** is a cell
+
+. . .
+
+- `bobwhite_counts` is tidy: one row per route per year, which is exactly what
+  `glmer()` needed on Tuesday
+- What counts as "an observation" depends on your question, so there can be
+  more than one tidy version of the same data
+
+::: {.plain}
+Tidy data puts one observation in each row, so every tidyverse function, and
+every model, knows where to find things.
+:::
+
+::: {.notes}
+Three minutes. Ask: is avo_wide tidy? Yes, if the question is about species: a
+species is the observation and each trait is a variable. If the question is
+about measurements (say, plotting every trait's distribution), the long version
+is the tidy one.
+
+The commonest untidy data in ecology: one column per year (count_2019,
+count_2020, ...), one column per site, or two values in one cell ("12/15").
+:::
+
+## Entering data: rules for spreadsheets {.smaller}
+
+From Broman and Woo (2018), *Data organization in spreadsheets*, for anyone
+entering field or lab data:
+
+- **Be consistent:** one code per thing (`female`, not `F`, `f` and `Female`), one name per site
+- **Missing is `NA`:** never -999, and never a blank, which could be a slip
+- **Dates as YYYY-MM-DD**
+- **One thing per cell:** mass in one column with its unit in the column name, not "12.4 g"
+- **A rectangle:** one header row, no merged cells, no calculations or graphs
+- **No color or bold as data:** if a highlight means something, make it a column
+- **A data dictionary:** what each column is, its units, how it was measured
+- **Never edit the raw file:** save a CSV copy, back it up, and clean it in code
+
+::: {.notes}
+Four minutes. Neither reading covers this, and it is where most biologists'
+data problems start: in the spreadsheet, before R is involved. The paper is
+Broman, K. W., and Woo, K. H. (2018), The American Statistician 72(1): 2 to 10,
+https://doi.org/10.1080/00031305.2017.1375989. It is open access, short, and
+worth assigning to anyone collecting data. Its twelve rules; the slide skips
+"choose good names" (the file and object names slides cover it) and folds
+backups, plain-text copies and "no calculations" into the last two lines. The
+last, data validation in Excel, is worth a mention to anyone entering data by
+hand: it restricts a column to numbers in a range or a list of codes.
+
+Why each:
+
+- Inconsistent codes become separate groups in R: "F" and "f" are two sexes to
+  group_by().
+- A -999 for "not measured" gets averaged in as a real value. If a file
+  already uses one, read_csv(..., na = c("", "NA", "-999")) fixes it on the way
+  in. A blank is ambiguous: missing on purpose, or never typed? The paper
+  prefers every cell filled; White et al. (2013) prefer blanks, so the one rule
+  everyone agrees on is to pick one code and use it everywhere. Notes on why a
+  value is missing go in their own column, not in the cell.
+- Excel converts anything that looks like a date. Ziemann et al. (2016) found
+  gene-name errors, mostly from this, in 20% of gene lists in journals'
+  supplementary files. Year-month-day is unambiguous and sorts correctly; the
+  paper suggests storing dates as text, or as separate year, month and day
+  columns, so Excel leaves them alone.
+- A merged cell, a second header row or a calculation breaks the rectangle that
+  read_csv() expects. Do calculations and graphs in a copy, or better, in R.
+- Color does not survive saving as CSV, and R cannot see it.
+- The data dictionary is most of the final project's Methods paragraph on the
+  data.
+- Never editing the raw file is Part 1 of the final project: the cleaning
+  is in the script, so it is reproducible. The paper says to write-protect the
+  raw file, back it up in more than one place, and keep a plain-text (CSV)
+  copy, which any program can read forever.
+:::
+
+## Make it long: `pivot_longer()` {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_wide <- avo |>
+  select(Species1, Mass, Wing.Length, Beak.Width, Beak.Length_Culmen)
+
+avo_long <- avo_wide |>
+  pivot_longer(cols = Mass:Beak.Length_Culmen,   # the columns to stack
+               names_to = "trait",              # their names go here
+               values_to = "trait_value")       # their values go here
+avo_long
+```
+:::
+
+**Check:** `r big(nrow(avo_wide))` rows become `r big(nrow(avo_long))`: how many
+per species, and why?
+
+::: {.notes}
+Three minutes. Four per species, one for each trait stacked. The three
+arguments are the whole idea: which columns, where their names go, where their
+values go.
+:::
+
+## Why long? Every trait in one plot {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| fig-height: 3.2
+ggplot(avo_long, aes(x = trait_value)) +
+  geom_histogram(bins = 40) +
+  scale_x_log10() +
+  facet_wrap(~ trait, scales = "free")
+```
+:::
+
+::: {.notes}
+Two minutes. With the wide data this would be four separate plots. In the long
+data, trait is a variable, so ggplot can split by it. This is the main reason
+to make data long: ggplot2 and group_by() work on variables, not on column
+names.
+:::
+
+## And back: `pivot_wider()` {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_wide2 <- avo_long |>
+  pivot_wider(id_cols = Species1,       # what identifies a row
+              names_from = trait,      # new column names come from here
+              values_from = trait_value)
+
+all.equal(as.data.frame(avo_wide2), avo_wide)
+```
+:::
+
+**Check:** `TRUE`: nothing was lost on the way there and back.
+
+::: {.notes}
+Two minutes. as.data.frame() because pivot_wider() returns a tibble and avonet
+is a plain data frame; without it, all.equal() reports the difference in class,
+not in content.
+:::
+
+## Your turn: bobwhite, one column per year {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+bw_wide <- bobwhite_counts |>
+  select(route, year, count)
+  # make it wide: one row per route, one column per year (hint: pivot_wider())
+
+# how many cells are empty? (hint: is.na() and sum())
+
+# for anyone fast: make bw_wide long again, with and without values_drop_na = TRUE.
+# Then try pivot_wider() with only year and count selected. What goes wrong?
+```
+:::
+
+**Check:** `r nrow(bw_wide)` rows and `r ncol(bw_wide)` columns, with
+`r big(n_empty)` empty cells. Back to long: `r big(nrow(bw_back))` rows, or
+`r big(nrow(bw_back_drop))` with `values_drop_na = TRUE`.
+
+**Then:** which version is easier to read by eye? Which one could `glmer()` use?
+
+::: {.notes}
+Seven minutes, in pairs. The answer:
+
+bw_wide <- bobwhite_counts |>
+  select(route, year, count) |>
+  pivot_wider(names_from = year, values_from = count)
+sum(is.na(bw_wide))
+
+The wide table is how a field crew might keep it, and it shows the gaps
+plainly: each NA is a route-year missing from these data, because no bobwhite
+were counted or the route was not run that year. Tuesday's "routes leave the data" point is
+visible at a glance. But glmer() needs the long version, with year and count as
+variables. Both are useful; only one is tidy for modeling.
+
+For anyone fast:
+
+    bw_wide |>
+      pivot_longer(cols = -route, names_to = "year", values_to = "count",
+                   values_drop_na = TRUE)
+
+Without values_drop_na, every empty cell becomes a row with count NA:
+`r big(nrow(bw_back))` rows instead of the original `r big(nrow(bobwhite_counts))`.
+(year also comes back as text, because it came from column names;
+mutate(year = as.numeric(year)) fixes it.)
+
+Without route, nothing says which row a count belongs to, so pivot_wider()
+warns "Values from count are not uniquely identified; output will contain
+list-cols" and packs every year's counts into one cell. That warning almost
+always means an ID column is missing.
+
+id_cols is not needed here: by default, every column not named in names_from
+or values_from identifies the row, which leaves route.
+:::
+
+# Pseudocode and comments
+
+## Pseudocode: plan before you code {.smaller}
+
+Write the **steps** in plain words, as comments, **before** writing any code.
+
+- Forces you to think through the **whole** approach first
+- Breaks a big job into **small steps you can search for** ("dplyr largest value")
+- Stays in the script as its **comments**
+
+. . .
+
+**Which species has the largest beak length difference (culmen minus nares) for
+its body mass?**
+
+```{r}
+#| eval: false
+# Calculate difference in beak lengths (culmen vs nares)
+# Divide difference by body mass
+# Identify largest mass-corrected difference in beak lengths
+```
+
+::: {.notes}
+Three minutes. Pseudocode works in any language, and it is how experienced
+programmers start anything longer than a few lines. It is also exactly what to
+paste into a search engine or a chatbot, one step at a time (Tuesday).
+
+The culmen is measured from the tip to where the beak meets the skull; the
+nares measurement is from the tip to the nostrils.
+:::
+
+## Then fill it in {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo |>
+  # Calculate difference in beak lengths (culmen vs nares)
+  mutate(delta_beak_length = Beak.Length_Culmen - Beak.Length_Nares) |>
+  # Divide difference by body mass
+  mutate(mass_corrected_delta_beak_length = delta_beak_length / Mass) |>
+  # Identify largest mass-corrected difference in beak lengths
+  slice_max(order_by = mass_corrected_delta_beak_length, n = 1) |>
+  select(Species1, Family1, mass_corrected_delta_beak_length)
+```
+:::
+
+**Check:** *`r beak_top$Species1`*, a hummingbird (`r beak_top$Family1`).
+
+::: {.notes}
+Two minutes. Each comment became one line of code, and the comments stay as
+documentation. A tiny bird with a long beak wins: Myrtis fanny is the
+purple-collared woodstar of the Andes.
+:::
+
+## Your turn: the most pointed wings {background-color="#f0f4f8" .smaller}
+
+**Which bird family has the most pointed wings, on average, among families with
+at least 10 species?**
+
+::: {.type-it}
+```{r}
+#| eval: false
+# first, your pseudocode: three or four steps, as comments
+
+# then fill in the code under each comment
+# (hints: group_by(), summarise(), arrange(desc()); after group_by(),
+#  n() counts the rows in each group)
+```
+:::
+
+**Check:** pointiest **`r pointy$Family1[1]`**, mean HWI
+`r round(pointy$mean_hwi[1])`. Bluntest: **`r tail(pointy$Family1, 1)`**,
+`r round(tail(pointy$mean_hwi, 1))`. `r nrow(pointy)` families qualify.
+
+::: {.notes}
+Ten minutes, in pairs. Do not let them skip the pseudocode; the point is the
+habit. One version:
+
+    # Group the species by family
+    # Keep families with at least 10 species
+    # Average each family's hand-wing index
+    # Sort from most to least pointed
+    avo |>
+      group_by(Family1) |>
+      filter(n() >= 10) |>
+      summarise(mean_hwi = mean(Hand.Wing.Index, na.rm = TRUE)) |>
+      arrange(desc(mean_hwi))
+
+Swifts (Apodidae) feed, and some even sleep, on the wing; hummingbirds come
+second. Penguins (Spheniscidae) come last, because their "wings" are flippers.
+For anyone fast: why does the 10-species cut matter? (Tuesday's small
+families: a one-species family's average is mostly luck.)
+:::
+
+## Comments: say why {.smaller}
+
+The code already says **what**. Comments should say **why**.
+
+| Says what (the code already did) | Says why (only you know) |
+|---|---|
+| `# log the mass` | `# log the mass: it runs from 2 g to 111 kg, and lm() wants even scatter` |
+| `# remove rows` | `# drop the 2004 counts: the observer changed mid-season` |
+| `# use glmer.nb` | `# glmer.nb: the Poisson put only 82% of counts inside its 95% range` |
+
+- Comments also **turn off** code for a moment: Ctrl+Shift+C (Cmd+Shift+C)
+- Good "why" comments are **your Methods section**, nearly written
+
+::: {.notes}
+Three minutes. The questions worth answering in a comment: why this decision,
+why this package and not another, why these rows were excluded. Those are also
+what a reviewer asks and what you will have forgotten by the time you write
+the paper.
+
+How I work: I write the Methods by copying my comments out of the script, in
+order, and then turning them into sentences.
+:::
+
+## A workflow that works {.smaller}
+
+1. Start a new script, with a comment at the top saying **what it is for**
+2. Write the **pseudocode**, as comments
+3. Fill in the **code** under each comment, a section at a time
+4. Add comments for each **decision**: why this, and not something else
+5. **Restart R and run it all**, top to bottom
+6. Use the comments to write the **Methods**
+
+::: {.notes}
+Two minutes. Step 5 is the reproducibility check: Session > Restart R, then
+Source (Ctrl+Shift+S, or Ctrl+Shift+Enter to see the output). If the script
+only worked because of something you typed in the console an hour ago, this is
+where you find out, not when I run it.
+:::
+
+# Wrapping up
+
+## Your turn: tidy up Assignment 4 {background-color="#f0f4f8" .smaller}
+
+Open your Assignment 4 script. Before tomorrow night:
+
+::: {.type-it}
+```{r}
+#| eval: false
+# 1. A comment at the top: what this script does, and what data it needs
+# 2. Sections (Ctrl+Shift+R): load, clean, fit, compare, plot
+# 3. Rename anything vague (x, df2, model_final) to say what it holds
+# 4. A "why" comment at each decision: transformations, rows dropped, models chosen
+# 5. lint("your_assignment_4_script.R"), and fix what is worth fixing
+# 6. Restart R and run the whole thing, top to bottom
+```
+:::
+
+::: {.notes}
+The rest of the class, at least fifteen minutes. Walk around. Step 6 is the one
+that matters most for grading: a script that does not run from a fresh session
+loses its reproducibility points.
+
+Students without their script handy can do the same to any earlier assignment
+or to today's hawks.R.
+:::
+
+## Which tool, when {.smaller}
+
+| You want to | Use |
+|---|---|
+| find style problems in a file, or a folder | `lint("file.R")`, `lint_dir("folder")` |
+| fix spacing and indentation automatically | `style_file("file.R")`, `style_dir("folder")`, or Ctrl+I |
+| jump around a long script | sections: Ctrl+Shift+R |
+| one row per measurement (for plotting, `group_by()`) | `pivot_longer()` |
+| one row per subject (for reading, or a table) | `pivot_wider()` |
+| plan code you do not yet know how to write | pseudocode, as comments |
+| make your Methods easy to write | comments that say why |
+| prove your script runs | Restart R, then run it all |
+
+::: {.notes}
+The slide to photograph.
+:::
+
+## Before next class
+
+**Turn in Assignment 4**: Friday, November 20, 11:59 pm
+
+Read *R for Data Science*, **chapter 8** (getting help), and Merow et al. (2023),
+*AI chatbots can boost scientific coding*: <https://doi.org/10.1038/s41559-023-02063-3>
+
+Tuesday: debugging, and where to go for help
+
+May be a quiz.
+
+::: {.notes}
+Tuesday opens with final project questions, so tell them to bring any that come
+up over the weekend.
+:::
