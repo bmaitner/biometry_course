@@ -55,8 +55,10 @@ You will submit three things:
 2. **Your writing**, as a Word document on Canvas (or the rendered output of
    your .Rmd or .qmd file, if you write it there).
 
-3. **Your presentation slides**, added to a shared Google Slides file for the
-   class. I will post the link on Canvas.
+3. **Your presentation slides**, added to a single Google Slides file shared
+   by the whole class, so every talk runs from one computer and no time is lost
+   connecting laptops. I will post the link on Canvas; it is not in this
+   document because this page is public.
 
 ## Grading
 
@@ -152,8 +154,12 @@ going over is fine):
 
 Present your findings to the class in the style of a short scientific talk,
 during the scheduled final exam block. Talks should be **about 5 minutes**, and
-going over costs points, because it takes time from the next speaker. Add your
-slides to the shared Google Slides file before the session.
+going over costs points, because it takes time from the next speaker.
+
+All talks run from **one shared Google Slides file**, using the link I post on
+Canvas. Add your slides to it, in your own section, before the session starts,
+and check that they look right there: fonts, figures and anything copied from
+PowerPoint can shift. Do not edit anyone else's slides.
 
 A format that works:
 
