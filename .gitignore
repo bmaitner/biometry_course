@@ -18,6 +18,7 @@ syllabus/syllabus.pdf
 assignments/*.html
 assignments/assignment_3/*.html
 midterm/*.html
+final/*.html
 
 # Word lock files
 ~$*

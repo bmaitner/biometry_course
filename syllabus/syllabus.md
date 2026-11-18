@@ -129,7 +129,7 @@ The midterm will be take-home, and will focus on data of relevance to the studen
 
 ## Final
 
-The final will build on the midterm, and should ideally utilize the same dataset. Students will conduct statistical analyses on their focal dataset, as well as creating relevant visualizations. The entire workflow should be reproducible and should include detailed comments to make clear what is being done at each step and why. Graduate students will be expected to upload their final assignment to Github (as an .Rmd or .Qmd file) and undergraduate students can optionally submit in this format for extra credit. In addition to the assignment, you'll also be expected to give a short presentation of what you did and what you found during class.
+The final will build on the midterm, and should ideally utilize the same dataset. Students will conduct statistical analyses on their focal dataset, as well as creating relevant visualizations. The entire workflow should be reproducible and should include detailed comments to make clear what is being done at each step and why. Graduate students will be expected to upload their final assignment to Github (as an .R, .Rmd or .qmd file) and undergraduate students can optionally submit in this format for extra credit. In addition to the assignment, you'll also be expected to give a short presentation of what you did and what you found during class.
 
 # Instructor Feedback Policy & Grade Dissemination
 
