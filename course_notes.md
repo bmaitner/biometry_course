@@ -687,7 +687,7 @@ with four work pauses runs about an hour.
   The dataset library is deliberate and worth keeping, but this one file could
   live behind a download link in its README like the Bolker seed data does.
 
-- [ ] **Lecture 2 should make "write code in a script, not the console" explicit.**
+- [x] **Lecture 2 should make "write code in a script, not the console" explicit.**
   Lecture 2 is where students first open RStudio, and by week four some are still
   typing code straight into the console. The exported Lecture 2 deck never
   mentions the console, the source pane, or creating a new R script, so this is a
@@ -710,7 +710,11 @@ with four work pauses runs about an hour.
   checks like `str()` or `?mean`, and the script is the record of your work.
   Worth repeating briefly in Lecture 4, when they first load real data.
 
-- [ ] **Lecture 2 mislabels the Holling type II parameters. Show both forms.**
+  **Done 2026-11-18** in the Quarto rebuild of Lecture 2: a "Write code in a
+  script, not the console" slide after the RStudio panes, with a first
+  type-and-run block. The Lecture 4 reminder is still to do.
+
+- [x] **Lecture 2 mislabels the Holling type II parameters. Show both forms.**
   The deck writes f(x) = ax/(b + x) and says "Here, a and b are attack rate and
   handling time". In that form a is the asymptote and b is the half-saturation
   constant (Bolker ch. 3). Attack rate and handling time are the parameters of the
@@ -728,7 +732,10 @@ with four work pauses runs about an hour.
   introduces: the curve is identical, and only the reason for using it decides
   which parameters you write down.
 
-- [ ] **Lecture 2's GitHub authentication slides are out of date.** Found this
+  **Done 2026-11-18:** Lecture 2 now has "One curve, two ways to write it", the
+  same pair as Lecture 9, with the mislabeling corrected.
+
+- [x] **Lecture 2's GitHub authentication slides are out of date.** Found this
   while teaching the lecture: in current versions of RStudio, clicking "push"
   handles authentication for you — it opens a browser sign-in rather than failing
   and demanding a Personal Access Token. The three slides covering this
@@ -743,6 +750,10 @@ with four work pauses runs about an hour.
   - It's still worth students knowing a token exists and that it should never go
     in a script — that point could survive on a single slide even if the
     step-by-step goes.
+
+  **Done 2026-11-18:** the three slides became "Send a change back" (commit,
+  push, browser sign-in on the first push) and "If push asks for a password
+  instead" (the token steps as a fallback, with the never-in-a-script warning).
 
 ---
 

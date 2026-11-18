@@ -44,6 +44,8 @@ source and license here whenever a new one is added.**
 | `01_r_in_job_ads.png` | Percentage of PhD student and postdoc job ads mentioning R, 2006 to 2018, used in Lecture 1 | *Frontiers in Ecology and the Environment* 2020, 18(3): 123 to 124, as cited on the slide | as cited | Journal copyright; the author is a colleague | 2026-11-18 |
 | `01_code_sharing_title.png`, `01_code_sharing_methods.png`, `01_code_sharing_table.png` | Title block and two page crops of the code-sharing paper, used in Lecture 1 | [Maitner et al. 2024, *Ecology and Evolution* 14: e70030](https://doi.org/10.1002/ece3.70030) | Maitner et al. | CC BY 4.0 | 2026-11-18 |
 | `01_course_github_page.png`, `01_r_citations_repo.png` | Screenshots of this course's GitHub repository and of the `R_citations` repository, used in Lecture 1 | github.com/bmaitner | Brian Maitner | Our own repositories | 2026-11-18 |
+| `02_holling_curve.png` | A Holling type II curve (prey eaten per predator against prey density), drawn in R, used in Lecture 2 | Original Google Slides deck | Brian Maitner | Our own work | 2026-11-18 |
+| `02_r_console.png`, `02_rstudio*.png`, `02_github_*.png` | Screenshots of R, RStudio and GitHub, some with the slide's arrows and labels baked in, used in Lecture 2 | Original Google Slides deck | Brian Maitner | Our own screenshots | 2026-11-18 |
 
 The Lecture 1 images were taken from the 2025 Google Slides deck when it was
 converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is
