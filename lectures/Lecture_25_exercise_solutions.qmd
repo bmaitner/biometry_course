@@ -78,6 +78,39 @@ AICtab(lm_lat, mm_null_ml, mm_lat_ml)
 confint(mm_lat_ml)     # .sig01 is the family standard deviation, .sigma the residual
 ```
 
+## Your turn: two rules of biogeography {.smaller}
+
+```{r}
+rules <- data.frame(family = songbirds$Family1,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    mass = songbirds$Mass,
+                    range = songbirds$Range.Size)
+rules <- na.omit(rules)
+
+lm_mass <- lm(log(mass) ~ lat, data = rules)
+mm_mass <- lmer(log(mass) ~ lat + (1 | family), data = rules)
+lm_range <- lm(log(range) ~ lat, data = rules)
+mm_range <- lmer(log(range) ~ lat + (1 | family), data = rules)
+
+# share of the variation between families
+vc <- as.data.frame(VarCorr(mm_mass)); vc$vcov[1] / sum(vc$vcov)
+vc <- as.data.frame(VarCorr(mm_range)); vc$vcov[1] / sum(vc$vcov)
+```
+
+## Two rules: the latitude slopes {.smaller}
+
+```{r}
+confint(lm_mass)["lat", ]
+confint(mm_mass, parm = "lat", quiet = TRUE)
+c(lm = coef(lm_range)[["lat"]], lmer = fixef(mm_range)[["lat"]])
+exp(10 * fixef(mm_range)["lat"])    # range multiplier per 10 degrees
+```
+
+Body mass runs strongly in families, range size barely does, so `lmer()` barely
+changes the range answer: ranges are about 1.8 times larger every 10 degrees from
+the equator. Neither model finds Bergmann's rule: both mass intervals include
+zero.
+
 ## Small families borrow from big ones {.smaller}
 
 ```{r}
@@ -156,6 +189,24 @@ yearly[c("1997", "2001", "2010", "2015", "2019"), ]
 Fewer routes in later years, and the ones left are the better routes, so the
 average count across all routes falls more slowly than the count on any one
 route.
+
+## Your turn: does development explain the routes? {.smaller}
+
+```{r}
+g_built <- MASS::glm.nb(count ~ decade + frac_built, data = bw)
+mm_built <- glmer.nb(count ~ decade + frac_built + (1 | route), data = bw)
+
+rbind(g_built = summary(g_built)$coefficients["frac_built", 1:2],
+      mm_built = summary(mm_built)$coefficients["frac_built", 1:2])
+VarCorr(mm_nb)
+VarCorr(mm_built)
+AICtab(mm_nb, mm_built)
+1 - exp(fixef(mm_built)["frac_built"] / 10)   # fewer birds per 10 points of built land
+```
+
+The estimate barely moves but its standard error grows about 2.6 times:
+`frac_built` has one value per route, so the counts hold about 100 pieces of
+evidence about it, not 1,360. It also explains part of why routes differ.
 
 ## Each route its own rate {.smaller}
 

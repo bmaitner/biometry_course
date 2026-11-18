@@ -67,6 +67,9 @@ jobs:
             any::viridis
             any::colorspace
             any::scales
+            any::tidyverse
+            any::lintr
+            any::styler
             github::davidsjoberg/ggbump
             github::bmaitner/glyospalettes
             github::bmaitner/transformerpalettes

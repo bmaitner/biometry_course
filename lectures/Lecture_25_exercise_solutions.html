@@ -1164,16 +1164,67 @@ lat          0.1395569  0.1570487</code></pre>
 </div>
 </div>
 </section>
+<section id="your-turn-two-rules-of-biogeography" class="slide level2 smaller">
+<h2>Your turn: two rules of biogeography</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href aria-hidden="true" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">family =</span> songbirds<span class="sc">$</span>Family1,</span>
+<span id="cb17-2"><a href aria-hidden="true" tabindex="-1"></a>                    <span class="at">lat =</span> <span class="fu">abs</span>(songbirds<span class="sc">$</span>Centroid.Latitude),</span>
+<span id="cb17-3"><a href aria-hidden="true" tabindex="-1"></a>                    <span class="at">mass =</span> songbirds<span class="sc">$</span>Mass,</span>
+<span id="cb17-4"><a href aria-hidden="true" tabindex="-1"></a>                    <span class="at">range =</span> songbirds<span class="sc">$</span>Range.Size)</span>
+<span id="cb17-5"><a href aria-hidden="true" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(rules)</span>
+<span id="cb17-6"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href aria-hidden="true" tabindex="-1"></a>lm_mass <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(mass) <span class="sc">~</span> lat, <span class="at">data =</span> rules)</span>
+<span id="cb17-8"><a href aria-hidden="true" tabindex="-1"></a>mm_mass <span class="ot">&lt;-</span> <span class="fu">lmer</span>(<span class="fu">log</span>(mass) <span class="sc">~</span> lat <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">data =</span> rules)</span>
+<span id="cb17-9"><a href aria-hidden="true" tabindex="-1"></a>lm_range <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(range) <span class="sc">~</span> lat, <span class="at">data =</span> rules)</span>
+<span id="cb17-10"><a href aria-hidden="true" tabindex="-1"></a>mm_range <span class="ot">&lt;-</span> <span class="fu">lmer</span>(<span class="fu">log</span>(range) <span class="sc">~</span> lat <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">data =</span> rules)</span>
+<span id="cb17-11"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># share of the variation between families</span></span>
+<span id="cb17-13"><a href aria-hidden="true" tabindex="-1"></a>vc <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(mm_mass)); vc<span class="sc">$</span>vcov[<span class="dv">1</span>] <span class="sc">/</span> <span class="fu">sum</span>(vc<span class="sc">$</span>vcov)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7361592</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href aria-hidden="true" tabindex="-1"></a>vc <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(mm_range)); vc<span class="sc">$</span>vcov[<span class="dv">1</span>] <span class="sc">/</span> <span class="fu">sum</span>(vc<span class="sc">$</span>vcov)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1522334</code></pre>
+</div>
+</div>
+</section>
+<section id="two-rules-the-latitude-slopes" class="slide level2 smaller">
+<h2>Two rules: the latitude slopes</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(lm_mass)[<span class="st">&quot;lat&quot;</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        2.5 %        97.5 % 
+-0.0024825454  0.0004940186 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(mm_mass, <span class="at">parm =</span> <span class="st">&quot;lat&quot;</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           2.5 %       97.5 %
+lat -0.001834441 0.0001596661</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">lm =</span> <span class="fu">coef</span>(lm_range)[[<span class="st">&quot;lat&quot;</span>]], <span class="at">lmer =</span> <span class="fu">fixef</span>(mm_range)[[<span class="st">&quot;lat&quot;</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        lm       lmer 
+0.05475855 0.05850883 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="dv">10</span> <span class="sc">*</span> <span class="fu">fixef</span>(mm_range)[<span class="st">&quot;lat&quot;</span>])    <span class="co"># range multiplier per 10 degrees</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     lat 
+1.795149 </code></pre>
+</div>
+</div>
+<p>Body mass runs strongly in families, range size barely does, so <code>lmer()</code> barely changes the range answer: ranges are about 1.8 times larger every 10 degrees from the equator. Neither model finds Bergmann’s rule: both mass intervals include zero.</p>
+</section>
 <section id="small-families-borrow-from-big-ones" class="slide level2 smaller">
 <h2>Small families borrow from big ones</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href aria-hidden="true" tabindex="-1"></a>mm0 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(hwi <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">data =</span> birds)</span>
-<span id="cb17-2"><a href aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">tapply</span>(birds<span class="sc">$</span>hwi, birds<span class="sc">$</span>family, mean)</span>
-<span id="cb17-3"><a href aria-hidden="true" tabindex="-1"></a>est <span class="ot">&lt;-</span> <span class="fu">coef</span>(mm0)<span class="sc">$</span>family[<span class="fu">names</span>(raw), <span class="dv">1</span>]</span>
-<span id="cb17-4"><a href aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(<span class="fu">table</span>(birds<span class="sc">$</span>family)[<span class="fu">names</span>(raw)])</span>
-<span id="cb17-5"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-6"><a href aria-hidden="true" tabindex="-1"></a>shrink <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">n =</span> n, <span class="at">raw =</span> <span class="fu">round</span>(raw, <span class="dv">1</span>), <span class="at">est =</span> <span class="fu">round</span>(est, <span class="dv">1</span>))</span>
-<span id="cb17-7"><a href aria-hidden="true" tabindex="-1"></a>shrink[<span class="fu">c</span>(<span class="st">&quot;Eupetidae&quot;</span>, <span class="st">&quot;Peucedramidae&quot;</span>, <span class="st">&quot;Tyrannidae&quot;</span>, <span class="st">&quot;Thraupidae&quot;</span>), ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href aria-hidden="true" tabindex="-1"></a>mm0 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(hwi <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">data =</span> birds)</span>
+<span id="cb29-2"><a href aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">tapply</span>(birds<span class="sc">$</span>hwi, birds<span class="sc">$</span>family, mean)</span>
+<span id="cb29-3"><a href aria-hidden="true" tabindex="-1"></a>est <span class="ot">&lt;-</span> <span class="fu">coef</span>(mm0)<span class="sc">$</span>family[<span class="fu">names</span>(raw), <span class="dv">1</span>]</span>
+<span id="cb29-4"><a href aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(<span class="fu">table</span>(birds<span class="sc">$</span>family)[<span class="fu">names</span>(raw)])</span>
+<span id="cb29-5"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href aria-hidden="true" tabindex="-1"></a>shrink <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">n =</span> n, <span class="at">raw =</span> <span class="fu">round</span>(raw, <span class="dv">1</span>), <span class="at">est =</span> <span class="fu">round</span>(est, <span class="dv">1</span>))</span>
+<span id="cb29-7"><a href aria-hidden="true" tabindex="-1"></a>shrink[<span class="fu">c</span>(<span class="st">&quot;Eupetidae&quot;</span>, <span class="st">&quot;Peucedramidae&quot;</span>, <span class="st">&quot;Tyrannidae&quot;</span>, <span class="st">&quot;Thraupidae&quot;</span>), ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                n  raw  est
 Eupetidae       1  4.0  8.4
@@ -1181,7 +1232,7 @@ Peucedramidae   1 27.6 24.3
 Tyrannidae    448 18.4 18.4
 Thraupidae    408 18.8 18.8</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(mm0)      <span class="co"># the overall average they are pulled toward</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(mm0)      <span class="co"># the overall average they are pulled toward</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(Intercept) 
    17.54315 </code></pre>
@@ -1191,18 +1242,18 @@ Thraupidae    408 18.8 18.8</code></pre>
 <section id="bobwhite-set-up-and-fit" class="slide level2 smaller">
 <h2>Bobwhite: set up and fit</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href aria-hidden="true" tabindex="-1"></a>bw <span class="ot">&lt;-</span> bobwhite_counts</span>
-<span id="cb21-2"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>route <span class="ot">&lt;-</span> <span class="fu">factor</span>(bw<span class="sc">$</span>route)</span>
-<span id="cb21-3"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>decade <span class="ot">&lt;-</span> bw<span class="sc">$</span>elapsed <span class="sc">/</span> <span class="dv">10</span></span>
-<span id="cb21-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">counts =</span> <span class="fu">nrow</span>(bw), <span class="at">routes =</span> <span class="fu">length</span>(<span class="fu">unique</span>(bw<span class="sc">$</span>route)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href aria-hidden="true" tabindex="-1"></a>bw <span class="ot">&lt;-</span> bobwhite_counts</span>
+<span id="cb33-2"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>route <span class="ot">&lt;-</span> <span class="fu">factor</span>(bw<span class="sc">$</span>route)</span>
+<span id="cb33-3"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>decade <span class="ot">&lt;-</span> bw<span class="sc">$</span>elapsed <span class="sc">/</span> <span class="dv">10</span></span>
+<span id="cb33-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">counts =</span> <span class="fu">nrow</span>(bw), <span class="at">routes =</span> <span class="fu">length</span>(<span class="fu">unique</span>(bw<span class="sc">$</span>route)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>counts routes 
   1360    100 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href aria-hidden="true" tabindex="-1"></a>g_nb <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">glm.nb</span>(count <span class="sc">~</span> decade, <span class="at">data =</span> bw)</span>
-<span id="cb23-2"><a href aria-hidden="true" tabindex="-1"></a>mm_pois <span class="ot">&lt;-</span> <span class="fu">glmer</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> route), <span class="at">family =</span> poisson, <span class="at">data =</span> bw)</span>
-<span id="cb23-3"><a href aria-hidden="true" tabindex="-1"></a>mm_nb <span class="ot">&lt;-</span> <span class="fu">glmer.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> route), <span class="at">data =</span> bw)</span>
-<span id="cb23-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(g_nb, mm_pois, mm_nb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href aria-hidden="true" tabindex="-1"></a>g_nb <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">glm.nb</span>(count <span class="sc">~</span> decade, <span class="at">data =</span> bw)</span>
+<span id="cb35-2"><a href aria-hidden="true" tabindex="-1"></a>mm_pois <span class="ot">&lt;-</span> <span class="fu">glmer</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> route), <span class="at">family =</span> poisson, <span class="at">data =</span> bw)</span>
+<span id="cb35-3"><a href aria-hidden="true" tabindex="-1"></a>mm_nb <span class="ot">&lt;-</span> <span class="fu">glmer.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> route), <span class="at">data =</span> bw)</span>
+<span id="cb35-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(g_nb, mm_pois, mm_nb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        dAIC   df
 mm_nb      0.0 4 
@@ -1215,26 +1266,26 @@ mm_pois 1384.0 3 </code></pre>
 <h2>Bobwhite: inside the 95% range</h2>
 <p>Lecture 24’s check, for each model:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href aria-hidden="true" tabindex="-1"></a>inside <span class="ot">&lt;-</span> <span class="cf">function</span>(lo, hi){</span>
-<span id="cb25-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(bw<span class="sc">$</span>count <span class="sc">&gt;=</span> lo <span class="sc">&amp;</span> bw<span class="sc">$</span>count <span class="sc">&lt;=</span> hi)</span>
-<span id="cb25-3"><a href aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb25-4"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(g_nb)</span>
-<span id="cb25-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">g_nb =</span> <span class="fu">inside</span>(<span class="fu">qnbinom</span>(<span class="fl">0.025</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> g_nb<span class="sc">$</span>theta),</span>
-<span id="cb25-6"><a href aria-hidden="true" tabindex="-1"></a>                <span class="fu">qnbinom</span>(<span class="fl">0.975</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> g_nb<span class="sc">$</span>theta)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href aria-hidden="true" tabindex="-1"></a>inside <span class="ot">&lt;-</span> <span class="cf">function</span>(lo, hi){</span>
+<span id="cb37-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(bw<span class="sc">$</span>count <span class="sc">&gt;=</span> lo <span class="sc">&amp;</span> bw<span class="sc">$</span>count <span class="sc">&lt;=</span> hi)</span>
+<span id="cb37-3"><a href aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb37-4"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(g_nb)</span>
+<span id="cb37-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">g_nb =</span> <span class="fu">inside</span>(<span class="fu">qnbinom</span>(<span class="fl">0.025</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> g_nb<span class="sc">$</span>theta),</span>
+<span id="cb37-6"><a href aria-hidden="true" tabindex="-1"></a>                <span class="fu">qnbinom</span>(<span class="fl">0.975</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> g_nb<span class="sc">$</span>theta)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  g_nb 
 0.9625 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(mm_pois)</span>
-<span id="cb27-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">mm_pois =</span> <span class="fu">inside</span>(<span class="fu">qpois</span>(<span class="fl">0.025</span>, mu), <span class="fu">qpois</span>(<span class="fl">0.975</span>, mu)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(mm_pois)</span>
+<span id="cb39-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">mm_pois =</span> <span class="fu">inside</span>(<span class="fu">qpois</span>(<span class="fl">0.025</span>, mu), <span class="fu">qpois</span>(<span class="fl">0.975</span>, mu)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  mm_pois 
 0.8191176 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">getME</span>(mm_nb, <span class="st">&quot;glmer.nb.theta&quot;</span>)</span>
-<span id="cb29-2"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(mm_nb)</span>
-<span id="cb29-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">mm_nb =</span> <span class="fu">inside</span>(<span class="fu">qnbinom</span>(<span class="fl">0.025</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> theta),</span>
-<span id="cb29-4"><a href aria-hidden="true" tabindex="-1"></a>                 <span class="fu">qnbinom</span>(<span class="fl">0.975</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> theta)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">getME</span>(mm_nb, <span class="st">&quot;glmer.nb.theta&quot;</span>)</span>
+<span id="cb41-2"><a href aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">fitted</span>(mm_nb)</span>
+<span id="cb41-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">mm_nb =</span> <span class="fu">inside</span>(<span class="fu">qnbinom</span>(<span class="fl">0.025</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> theta),</span>
+<span id="cb41-4"><a href aria-hidden="true" tabindex="-1"></a>                 <span class="fu">qnbinom</span>(<span class="fl">0.975</span>, <span class="at">mu =</span> mu, <span class="at">size =</span> theta)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    mm_nb 
 0.9713235 </code></pre>
@@ -1244,24 +1295,24 @@ mm_pois 1384.0 3 </code></pre>
 <section id="undo-the-link" class="slide level2 smaller">
 <h2>Undo the link</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mm_nb)[<span class="st">&quot;decade&quot;</span>]</span>
-<span id="cb31-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(b)                         <span class="co"># per decade</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mm_nb)[<span class="st">&quot;decade&quot;</span>]</span>
+<span id="cb43-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(b)                         <span class="co"># per decade</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   decade 
 0.6748921 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(b <span class="sc">/</span> <span class="dv">10</span>)                    <span class="co"># per year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(b <span class="sc">/</span> <span class="dv">10</span>)                    <span class="co"># per year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   decade 
 0.9614428 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href aria-hidden="true" tabindex="-1"></a>ci <span class="ot">&lt;-</span> <span class="fu">confint</span>(mm_nb, <span class="at">parm =</span> <span class="st">&quot;beta_&quot;</span>, <span class="at">method =</span> <span class="st">&quot;Wald&quot;</span>)</span>
-<span id="cb35-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(ci[<span class="st">&quot;decade&quot;</span>, ] <span class="sc">/</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href aria-hidden="true" tabindex="-1"></a>ci <span class="ot">&lt;-</span> <span class="fu">confint</span>(mm_nb, <span class="at">parm =</span> <span class="st">&quot;beta_&quot;</span>, <span class="at">method =</span> <span class="st">&quot;Wald&quot;</span>)</span>
+<span id="cb47-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(ci[<span class="st">&quot;decade&quot;</span>, ] <span class="sc">/</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   2.5 %   97.5 % 
 0.956507 0.966404 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(g_nb)[<span class="st">&quot;decade&quot;</span>] <span class="sc">/</span> <span class="dv">10</span>) <span class="co"># ignoring routes: Lecture 15&#39;s 2.9% a year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(g_nb)[<span class="st">&quot;decade&quot;</span>] <span class="sc">/</span> <span class="dv">10</span>) <span class="co"># ignoring routes: Lecture 15&#39;s 2.9% a year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   decade 
 0.9708663 </code></pre>
@@ -1272,14 +1323,14 @@ mm_pois 1384.0 3 </code></pre>
 <section id="why-is-the-decline-steeper" class="slide level2 smaller">
 <h2>Why is the decline steeper?</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># each route&#39;s intercept, attached to its counts</span></span>
-<span id="cb39-2"><a href aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">ranef</span>(mm_nb)<span class="sc">$</span>route</span>
-<span id="cb39-3"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>route_effect <span class="ot">&lt;-</span> re[<span class="fu">as.character</span>(bw<span class="sc">$</span>route), <span class="dv">1</span>]</span>
-<span id="cb39-4"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-5"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># routes counted each year, and how good they are, as a multiplier on an average route</span></span>
-<span id="cb39-6"><a href aria-hidden="true" tabindex="-1"></a>yearly <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">routes =</span> <span class="fu">tapply</span>(bw<span class="sc">$</span>route, bw<span class="sc">$</span>year, <span class="cf">function</span>(x){ <span class="fu">length</span>(<span class="fu">unique</span>(x)) }),</span>
-<span id="cb39-7"><a href aria-hidden="true" tabindex="-1"></a>                     <span class="at">quality =</span> <span class="fu">round</span>(<span class="fu">exp</span>(<span class="fu">tapply</span>(bw<span class="sc">$</span>route_effect, bw<span class="sc">$</span>year, mean)), <span class="dv">2</span>))</span>
-<span id="cb39-8"><a href aria-hidden="true" tabindex="-1"></a>yearly[<span class="fu">c</span>(<span class="st">&quot;1997&quot;</span>, <span class="st">&quot;2001&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2015&quot;</span>, <span class="st">&quot;2019&quot;</span>), ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># each route&#39;s intercept, attached to its counts</span></span>
+<span id="cb51-2"><a href aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">ranef</span>(mm_nb)<span class="sc">$</span>route</span>
+<span id="cb51-3"><a href aria-hidden="true" tabindex="-1"></a>bw<span class="sc">$</span>route_effect <span class="ot">&lt;-</span> re[<span class="fu">as.character</span>(bw<span class="sc">$</span>route), <span class="dv">1</span>]</span>
+<span id="cb51-4"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-5"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># routes counted each year, and how good they are, as a multiplier on an average route</span></span>
+<span id="cb51-6"><a href aria-hidden="true" tabindex="-1"></a>yearly <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">routes =</span> <span class="fu">tapply</span>(bw<span class="sc">$</span>route, bw<span class="sc">$</span>year, <span class="cf">function</span>(x){ <span class="fu">length</span>(<span class="fu">unique</span>(x)) }),</span>
+<span id="cb51-7"><a href aria-hidden="true" tabindex="-1"></a>                     <span class="at">quality =</span> <span class="fu">round</span>(<span class="fu">exp</span>(<span class="fu">tapply</span>(bw<span class="sc">$</span>route_effect, bw<span class="sc">$</span>year, mean)), <span class="dv">2</span>))</span>
+<span id="cb51-8"><a href aria-hidden="true" tabindex="-1"></a>yearly[<span class="fu">c</span>(<span class="st">&quot;1997&quot;</span>, <span class="st">&quot;2001&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2015&quot;</span>, <span class="st">&quot;2019&quot;</span>), ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     routes quality
 1997     62    1.06
@@ -1291,25 +1342,62 @@ mm_pois 1384.0 3 </code></pre>
 </div>
 <p>Fewer routes in later years, and the ones left are the better routes, so the average count across all routes falls more slowly than the count on any one route.</p>
 </section>
+<section id="your-turn-does-development-explain-the-routes" class="slide level2 smaller">
+<h2>Your turn: does development explain the routes?</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href aria-hidden="true" tabindex="-1"></a>g_built <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">glm.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> frac_built, <span class="at">data =</span> bw)</span>
+<span id="cb53-2"><a href aria-hidden="true" tabindex="-1"></a>mm_built <span class="ot">&lt;-</span> <span class="fu">glmer.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> frac_built <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> route), <span class="at">data =</span> bw)</span>
+<span id="cb53-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(<span class="at">g_built =</span> <span class="fu">summary</span>(g_built)<span class="sc">$</span>coefficients[<span class="st">&quot;frac_built&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>],</span>
+<span id="cb53-5"><a href aria-hidden="true" tabindex="-1"></a>      <span class="at">mm_built =</span> <span class="fu">summary</span>(mm_built)<span class="sc">$</span>coefficients[<span class="st">&quot;frac_built&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Estimate Std. Error
+g_built  -3.388155  0.2862665
+mm_built -3.168994  0.7499383</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">VarCorr</span>(mm_nb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Groups Name        Std.Dev.
+ route  (Intercept) 0.77552 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">VarCorr</span>(mm_built)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Groups Name        Std.Dev.
+ route  (Intercept) 0.70886 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(mm_nb, mm_built)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         dAIC df
+mm_built  0.0 5 
+mm_nb    14.6 4 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">-</span> <span class="fu">exp</span>(<span class="fu">fixef</span>(mm_built)[<span class="st">&quot;frac_built&quot;</span>] <span class="sc">/</span> <span class="dv">10</span>)   <span class="co"># fewer birds per 10 points of built land</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>frac_built 
+ 0.2715959 </code></pre>
+</div>
+</div>
+<p>The estimate barely moves but its standard error grows about 2.6 times: <code>frac_built</code> has one value per route, so the counts hold about 100 pieces of evidence about it, not 1,360. It also explains part of why routes differ.</p>
+</section>
 <section id="each-route-its-own-rate" class="slide level2 smaller">
 <h2>Each route its own rate</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href aria-hidden="true" tabindex="-1"></a>mm_slope <span class="ot">&lt;-</span> <span class="fu">glmer.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> decade <span class="sc">|</span> route), <span class="at">data =</span> bw)</span>
-<span id="cb41-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(mm_nb, mm_slope)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href aria-hidden="true" tabindex="-1"></a>mm_slope <span class="ot">&lt;-</span> <span class="fu">glmer.nb</span>(count <span class="sc">~</span> decade <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> decade <span class="sc">|</span> route), <span class="at">data =</span> bw)</span>
+<span id="cb63-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(mm_nb, mm_slope)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         dAIC  df
 mm_slope   0.0 6 
 mm_nb    109.8 4 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">VarCorr</span>(mm_slope)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">VarCorr</span>(mm_slope)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> Groups Name        Std.Dev. Corr   
  route  (Intercept) 0.78894         
         decade      0.37650  -0.253 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mm_slope)[<span class="st">&quot;decade&quot;</span>]</span>
-<span id="cb45-2"><a href aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(mm_slope))<span class="sc">$</span>sdcor[<span class="dv">2</span>]</span>
-<span id="cb45-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">c</span>(<span class="at">average =</span> b, <span class="at">low =</span> b <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> s, <span class="at">high =</span> b <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> s) <span class="sc">/</span> <span class="dv">10</span>)   <span class="co"># per year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mm_slope)[<span class="st">&quot;decade&quot;</span>]</span>
+<span id="cb67-2"><a href aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(mm_slope))<span class="sc">$</span>sdcor[<span class="dv">2</span>]</span>
+<span id="cb67-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">c</span>(<span class="at">average =</span> b, <span class="at">low =</span> b <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> s, <span class="at">high =</span> b <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> s) <span class="sc">/</span> <span class="dv">10</span>)   <span class="co"># per year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>average.decade     low.decade    high.decade 
      0.9541302      0.8862559      1.0272026 </code></pre>
@@ -1319,16 +1407,16 @@ mm_nb    109.8 4 </code></pre>
 <section id="the-average-route-is-not-every-route" class="slide level2 smaller">
 <h2>The average route is not every route</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href aria-hidden="true" tabindex="-1"></a>route_change <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(mm_slope)<span class="sc">$</span>route[, <span class="st">&quot;decade&quot;</span>] <span class="sc">/</span> <span class="dv">10</span>) <span class="sc">-</span> <span class="dv">1</span>   <span class="co"># each route, per year</span></span>
-<span id="cb47-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(route_change)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href aria-hidden="true" tabindex="-1"></a>route_change <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(mm_slope)<span class="sc">$</span>route[, <span class="st">&quot;decade&quot;</span>] <span class="sc">/</span> <span class="dv">10</span>) <span class="sc">-</span> <span class="dv">1</span>   <span class="co"># each route, per year</span></span>
+<span id="cb69-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(route_change)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] -0.13758765  0.05411982</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(route_change <span class="sc">&gt;</span> <span class="dv">0</span>)                         <span class="co"># shrunk estimates above zero</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(route_change <span class="sc">&gt;</span> <span class="dv">0</span>)                         <span class="co"># shrunk estimates above zero</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 4</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">pnorm</span>(<span class="dv">0</span>, <span class="at">mean =</span> b, <span class="at">sd =</span> s, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>) <span class="co"># share of routes the model expects to be rising</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">pnorm</span>(<span class="dv">0</span>, <span class="at">mean =</span> b, <span class="at">sd =</span> s, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>) <span class="co"># share of routes the model expects to be rising</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.1061724</code></pre>
 </div>
@@ -1338,26 +1426,26 @@ mm_nb    109.8 4 </code></pre>
 <section id="your-turn-migration-with-families" class="slide level2 smaller">
 <h2>Your turn: migration, with families</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href aria-hidden="true" tabindex="-1"></a>g_add <span class="ot">&lt;-</span> <span class="fu">glm</span>(migratory <span class="sc">~</span> lat <span class="sc">+</span> hwi, <span class="at">family =</span> binomial, <span class="at">data =</span> birds)</span>
-<span id="cb53-2"><a href aria-hidden="true" tabindex="-1"></a>mm_mig <span class="ot">&lt;-</span> <span class="fu">glmer</span>(migratory <span class="sc">~</span> lat <span class="sc">+</span> hwi <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">family =</span> binomial, <span class="at">data =</span> birds)</span>
-<span id="cb53-3"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># odds ratios</span></span>
-<span id="cb53-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="at">glm =</span> <span class="fu">exp</span>(<span class="fu">coef</span>(g_add)), <span class="at">glmer =</span> <span class="fu">exp</span>(<span class="fu">fixef</span>(mm_mig)))[<span class="sc">-</span><span class="dv">1</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href aria-hidden="true" tabindex="-1"></a>g_add <span class="ot">&lt;-</span> <span class="fu">glm</span>(migratory <span class="sc">~</span> lat <span class="sc">+</span> hwi, <span class="at">family =</span> binomial, <span class="at">data =</span> birds)</span>
+<span id="cb75-2"><a href aria-hidden="true" tabindex="-1"></a>mm_mig <span class="ot">&lt;-</span> <span class="fu">glmer</span>(migratory <span class="sc">~</span> lat <span class="sc">+</span> hwi <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> family), <span class="at">family =</span> binomial, <span class="at">data =</span> birds)</span>
+<span id="cb75-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># odds ratios</span></span>
+<span id="cb75-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="at">glm =</span> <span class="fu">exp</span>(<span class="fu">coef</span>(g_add)), <span class="at">glmer =</span> <span class="fu">exp</span>(<span class="fu">fixef</span>(mm_mig)))[<span class="sc">-</span><span class="dv">1</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         glm    glmer
 lat 1.122941 1.133127
 hwi 1.077905 1.173323</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># standard errors</span></span>
-<span id="cb55-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="at">glm =</span> <span class="fu">summary</span>(g_add)<span class="sc">$</span>coefficients[, <span class="dv">2</span>],</span>
-<span id="cb55-3"><a href aria-hidden="true" tabindex="-1"></a>      <span class="at">glmer =</span> <span class="fu">summary</span>(mm_mig)<span class="sc">$</span>coefficients[, <span class="dv">2</span>])[<span class="sc">-</span><span class="dv">1</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># standard errors</span></span>
+<span id="cb77-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="at">glm =</span> <span class="fu">summary</span>(g_add)<span class="sc">$</span>coefficients[, <span class="dv">2</span>],</span>
+<span id="cb77-3"><a href aria-hidden="true" tabindex="-1"></a>      <span class="at">glmer =</span> <span class="fu">summary</span>(mm_mig)<span class="sc">$</span>coefficients[, <span class="dv">2</span>])[<span class="sc">-</span><span class="dv">1</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>            glm       glmer
-lat 0.004401198 0.006707991
-hwi 0.006463460 0.015297248</code></pre>
+<pre><code>            glm      glmer
+lat 0.004401198 0.00670801
+hwi 0.006463460 0.01529752</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># for anyone fast</span></span>
-<span id="cb57-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(g_add, mm_mig)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># for anyone fast</span></span>
+<span id="cb79-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(g_add, mm_mig)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       dAIC  df
 mm_mig   0.0 4 

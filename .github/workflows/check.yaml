@@ -71,6 +71,8 @@ jobs:
             any::lme4
             any::marginaleffects
             any::reprex
+            any::lintr
+            any::styler
             local::./biometrydata
 
       # Same script you can run locally with:

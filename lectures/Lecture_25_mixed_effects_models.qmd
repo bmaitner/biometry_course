@@ -89,6 +89,25 @@ top_fam <- names(sort(table(birds$family), decreasing = TRUE))[1:12]
 big_fams <- birds[birds$family %in% top_fam, ]
 big_fams$family <- reorder(factor(big_fams$family), big_fams$hwi, median)
 
+# your turn: two rules of biogeography
+rules <- na.omit(data.frame(family = songbirds$Family1,
+                            lat = abs(songbirds$Centroid.Latitude),
+                            mass = songbirds$Mass,
+                            range = songbirds$Range.Size))
+n_rules <- nrow(rules)
+icc_of <- function(m){
+  v <- as.data.frame(VarCorr(m))$vcov
+  v[1] / sum(v)
+}
+lm_mass <- lm(log(mass) ~ lat, data = rules)
+mm_mass <- lmer(log(mass) ~ lat + (1 | family), data = rules)
+lm_range <- lm(log(range) ~ lat, data = rules)
+mm_range <- lmer(log(range) ~ lat + (1 | family), data = rules)
+ci_mass_lm <- confint(lm_mass)["lat", ]
+ci_mass_mm <- confint(mm_mass, parm = "lat", quiet = TRUE)["lat", ]
+range10 <- exp(10 * fixef(mm_range)["lat"])
+ci_txt <- function(x){ paste0(f4(x[1]), " to ", f4(x[2])) }
+
 # shrinkage: each family's raw mean against the model's estimate
 mm0 <- lmer(hwi ~ 1 + (1 | family), data = birds)
 fam_n <- table(birds$family)
@@ -122,6 +141,13 @@ trend_bw$decade <- (trend_bw$year - 1996) / 10
 trend_bw$fit <- predict(g_nb, newdata = trend_bw, type = "response")
 daic_bw <- aics_bw - min(aics_bw)
 
+# your turn: development, a predictor measured once per route
+g_built <- MASS::glm.nb(count ~ decade + frac_built, data = bw)
+mm_built <- glmer.nb(count ~ decade + frac_built + (1 | route), data = bw)
+est_built <- c(g = coef(g_built)[["frac_built"]], mm = fixef(mm_built)[["frac_built"]])
+se_built <- c(g = se_of(g_built, "frac_built"), mm = se_of(mm_built, "frac_built"))
+aic_built <- AIC(mm_nb) - AIC(mm_built)
+
 per_year <- function(b){ exp(b / 10) }
 yr_g <- per_year(c(coef(g_nb)["decade"], confint.default(g_nb)["decade", ]))
 yr_p <- per_year(c(fixef(mm_pois)["decade"],
@@ -145,6 +171,7 @@ in_n <- inside(qnbinom(0.025, mu = mu_n, size = th_n),
 
 # how much routes differ, and which routes are left in later years
 sd_route <- as.data.frame(VarCorr(mm_nb))$sdcor[1]
+sd_route_built <- as.data.frame(VarCorr(mm_built))$sdcor[1]
 re_route <- ranef(mm_nb)$route
 bw$route_effect <- re_route[as.character(bw$route), 1]
 early <- exp(mean(bw$route_effect[bw$year <= 2001]))
@@ -196,8 +223,8 @@ aic_mig <- AIC(g_add) - AIC(mm_mig)
 
 1. Rows that come in **groups**
 2. What a **random effect** is
-3. `lmer()`: wing shape within bird families
-4. `glmer()`: bobwhite routes, counted every year
+3. `lmer()`: wing shape within bird families; your turn: two rules of biogeography
+4. `glmer()`: bobwhite routes, counted every year; your turn: development
 5. Your turn: which songbirds migrate, with families
 6. Beyond groups: rows linked by space, time and ancestry
 7. Random or fixed? Which tool, when
@@ -674,6 +701,79 @@ random effects .sig01 (the family standard deviation, `r f2(ci_lat[1, 1])` to
 few seconds.
 :::
 
+## Your turn: two rules of biogeography {background-color="#f0f4f8" .smaller}
+
+**Bergmann's rule:** animals are heavier toward the poles. **Rapoport's rule:**
+ranges are larger toward the poles. Do songbirds follow them?
+
+::: {.type-it}
+```{r}
+#| eval: false
+rules <- data.frame(family = songbirds$Family1,
+                    lat = abs(songbirds$Centroid.Latitude),
+                    mass = songbirds$Mass,           # grams
+                    range = songbirds$Range.Size)    # square km
+rules <- na.omit(rules)
+
+lm_mass <- lm(log(mass) ~ lat, data = rules)
+# mm_mass: the same, with a random intercept for family
+# lm_range, mm_range: the same two models for log(range)
+
+# share between families: vc <- as.data.frame(VarCorr(mm_mass)); vc$vcov[1] / sum(vc$vcov)
+# latitude intervals: confint() on each
+```
+:::
+
+**Before you fit:** which runs more in families, body mass or range size?
+
+::: {.notes}
+Ten minutes, in pairs, then the next slide. The answer:
+
+mm_mass <- lmer(log(mass) ~ lat + (1 | family), data = rules)
+lm_range <- lm(log(range) ~ lat, data = rules)
+mm_range <- lmer(log(range) ~ lat + (1 | family), data = rules)
+
+A new data frame rather than new columns on birds: birds had rows removed by
+na.omit(), so songbirds' columns no longer line up with it. rules has
+`r big(n_rules)` species. Both traits are logged because they span orders of
+magnitude (Lecture 23).
+
+The prediction question is the point: a crow and a warbler differ in mass
+because of their lineage, while range size depends on geography and history,
+which relatives share far less.
+:::
+
+## What the two rules show {.smaller}
+
+| | body mass | range size |
+|---|---|---|
+| share between families | **`r pct(icc_of(mm_mass))`** | **`r pct(icc_of(mm_range))`** |
+| latitude slope, `lm()` | `r f4(coef(lm_mass)["lat"])` (`r ci_txt(ci_mass_lm)`) | `r f4(coef(lm_range)["lat"])` |
+| latitude slope, `lmer()` | `r f4(fixef(mm_mass)["lat"])` (`r ci_txt(ci_mass_mm)`) | `r f4(fixef(mm_range)["lat"])` |
+
+- **Range size barely runs in families**, so `lmer()` barely changes its answer:
+  ranges about `r f1(range10)` times larger every 10 degrees from the equator
+- **Body mass runs strongly in families**, but neither model finds Bergmann's
+  rule: both intervals include zero. A random effect does not create an effect.
+
+::: {.plain}
+The more a trait runs in groups, the more a mixed model changes the answer; when
+groups barely differ, it agrees with lm().
+:::
+
+::: {.notes}
+Three minutes. Tie it back to the share on "Reading the output": it is the
+quick way to know whether the grouping will matter.
+
+Biology: Bergmann framed his rule for closely related animals. Across a whole
+order, body size is set mostly by lineage, so a pattern across all songbirds was
+never the fairest test. Within families it is still flat here. Rapoport's rule
+(Stevens 1989) holds clearly in these data.
+
+The range slope in lmer() is `r f4(fixef(mm_range)["lat"])` on the log scale per
+degree; exp(10 * slope) gives the 10-degree multiplier.
+:::
+
 # `glmer()`: bobwhite routes
 
 ## `glmer()` is `glm()` with groups {background-color="#f0f4f8" .smaller}
@@ -801,6 +901,74 @@ so even the mixed model only sees the routes where birds were found. The
 occupancy model in Lecture 24 handles the other half of the story.
 :::
 
+## Your turn: does development explain the routes? {background-color="#f0f4f8" .smaller}
+
+Lecture 16's `frac_built`: the share of land built up around each route,
+measured **once per route**.
+
+::: {.type-it}
+```{r}
+#| eval: false
+g_built <- MASS::glm.nb(count ~ decade + frac_built, data = bw)
+# mm_built: the same, plus a random intercept for route (hint: glmer.nb())
+
+# frac_built's estimate and standard error in each model:
+#   summary(...)$coefficients["frac_built", 1:2]
+
+# how much routes differ, before and after: VarCorr(mm_nb), VarCorr(mm_built)
+
+# for anyone fast: AICtab(mm_nb, mm_built)
+```
+:::
+
+**Before you fit:** `r big(n_bw)` counts, but `frac_built` takes one value per
+route. Will its standard error grow or shrink?
+
+::: {.notes}
+Ten minutes, in pairs, then the next slide. The answer:
+
+mm_built <- glmer.nb(count ~ decade + frac_built + (1 | route), data = bw)
+
+frac_built: `r f2(est_built["g"])` (SE `r f2(se_built["g"])`) in g_built,
+`r f2(est_built["mm"])` (SE `r f2(se_built["mm"])`) in mm_built. Route standard
+deviation `r f2(sd_route)` without it, `r f2(sd_route_built)` with it.
+mm_built beats mm_nb by `r big(aic_built)` AIC units.
+
+This is the fourth reason on the "Random or fixed?" slide in action: route as a
+fixed factor could not include frac_built at all, because the 99 route
+differences already use up everything that varies between routes.
+:::
+
+## What development shows {.smaller}
+
+- **Built-up routes have fewer bobwhite:** every 10 percentage points of built
+  land, about `r pct(1 - exp(est_built[["mm"]] / 10))` fewer birds
+- **Its standard error grows `r f1(se_built[["mm"]] / se_built[["g"]])` times.**
+  `glm.nb()` counted `r big(n_bw)` pieces of evidence about development; there are
+  about `r n_routes`, one per route
+- **It explains part of why routes differ:** the route standard deviation falls
+  from `r f2(sd_route)` to `r f2(sd_route_built)`
+
+::: {.plain}
+A predictor measured once per group gets about one piece of evidence per group,
+however many rows each group has.
+:::
+
+::: {.notes}
+Three minutes. The "10 percentage points" number is exp(`r f2(est_built[["mm"]])`
+* 0.1): frac_built is a fraction, so 0.1 is 10 percentage points. Most routes are
+under 5% built; the most developed is about half.
+
+The estimate barely moved; only how sure we are changed. That is the usual
+pattern for a group-level predictor, and the reason it matters for Assignment 4:
+a site's elevation, a plot's treatment or a lake's area all get one piece of
+evidence per site, plot or lake.
+
+Development explains only a little of the route-to-route spread, so most of what
+makes a route good is something else: habitat management, fire, farming
+practice.
+:::
+
 ## Does each route decline at its own rate? {.smaller}
 
 ```{r}
@@ -828,10 +996,9 @@ well as its own intercept, with the slopes drawn from a normal distribution
 too. That costs two more parameters (the slopes' standard deviation, and how
 slopes and intercepts correlate).
 
-The biology: some routes are being developed and some are not. Lecture 16 found
-counts fall with the share of a route that is built up; a route-level predictor
-like frac_built could explain why the slopes differ, and only a random effect
-leaves room for it.
+The biology: some routes are being developed and some are not. Your turn showed
+frac_built explains part of why routes differ in level; adding decade:frac_built
+would ask whether built-up routes also decline faster.
 
 It takes several seconds and prints an odd internal warning from glmer.nb(),
 which is why it is not type-and-run. The "most routes" range is the average
@@ -983,9 +1150,8 @@ residual scatter (the residual standard deviation fell from
 `r f2(sigma(lm_lat))` to `r f2(sd_res)`), and less scatter means a sharper slope.
 A binomial model has no residual standard deviation to shrink, so the main
 effect of adding family is to discount the evidence that comes from comparing
-different families, and the intervals widen. The general rule for Assignment
-4: a predictor measured at the group level (a site's elevation) gets roughly one
-piece of information per group, so expect its interval to widen most.
+different families, and the intervals widen. Compare the development exercise: there
+the predictor was measured once per route, and its interval widened most of all.
 
 Why the HWI effect grows: glmer() estimates the effect within a family, and in
 a logit model a within-group effect is generally larger than the
