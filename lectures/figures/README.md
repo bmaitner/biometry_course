@@ -39,6 +39,15 @@ source and license here whenever a new one is added.**
 | `23_tree_swallow_flight.jpg` | Tree Swallow (*Tachycineta bicolor*) in flight, Oregon, used in Lecture 23 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tree_Swallows,_Oregon_(204489371).jpg) | Derald Grimwood | CC0 | 2026-11-09 |
 | `23_blue_jay_flight.jpg` | Blue Jay (*Cyanocitta cristata*) in flight, Stirling, Ontario, used in Lecture 23 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Blue_Jay_in_Flight_0566_(4511292119).jpg) | Robert Taylor | CC BY 2.0 | 2026-11-09 |
 | `24_sctld_treatment.jpg` | A diver applying antibiotic paste to a coral with stony coral tissue loss disease, location not recorded, used in Lecture 24 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Scuba_diver_SCTLD_antibiotic_paste.png) | Joe Snyder/NOAA | Public domain | 2026-11-11 |
+| `01_bolker_book_cover.jpg` | Cover of Bolker, *Ecological Models and Data in R* (Princeton University Press, 2008), the course text, used in Lecture 1 | Original Google Slides deck | Princeton University Press | Publisher's copyright; used as a book cover to identify the course text | 2026-11-18 |
+| `01_r_popularity_ecology.png`, `01_lai_2019_title.png` | Percent of ecology articles reporting use of R, 2008 to 2017, and the article's title block, used in Lecture 1 | [Lai et al. 2019, *Ecosphere* 10: e02567](https://doi.org/10.1002/ecs2.2567) | Lai, Lortie, Muenchen, Yang and Ma | CC BY 4.0 | 2026-11-18 |
+| `01_r_in_job_ads.png` | Percentage of PhD student and postdoc job ads mentioning R, 2006 to 2018, used in Lecture 1 | *Frontiers in Ecology and the Environment* 2020, 18(3): 123 to 124, as cited on the slide | as cited | Journal copyright; the author is a colleague | 2026-11-18 |
+| `01_code_sharing_title.png`, `01_code_sharing_methods.png`, `01_code_sharing_table.png` | Title block and two page crops of the code-sharing paper, used in Lecture 1 | [Maitner et al. 2024, *Ecology and Evolution* 14: e70030](https://doi.org/10.1002/ece3.70030) | Maitner et al. | CC BY 4.0 | 2026-11-18 |
+| `01_course_github_page.png`, `01_r_citations_repo.png` | Screenshots of this course's GitHub repository and of the `R_citations` repository, used in Lecture 1 | github.com/bmaitner | Brian Maitner | Our own repositories | 2026-11-18 |
+
+The Lecture 1 images were taken from the 2025 Google Slides deck when it was
+converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is
+from a journal that is not open access; its author is a colleague.
 
 The two Lecture 23 photos are cropped to matching frames around the spread
 wings. The Blue Jay is CC BY, so the slide credits the photographer and names

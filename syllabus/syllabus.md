@@ -29,7 +29,7 @@ CRN 92379/89986, Section #601, Credit Hours: 4
 | Class Meeting Location | DAV 265 |
 | Instructor | Dr. Brian Maitner |
 | Office Location | DAV 226 |
-| Office Hours | Tues 3:15 – 4:15 (or by appointment) |
+| Office Hours | TBD (or by appointment) |
 | Email | [bmaitner\@usf.edu](mailto:bmaitner@usf.edu){.email} |
 
 # University Course Description
