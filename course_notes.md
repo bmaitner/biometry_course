@@ -136,6 +136,9 @@ From midterm feedback, Fall 2025:
   reason as the em-dashes: they had already gone out to students. Fix both in the
   same pass.
 
+  Progress: Lectures 01, 02 and 03 were rebuilt in Quarto on 2026-11-18 with
+  US spelling and no em-dashes (the Lecture 02 file name is unchanged).
+
   Where they are, as of September 2026:
 
   - **Decks:** "modelling" in Lectures 02 (3, plus "modelled"), 03 (12), 18 (4),
@@ -361,6 +364,21 @@ Two things that made it work and are worth preserving:
 - The confidence-interval demo. With `set.seed(101)` the 95% interval for the
   slope is (1.69, 1.98) and misses the true value of 2. Simulating 1000 datasets
   shows 95% coverage, so the miss is the lesson rather than a mistake.
+
+- [ ] **Swap Bolker's own data and examples for new ones in the lecture slides.**
+  Brian's note, 2026-11-18: students should already have met Bolker's examples
+  in the reading, so reusing them in class repeats rather than reinforces.
+  Fresh examples that make the same point test whether they understood the idea,
+  not just the example. Known spots:
+
+  - Lecture 2: the Sandin and Pacala (2005) opener, Bolker's chapter 1 example.
+  - Lecture 3: the Duncan and Duncan (2000) seed predation data in "One dataset,
+    three answers", "Likelihood and Bayes, drawn" and "Same data, same
+    conclusion" (all three need new numbers, ideally computed at render time).
+
+  Keep Bolker's frameworks and figures, such as Table 1.1 and the Figure 1.5
+  flowchart; it is his datasets and worked examples that should change. Check
+  the later decks for the same thing as each one comes up for revision.
 
 **Lecture 4 timing was good, but has less slack than 2 and 3.** The expanded deck
 (plain text, metadata, long/wide, the readxl block, and the −999 demo) fit the
@@ -680,6 +698,11 @@ with four work pauses runs about an hour.
   Worth noting that the Markdown/Quarto conversion below makes this much cheaper:
   figures would be generated at render time from the code already in the chapter
   scripts, rather than pasted in as images that then go stale.
+
+  **Lecture 3 done 2026-11-18** in its Quarto rebuild: all five figures above,
+  drawn at render time (the likelihood and posterior side by side, frogs clean
+  and noisy, the slope histograms, and 50 intervals with the misses in orange).
+  Lecture 2 is still mostly text plus screenshots.
 
 - [ ] **Consider moving `data/Deer_movement/MD_dataset.RDS` out of the repo.**
   At 92 MB it is more than half the 167 MB clone. Students now clone the repo in
