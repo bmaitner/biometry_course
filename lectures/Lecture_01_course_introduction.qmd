@@ -37,10 +37,10 @@ format:
 
 ## Today's agenda
 
-- Introductions
-- Syllabus
-- Why we need stats
-- Reproducibility and Openness
+1. Introductions
+2. Syllabus
+3. Why we need stats
+4. Reproducibility and Openness
 
 ## Introductions
 
@@ -95,11 +95,7 @@ Up to date syllabus: <https://github.com/bmaitner/biometry_course>
 :::
 
 ::: {.column width="38%"}
-**Full of useful stuff**
-
-- Syllabus
-- Lectures
-- Previous quizzes
+**Full of useful stuff:** the syllabus, the lectures, and previous quizzes.
 :::
 ::::
 
@@ -214,23 +210,27 @@ Ability to go further on your own
 ::: {.card}
 [Data & Visualization]{.card-label}
 
-- Load data into R & perform common data-wrangling
-- Create plots using base R & ggplot2
+Load data into R & perform common data-wrangling
+
+Create plots using base R & ggplot2
 :::
 
 ::: {.card}
 [Stats & Analysis]{.card-label}
 
-- Understand key statistical distributions and applications
-- Select correct analyses for ecological datasets
+Understand key statistical distributions and applications
+
+Select correct analyses for ecological datasets
 :::
 
 ::: {.card}
 [Problem Solving]{.card-label}
 
-- Troubleshoot & debug R code effectively
-- Approach novel coding challenges with confidence
-- Apply new programming skills directly to your own work
+Troubleshoot & debug R code effectively
+
+Approach novel coding challenges with confidence
+
+Apply new programming skills directly to your own work
 :::
 :::
 
@@ -510,11 +510,9 @@ Note: many journals and funders are now requiring code to be published
 
 ## Questions on any of this? {.center}
 
-## Next time:
+## Before next class
 
-Before class: read 1.1 - 1.3
+Read Bolker **1.1 to 1.3**
 
-During class:
-
-- Discuss 1.1-1.3
-- Installing and setting up R, RStudio, and Github (if needed)
+Next class: discuss 1.1 to 1.3, then install and set up R, RStudio and GitHub
+(if needed)

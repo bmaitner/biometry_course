@@ -76,9 +76,11 @@ How would you test this, based on what you already know?
 
 **Challenges to deal with:**
 
-- Correlation assumes bivariate normal data
-- Regression assumes a linear relationship and normal errors
-- Mortality counts are neither (and there were lots of zeros)
+**Correlation** assumes bivariate normal data.
+
+**Regression** assumes a linear relationship and normal errors.
+
+**Mortality counts are neither,** and there were lots of zeros.
 
 ::: {.notes}
 Five minutes. Let them answer before the click: most will say correlation or
@@ -90,9 +92,12 @@ counts of deaths, which are whole numbers, never negative, and often zero.
 
 They **wrote the model down directly**:
 
-- absolute mortality = r₀ + r₁n
-- per capita mortality = (r₀ + r₁n) / n
-- with binomial and Poisson variation instead of normal
+| Mortality | Model |
+|---|---|
+| absolute | r₀ + r₁n |
+| per capita | (r₀ + r₁n) / n |
+
+with binomial and Poisson variation instead of normal.
 
 . . .
 
@@ -170,8 +175,9 @@ the rest of the semester.
 
 **Generality has a price.**
 
-- **Theoretical:** general and oversimplified; used for qualitative predictions
-- **Applied:** messier and more specific; better forecasts, but needs more data
+**Theoretical:** general and oversimplified; used for qualitative predictions.
+
+**Applied:** messier and more specific; better forecasts, but needs more data.
 
 [Adapted from Bolker (2008), Table 1.1]{.credit}
 
@@ -289,8 +295,7 @@ searching for the next).
 
 $$f(x) = \frac{\alpha\,x}{1 + \alpha\,h\,x}$$
 
-- $\alpha$: attack rate
-- $h$: handling time
+$\alpha$ is the attack rate; $h$ is the handling time.
 :::
 
 ::: {.column width="50%"}
@@ -298,8 +303,7 @@ $$f(x) = \frac{\alpha\,x}{1 + \alpha\,h\,x}$$
 
 $$f(x) = \frac{a\,x}{b + x}$$
 
-- $a$: the maximum
-- $b$: half-saturation, where $f(x) = a/2$
+$a$ is the maximum; $b$ is the half-saturation point, where $f(x) = a/2$.
 :::
 ::::
 
@@ -503,11 +507,11 @@ again.
 
 :::: {.columns}
 ::: {.column width="45%"}
-**Git** tracks changes in files:
+**Git** tracks changes in files. No more multiple versions of a file: you can
+always go back.
 
-- no more multiple versions of a file: you can always go back
-- records what was added or removed in each version
-- lets several people work on files and combine their changes
+It records what was added or removed in each version, and lets several people
+work on the same files and combine their changes.
 
 **GitHub** stores Git repositories online, can be used to edit files, and can
 even run analyses for you
@@ -525,14 +529,16 @@ repository ("repo") is a folder that Git tracks.
 
 ## Why use GitHub? {.smaller}
 
-- A secure backup of your code (in case your computer dies)
-- Easier when you use more than one computer
-- Collaboration
-- Transparency and reproducibility, if you make it public
-- Other people can use your code (forking and copying)
-- Increasingly expected of biologists
-- Can be archived and cited, for example through Zenodo
-- **Grad students have to; undergrads get extra credit**
+| For you | For others |
+|---|---|
+| a secure backup, in case your computer dies | collaboration |
+| easier when you use more than one computer | transparency and reproducibility, if you make it public |
+| | they can use your code (forking and copying) |
+| | it can be archived and cited, for example through Zenodo |
+
+Increasingly expected of biologists.
+
+**Grad students have to; undergrads get extra credit.**
 
 ::: {.notes}
 One minute.
@@ -567,10 +573,11 @@ rerun.
 it starts, so if Git was installed while RStudio was open, it does not know Git
 is there yet.
 
-Then check: **Tools → Global Options → Git/SVN**
+Then open **Tools → Global Options → Git/SVN** and check two things:
 
-- the **Git executable** box shows a path (Windows: `C:/Program Files/Git/bin/git.exe`)
-- **Enable version control interface for RStudio projects** is ticked
+The **Git executable** box shows a path (Windows: `C:/Program Files/Git/bin/git.exe`).
+
+**Enable version control interface for RStudio projects** is ticked.
 
 No Git tab yet? That's expected: it appears once you open a project that Git
 tracks, which is the next few steps.

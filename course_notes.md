@@ -136,7 +136,7 @@ From midterm feedback, Fall 2025:
   reason as the em-dashes: they had already gone out to students. Fix both in the
   same pass.
 
-  Progress: Lectures 01, 02 and 03 were rebuilt in Quarto on 2026-11-18 with
+  Progress: Lectures 01, 02, 03 and 04 were rebuilt in Quarto on 2026-11-18 with
   US spelling and no em-dashes (the Lecture 02 file name is unchanged).
 
   Where they are, as of September 2026:
@@ -375,6 +375,8 @@ Two things that made it work and are worth preserving:
   - Lecture 3: the Duncan and Duncan (2000) seed predation data in "One dataset,
     three answers", "Likelihood and Bayes, drawn" and "Same data, same
     conclusion" (all three need new numbers, ideally computed at render time).
+  - Lecture 4: the long and wide format tables use the same seed predation
+    data (stations, dates, `psd` and `uva`).
 
   Keep Bolker's frameworks and figures, such as Table 1.1 and the Figure 1.5
   flowchart; it is his datasets and worked examples that should change. Check
@@ -736,6 +738,9 @@ with four work pauses runs about an hour.
   **Done 2026-11-18** in the Quarto rebuild of Lecture 2: a "Write code in a
   script, not the console" slide after the RStudio panes, with a first
   type-and-run block. The Lecture 4 reminder is still to do.
+
+  **Lecture 4 reminder done 2026-11-18** in its Quarto rebuild: a "Work in a
+  script" slide just before the first file is read.
 
 - [x] **Lecture 2 mislabels the Holling type II parameters. Show both forms.**
   The deck writes f(x) = ax/(b + x) and says "Here, a and b are attack rate and

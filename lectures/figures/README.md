@@ -47,6 +47,7 @@ source and license here whenever a new one is added.**
 | `02_holling_curve.png` | A Holling type II curve (prey eaten per predator against prey density), drawn in R, used in Lecture 2 | Original Google Slides deck | Brian Maitner | Our own work | 2026-11-18 |
 | `02_r_console.png`, `02_rstudio*.png`, `02_github_*.png` | Screenshots of R, RStudio and GitHub, some with the slide's arrows and labels baked in, used in Lecture 2 | Original Google Slides deck | Brian Maitner | Our own screenshots | 2026-11-18 |
 | `03_flowchart_1.png` to `03_flowchart_9.png`, `03_flowchart_walk.png` | The modeling process flowchart (after Bolker Figure 1.5), in the nine build stages of the original slides, used in Lecture 3 | Original Google Slides deck | Brian Maitner | Our own drawing | 2026-11-18 |
+| `04_amphibians_xlsx.png` | Screenshot of the top of `data/European_amphibians/oo_32985.xlsx` open in Excel, showing the title rows above the real column names, used in Lecture 4 | Original Google Slides deck | Brian Maitner | Our own screenshot; the data are CC0 (Trochet et al. 2014) | 2026-11-18 |
 
 The Lecture 1 images were taken from the 2025 Google Slides deck when it was
 converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is

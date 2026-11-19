@@ -86,9 +86,12 @@ in Fall 2026, where Fall 2025 had sent students off to work through 1.7 alone.
 
 ## The story so far {.smaller}
 
-- Lecture 1: why we need statistics, and why we do it in R
-- Lecture 2: the choices behind a model, and where its scatter comes from
-- **Today:** the different ways to turn data into an answer, and our first real code
+**Lecture 1:** why we need statistics, and why we do it in R.
+
+**Lecture 2:** the choices behind a model, and where its scatter comes from.
+
+**Today:** the different ways to turn data into an answer, and our first real
+code.
 
 ::: {.notes}
 Thirty seconds.
@@ -100,11 +103,7 @@ Thirty seconds.
 
 . . .
 
-**Three:**
-
-- **Frequentist**
-- **Likelihood**
-- **Bayesian**
+**Three:** frequentist, likelihood, and Bayesian.
 
 This course focuses mostly on **likelihood**.
 
@@ -118,9 +117,10 @@ what a probability means are few.
 
 Bolker's example, from Duncan and Duncan (2000):
 
-- Seeds at **941 stations** in Kibale, Uganda
-- Two species: *Polyscias* (tiny seeds) and *Pseudospondias* (seeds of about 50 g)
-- Seeds were taken at **51** stations
+Seeds at **941 stations** in Kibale, Uganda, from two species: *Polyscias*
+(tiny seeds) and *Pseudospondias* (seeds of about 50 g).
+
+Seeds were taken at **51** stations.
 
 **Does being taken depend on species?**
 
@@ -352,9 +352,10 @@ the answer; and the answers usually raise new questions.
 
 Consider two levels:
 
-- **General:** does disease select against cannibalism in tiger salamanders?
-- **Specific:** what is the difference in the probability of becoming a cannibal
-  between populations A and B?
+**General:** does disease select against cannibalism in tiger salamanders?
+
+**Specific:** what is the difference in the probability of becoming a cannibal
+between populations A and B?
 
 General is how you **talk** about the question. Specific is how you **test** it.
 
