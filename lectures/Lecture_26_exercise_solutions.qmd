@@ -1,0 +1,126 @@
+---
+title: "Code and data style: worked solutions"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 26"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## How to use this
+
+The three exercises from Lecture 26, solved. Your versions may differ in names
+and layout and still be right: the checks are what matter.
+
+::: {.notes}
+Posted after class.
+:::
+
+## Set up {.smaller}
+
+```{r}
+library(tidyverse)
+library(lintr)
+library(biometrydata)
+
+avo <- avonet
+```
+
+## Restyle the hawks {.smaller}
+
+```{r}
+hawks <- avo |>
+  filter(Family1 == "Accipitridae")
+mean_hawk_mass <- mean(hawks$Mass, na.rm = TRUE)
+habitat_summary <- hawks |>
+  group_by(Habitat) |>
+  summarise(mean_mass = mean(Mass),
+            mean_wing = mean(Wing.Length))
+
+nrow(hawks)
+mean_hawk_mass
+habitat_summary
+```
+
+## Restyle the hawks: the lint check {.smaller}
+
+The same code, given to `lint()` as text. Your `lint("hawks.R")` should also
+come back empty.
+
+```{r}
+clean <- 'hawks <- avo |>
+  filter(Family1 == "Accipitridae")
+mean_hawk_mass <- mean(hawks$Mass, na.rm = TRUE)
+habitat_summary <- hawks |>
+  group_by(Habitat) |>
+  summarise(mean_mass = mean(Mass),
+            mean_wing = mean(Wing.Length))
+'
+lint(text = clean)
+```
+
+If `lint()` says "Missing terminal newline", put the cursor after the last line
+of your file and press Enter.
+
+## Bobwhite, one column per year {.smaller}
+
+```{r}
+bw_wide <- bobwhite_counts |>
+  select(route, year, count) |>
+  pivot_wider(names_from = year, values_from = count)
+
+dim(bw_wide)
+sum(is.na(bw_wide))
+bw_wide[1:4, 1:6]
+```
+
+The wide version is easier to read and shows the gaps. `glmer()` needs the long
+version, with year and count as variables.
+
+## Bobwhite: for anyone fast {.smaller}
+
+```{r}
+# back to long: every empty cell becomes a row, unless you drop them
+bw_wide |>
+  pivot_longer(cols = -route, names_to = "year", values_to = "count") |>
+  nrow()
+bw_wide |>
+  pivot_longer(cols = -route, names_to = "year", values_to = "count",
+               values_drop_na = TRUE) |>
+  nrow()
+
+# without route, nothing identifies a row: one row of list-columns, and a warning
+bobwhite_counts |>
+  select(year, count) |>
+  pivot_wider(names_from = year, values_from = count) |>
+  dim()
+```
+
+That "not uniquely identified" warning almost always means an ID column is
+missing.
+
+## The most pointed wings {.smaller}
+
+```{r}
+avo |>
+  # Group the species by family
+  group_by(Family1) |>
+  # Keep families with at least 10 species
+  filter(n() >= 10) |>
+  # Average each family's hand-wing index
+  summarise(mean_hwi = mean(Hand.Wing.Index, na.rm = TRUE)) |>
+  # Sort from most to least pointed
+  arrange(desc(mean_hwi))
+```
+
+Swifts first, hummingbirds second, penguins last.
