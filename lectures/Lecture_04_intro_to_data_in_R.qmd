@@ -304,6 +304,7 @@ Download **data/European_amphibians/oo_32985.xlsx** into the same place, then:
 ::: {.type-it}
 ```{r}
 #| eval: false
+# the wrong function, on purpose: see what R does
 amphibians <- read.csv("data/European_amphibians/oo_32985.xlsx")
 ```
 :::
@@ -313,18 +314,25 @@ This is an Excel file. Try it anyway.
 **What happens? Why?**
 
 ::: {.notes}
-Two minutes. Let them run it before the next slide. It does not error: it warns
-and returns nonsense, which is worse and more instructive.
+Two minutes. Let them run it before the next slide. What they see depends on
+the computer. On Windows it does not error: it warns and returns nonsense,
+which is worse and more instructive. On Linux, where the course's automated
+check runs, it stops with an error instead, and a Mac probably does the same
+(not yet confirmed in class). Ask the room who got
+which: the same file and the same code giving different results on different
+machines is itself the lesson about binary formats.
 :::
 
 ## That's not text {.smaller}
 
+Depending on your computer, a warning or an error:
+
 ```
-Warning message:
 line 1 appears to contain embedded nulls
+duplicate 'row.names' are not allowed
 ```
 
-`.xlsx` isn't text. It's a zip file full of XML.
+Either way, `.xlsx` isn't text. It's a zip file full of XML.
 
 `read.csv()` reads **text**. It tried.
 
@@ -332,8 +340,9 @@ line 1 appears to contain embedded nulls
 One minute. An .xlsx really is a zip archive: rename one to .zip and you can
 open it. That is why base R can't read it without help, and it ties straight
 back to "Why plain text?". A .csv you can open in Notepad; an .xlsx you cannot.
-The amphibians object they made is one column of garbage, and it gets replaced
-on the next slides.
+Where it only warned, the amphibians object is one column of garbage; where it
+errored, there is no amphibians object yet. Either way it gets made properly on
+the next slides.
 :::
 
 ## You need a package {.smaller}
