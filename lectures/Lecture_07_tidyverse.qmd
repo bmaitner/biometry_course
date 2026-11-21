@@ -1,0 +1,1001 @@
+---
+title: "Into the tidyverse"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 7"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        .credit { font-size: 0.5em; font-style: italic; color: #555555; }
+        .small-table table { font-size: 0.8em; }
+        .tiny-table table { font-size: 0.7em; }
+        .out pre code { font-size: 1em; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| echo: false
+suppressPackageStartupMessages(library(tidyverse))
+options(width = 60, pillar.width = 60)
+avo <- read_rds("../data/Avonet/AVONET1_BirdLife.rds")
+big <- function(x){ format(round(x), big.mark = ",") }
+
+parrot_fam1 <- avo[which(avo$Family1 == "Psittacidae"), ]
+parrot_fam2 <- avo |> filter(Family1 == "Psittacidae")
+forest_parrots <- avo |> filter(Family1 == "Psittacidae" & Habitat == "Forest")
+p_or_c <- avo |> filter(Family1 %in% c("Psittacidae", "Cacatuidae"))
+forest_p_or_c <- avo |>
+  filter((Family1 == "Psittacidae" | Family1 == "Cacatuidae") & Habitat == "Forest")
+no_parens <- avo |>
+  filter(Family1 == "Psittacidae" | Family1 == "Cacatuidae" & Habitat == "Forest")
+raptors_no_parens <- avo |>
+  filter(Habitat == "Forest" & Trophic.Level == "Carnivore" &
+         Family1 == "Accipitridae" | Family1 == "Falconidae")
+raptors <- avo |> filter(Habitat == "Forest" & Trophic.Level == "Carnivore" &
+                         Family1 %in% c("Accipitridae", "Falconidae"))
+longest <- avo |> arrange(desc(Wing.Length)) |> slice(1)
+beak_diff <- avo |>
+  mutate(beak_length_difference = Beak.Length_Culmen - Beak.Length_Nares) |>
+  arrange(desc(beak_length_difference))
+avo_w_family_mass <- avo |> group_by(Family1) |> mutate(fam_mean_mass = mean(Mass))
+avo_frac <- avo_w_family_mass |> mutate(frac = Mass / sum(Mass))
+avo_frac_fixed <- avo_w_family_mass |> ungroup() |> mutate(frac = Mass / sum(Mass))
+habitats <- avo |> group_by(Habitat) |>
+  summarise(n = n(), mean_mass = mean(Mass)) |> arrange(desc(mean_mass))
+biggest_in_fams <- avo |> group_by(Family1) |> slice_max(Mass, n = 1)
+smallest_in_fams <- avo |> group_by(Family1) |> slice_min(Mass, n = 1)
+```
+
+## Today's agenda {.smaller}
+
+1. The tidyverse, and why
+2. Operating on rows: `filter()`, `arrange()`, `distinct()`
+3. Operating on columns: `mutate()`, `select()`, `rename()`, `relocate()`
+4. Grouping: `group_by()`, `summarise()`, `slice_*()`
+
+::: {.notes}
+Reading for today: R for Data Science, chapter 3 (data transformation).
+
+In Fall 2026 this deck ran out of time at "What went wrong?" (slide 34 here),
+and the last six slides (the ungroup block, the grouping Your turn, and the
+slice functions) carried over to the start of Lecture 8. If it runs long again,
+the buy-back candidates are the "& and |" pair (the parentheses slide and its
+Your turn): the first Your turn already covers the same ground, and the
+parentheses question can be asked aloud.
+:::
+
+## The story so far {.smaller}
+
+**Lecture 4:** reading data into R.
+
+**Lectures 5 and 6:** exploring it with base R: `which()`, `[ , ]` and `$`.
+
+**Today:** the same jobs, and more, with the tidyverse.
+
+::: {.notes}
+Thirty seconds. Everything they did with which() last week has a tidyverse
+equivalent today, and the first comparison slide shows the two side by side.
+:::
+
+# The tidyverse
+
+## tidyverse {.smaller}
+
+**A collection of R packages** built on a similar syntax.
+
+**Designed to work together.**
+
+**Very useful for data wrangling and data visualization.**
+
+**Many people find them more intuitive than base R.**
+
+::: {.notes}
+One minute. Today is dplyr, the wrangling package. Next class is ggplot2, the
+plotting package. Both load with library(tidyverse).
+:::
+
+## dplyr {.smaller}
+
+**Used for data wrangling.**
+
+**More readable than base R** (to most).
+
+**The downside:** the syntax is still evolving.
+
+**Designed for use with pipes:** `%>%` or `|>`
+
+::: {.notes}
+One minute. "Still evolving" is worth a sentence: answers on Stack Overflow from
+a few years ago sometimes use functions that have since been renamed or retired.
+`|>` is the pipe built into R since 4.1, and it's the one we use; `%>%` is the
+older one from the magrittr package, and they'll see it in older code.
+:::
+
+## dplyr {.smaller}
+
+dplyr functions:
+
+| Step | |
+|---|---|
+| Take in | a data.frame (or tibble) |
+| Do | something |
+| Return | a data.frame (or tibble) |
+
+This means that you can easily chain functions together with pipes!
+
+```{r}
+#| eval: false
+data |>
+  do_something() |>
+  do_something_else()
+```
+
+::: {.notes}
+Two minutes. Read the pipe aloud as "and then". A tibble is the tidyverse's
+version of a data frame: it prints more tidily, and that's most of the
+difference they will notice.
+:::
+
+## Tidyverse update! {.smaller}
+
+:::: {.columns}
+::: {.column width="60%"}
+**genzplyr:** [hadley.github.io/genzplyr](https://hadley.github.io/genzplyr/index.html)
+
+Does what dplyr does, but using Gen Z slang.
+
+Use it on Assignment 2 for 1% extra credit.
+:::
+
+::: {.column width="40%"}
+![](figures/07_genzplyr_logo.png){width="85%"}
+:::
+::::
+
+::: {.notes}
+One minute, for fun. It's a real package by dplyr's own author, Hadley Wickham.
+:::
+
+# Getting set up
+
+## Getting data {background-color="#f0f4f8" .smaller}
+
+We'll work with the AVONET data again.
+
+::: {.type-it}
+```{r}
+#| eval: false
+library(tidyverse)
+avo <- read_rds("https://tinyurl.com/avonetbirddata")
+```
+:::
+
+**Go ahead and load the data now.**
+
+::: {.notes}
+Two minutes. read_rds() reads R's own file format, which keeps the column types
+exactly as they were saved, so there's nothing to check the way there was with
+read.csv() in Lecture 4. The short link points at the .rds copy in the course
+repository.
+:::
+
+# Operating on rows
+
+## Operating on rows {.smaller}
+
+We're going to start by talking about functions that operate on rows:
+
+| Function | What it does |
+|---|---|
+| `filter()` | keeps the rows that meet a condition |
+| `arrange()` | sorts the rows |
+| `distinct()` | removes duplicate rows |
+
+::: {.notes}
+Thirty seconds.
+:::
+
+## Filtering data {background-color="#f0f4f8" .smaller}
+
+**base R:**
+
+::: {.type-it}
+```{r}
+#| eval: false
+parrot_fam1 <- avo[which(avo$Family1 == "Psittacidae"), ]
+```
+:::
+
+**dplyr:**
+
+::: {.type-it}
+```{r}
+#| eval: false
+parrot_fam2 <- avo |>
+  filter(Family1 == "Psittacidae")
+```
+:::
+
+**Try these now and see if you notice any differences.**
+
+::: {.fragment}
+**Check:** the same `r nrow(parrot_fam2)` rows. The row names differ: base R
+keeps the originals (`r rownames(parrot_fam1)[1]`, `r rownames(parrot_fam1)[2]`,
+...), `filter()` renumbers from 1.
+:::
+
+::: {.notes}
+Three minutes. The base R line is last week's. The dplyr version doesn't repeat
+avo$ and doesn't need which() or the trailing comma, and those are the three
+things students got wrong most often last week.
+:::
+
+## Filtering on multiple columns {.smaller}
+
+In R we can use:
+
+| | Meaning |
+|---|---|
+| `&` (AND) | multiple conditions have to be met |
+| <code>&#124;</code> (OR, vertical line) | either condition can be met |
+
+This can be used to make our filtering more complex.
+
+(Note that my favorite Star Wars media is thus "&|".)
+
+::: {.notes}
+One minute. "Andor", for anyone who missed it. The vertical line is above the
+Enter key on most keyboards, with Shift.
+:::
+
+## Filtering on multiple columns: & {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+forest_parrots1 <- avo[which(avo$Family1 == "Psittacidae" &
+                             avo$Habitat == "Forest"), ]
+
+forest_parrots2 <- avo |>
+  filter(Family1 == "Psittacidae" &
+           Habitat == "Forest")
+
+forest_parrots3 <- avo |>
+  filter(Family1 == "Psittacidae") |>
+  filter(Habitat == "Forest")
+```
+:::
+
+**Are these all equivalent? Try them and find out.**
+
+::: {.fragment}
+**Check:** yes, all three have `r nrow(forest_parrots)` rows (only the row names
+differ in the base R one).
+:::
+
+::: {.notes}
+Three minutes. Two filters in a row is the same as one filter with &, which is
+the pipe doing what it promises: each step takes the output of the last.
+:::
+
+## Filtering on multiple columns: & {.smaller}
+
+**Your turn!**
+
+Filter the `avo` dataset to only include:
+
+A single order (of your choice)
+
+A single trophic level
+
+::: {.notes}
+Four minutes. Students will need the spellings: unique(avo$Order1) and
+unique(avo$Trophic.Level) list them, and both lines are in
+R_scripts/Lecture_07_examples.R.
+:::
+
+## Filtering on multiple columns: | {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+parrots_or_cockatoos <- avo |>
+  filter(Family1 == "Psittacidae" |
+           Family1 == "Cacatuidae")
+```
+:::
+
+Alternative using `%in%` and a vector:
+
+::: {.type-it}
+```{r}
+#| eval: false
+parrots_or_cockatoos2 <- avo |>
+  filter(Family1 %in% c("Psittacidae", "Cacatuidae"))
+```
+:::
+
+**Try running these now.**
+
+::: {.fragment}
+**Check:** `r nrow(p_or_c)` rows each.
+:::
+
+::: {.notes}
+Two minutes. %in% is the one to remember: with five families, the | version is
+five lines and the %in% version is still one.
+:::
+
+## Filtering on multiple columns: & and | {background-color="#f0f4f8" .smaller}
+
+Let's say we wanted parrots OR cockatoos, but only the ones that live in
+forests. We need to make our filter more complex: we can combine `&`, `|`, and
+`()` to achieve this.
+
+::: {.type-it}
+```{r}
+#| eval: false
+forest_p_or_c <- avo |>
+  filter((Family1 == "Psittacidae" | Family1 == "Cacatuidae") &
+           Habitat == "Forest")
+table(forest_p_or_c$Habitat)
+```
+:::
+
+**Try this now! Then delete the grouping parentheses and run it again. What
+changed?**
+
+::: {.fragment}
+**Check:** `r nrow(forest_p_or_c)` rows, all forest. Without the parentheses,
+`r nrow(no_parens)`, from `r length(table(no_parens$Habitat))` habitats: R does
+`&` before `|`, so it reads "parrots anywhere, or forest cockatoos".
+:::
+
+::: {.notes}
+Four minutes. Let them run both before clicking. The table() line is there so
+the mistake is visible: with the parentheses there is one habitat, without them
+there are six, from desert to woodland.
+
+The rule: & is done before |, the way multiplication is done before addition.
+Without parentheses, R reads A | B & C as A | (B & C), which here means every
+parrot plus only the forest cockatoos. The habit worth teaching is to write the
+parentheses whenever & and | appear together, so nobody (including you, later)
+has to remember the rule.
+
+Nothing errors. The only sign is a row count that is too big, which is why the
+table() check is worth the extra line.
+:::
+
+## Filtering on multiple columns: & and | {.smaller}
+
+**Your turn:**
+
+**Make a version of the data that only contains forest carnivores in either the
+family "Accipitridae" or "Falconidae".**
+
+::: {.fragment}
+**Check:** `r nrow(raptors)` rows: `r sum(raptors$Family1 == "Accipitridae")`
+hawks and eagles, `r sum(raptors$Family1 == "Falconidae")` falcons. Got
+`r nrow(raptors_no_parens)`? Check your parentheses.
+:::
+
+::: {.notes}
+Four minutes. Three conditions, one of which is an OR: the same shape as the
+last slide, so it practices the parentheses. Without them you get every falcon
+in the dataset, whatever its habitat or diet. The %in% version is the tidiest
+answer and needs no parentheses at all, which is worth pointing out.
+:::
+
+## Sorting your data {background-color="#f0f4f8" .smaller}
+
+We can use `arrange()` to sort by a column.
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_by_mass <- avo |>
+  arrange(Mass)
+
+avo_by_mass_dec <- avo |>
+  arrange(-Mass)
+
+avo_by_mass_dec2 <- avo |>
+  arrange(desc(Mass))
+```
+:::
+
+**Use this syntax to figure out which bird has the longest wings.**
+
+::: {.fragment}
+**Check:** the Andean condor, *`r longest$Species1`*, at `r longest$Wing.Length` mm.
+:::
+
+::: {.notes}
+Three minutes. The minus sign only works on numbers; desc() works on text too,
+which is why it's the one to use.
+:::
+
+## distinct {background-color="#f0f4f8" .smaller}
+
+Used to remove duplicate rows:
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_no_dupes <- avo |>
+  distinct()
+```
+:::
+
+Can also be used on particular fields, or combinations of fields:
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_fams <- avo |>
+  distinct(Family1)
+
+family_trophic_levels <- avo |>
+  distinct(Family1, Trophic.Level)
+```
+:::
+
+**What do these two data frames contain?**
+
+::: {.fragment}
+**Check:** the `r nrow(distinct(avo, Family1))` families, and the
+`r nrow(distinct(avo, Family1, Trophic.Level))` family and trophic level
+combinations that occur. (`avo` has no duplicate rows: still
+`r big(nrow(distinct(avo)))`.)
+:::
+
+::: {.notes}
+Three minutes.
+:::
+
+# Operating on columns
+
+## Operating on columns {.smaller}
+
+There are also functions that operate on columns:
+
+| Function | What it does |
+|---|---|
+| `mutate()` | makes new columns, or changes existing ones |
+| `select()` | keeps (or drops) columns |
+| `rename()` | renames columns |
+| `relocate()` | moves columns |
+
+::: {.notes}
+Thirty seconds.
+:::
+
+## Mutate {background-color="#f0f4f8" .smaller}
+
+Can be used to create new variables or modify existing ones. Let's create a
+variable calculating the difference between the two beak length measures:
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_w_beak_diff <- avo |>
+  mutate(beak_length_difference =
+           Beak.Length_Culmen - Beak.Length_Nares)
+```
+:::
+
+**Which bird has the largest difference between these measurements?**
+
+**Is this an error?**
+
+::: {.fragment}
+**Check:** a kiwi, *`r beak_diff$Species1[1]`*: a difference of
+`r beak_diff$beak_length_difference[1]` mm.
+:::
+
+::: {.notes}
+Four minutes. Culmen length is measured from the feathers at the base of the
+beak, Nares from the nostril. All three top spots are kiwis. Not an error:
+kiwis are the only birds with their nostrils at the tip of the beak, which is
+how they smell for worms. A callback to the kiwi in Lecture 5.
+
+Worth asking: what about the other end? Sort ascending and a few species have a
+negative difference, a nostril further from the tip than the feathers. That one
+is worth a second look in a real analysis.
+:::
+
+## Select {background-color="#f0f4f8" .smaller}
+
+Selects fields to keep (or remove).
+
+Keep only family, species, mass:
+
+::: {.type-it}
+```{r}
+#| eval: false
+fsm <- avo |>
+  select(Family1, Species1, Mass)
+```
+:::
+
+Toss range size:
+
+::: {.type-it}
+```{r}
+#| eval: false
+no_rangesize <- avo |>
+  select(!Range.Size)
+```
+:::
+
+**Try these out now.**
+
+::: {.notes}
+Two minutes. ! means "not", the same as in last week's !is.na().
+:::
+
+## Select {background-color="#f0f4f8" .smaller}
+
+We can also use the `:` syntax to select multiple fields.
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_tax <- avo |>
+  select(Species1:Order1)
+```
+:::
+
+**Try this and see if you understand what it did.**
+
+**How would you remove Primary.Lifestyle, Range.Size and everything in
+between?**
+
+::: {.fragment}
+**Check:** `select(!(Primary.Lifestyle:Range.Size))`, which leaves
+`r ncol(select(avo, !(Primary.Lifestyle:Range.Size)))` of the
+`r ncol(avo)` columns.
+:::
+
+::: {.notes}
+Three minutes. Species1:Order1 means "from Species1 to Order1, in the order the
+columns sit", so it keeps three columns. names(avo) shows the order.
+:::
+
+## Rename {background-color="#f0f4f8" .smaller}
+
+**Let's say we wanted to remove the 1s from the taxonomic variables:**
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_tax1 <- avo |>
+  rename(Species = Species1,
+         Family = Family1,
+         Order = Order1)
+```
+:::
+
+**Note that you can do this during a `select()` as well:**
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_tax2 <- avo |>
+  select(Species = Species1,
+         Family = Family1,
+         Order = Order1,
+         Mass)
+```
+:::
+
+**Try these both out. How do they differ?**
+
+::: {.fragment}
+**Check:** `rename()` keeps all `r ncol(avo)` columns; `select()` keeps only the
+4 you name.
+:::
+
+::: {.notes}
+Two minutes. The new name goes on the left, the same way as in mutate().
+:::
+
+## Relocate {background-color="#f0f4f8" .smaller}
+
+Often easier to have important variables on the left-most columns.
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_relocated <- avo |>
+  relocate(Order1, Family1, Species1, Mass, Wing.Length)
+```
+:::
+
+**Try this and look at the avo_relocated data frame.**
+
+**Why are only some of the variables relocated?**
+
+::: {.notes}
+Two minutes. relocate() moves the columns you name to the front, in the order
+you name them, and leaves everything else where it was, after them. Nothing is
+dropped: that's the difference from select().
+:::
+
+# Grouping
+
+## Grouping {.smaller}
+
+You can "group" rows of data together. This allows you to create summary
+statistics for those groups, and it is usually combined with another function
+like `summarise()`.
+
+Important functions:
+
+| Function | What it does |
+|---|---|
+| `group_by()` | marks the groups |
+| `ungroup()` | removes them |
+| `summarise()` | one row per group |
+| `slice_*()` | picks rows within each group |
+
+::: {.notes}
+One minute. summarise() and summarize() are the same function, so either
+spelling works.
+:::
+
+## Using group_by() {background-color="#f0f4f8" .smaller}
+
+Let's add in family level mean mass information:
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_w_family_mass <- avo |>
+  group_by(Family1) |>
+  mutate(fam_mean_mass = mean(Mass))
+```
+:::
+
+**Run this and see if the results make sense.**
+
+::: {.notes}
+Three minutes. Every row gets its own family's mean: all the Accipitridae rows
+say `r big(avo_w_family_mass$fam_mean_mass[avo_w_family_mass$Family1 == "Accipitridae"][1])`
+g. Still `r big(nrow(avo_w_family_mass))` rows. Remember this object: it comes
+back in a few slides.
+:::
+
+## summarise {background-color="#f0f4f8" .smaller}
+
+If we ONLY wanted the data at the family level, we can use `summarise()`:
+
+::: {.type-it}
+```{r}
+#| eval: false
+family_mass <- avo |>
+  group_by(Family1) |>
+  summarise(Mean_Mass = mean(Mass))
+```
+:::
+
+**Try this. How many columns and how many rows do you get back?**
+
+**Why these?**
+
+::: {.fragment}
+**Check:** `r nrow(distinct(avo, Family1))` rows and 2 columns: one row per
+family, and only the grouping column plus the one you made.
+:::
+
+::: {.notes}
+Three minutes. The contrast with the last slide is the point: mutate() keeps
+every row, summarise() collapses each group to one.
+:::
+
+## More than one statistic {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo |>
+  group_by(Trophic.Level) |>
+  summarise(n           = n(),
+            mean_mass   = mean(Mass),
+            median_mass = median(Mass))
+```
+:::
+
+`n()` counts the rows in each group.
+
+**Try this and inspect the output.**
+
+::: {.notes}
+Three minutes. Two things to draw out. There's a fifth row, NA: five species
+have no trophic level, and group_by() keeps them as their own group. And the
+scavenger mean and median are close, while every other group's mean is several
+times its median: the long right tail from Lecture 5.
+:::
+
+## What went wrong? {background-color="#f0f4f8" .smaller}
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo |>
+  group_by(Trophic.Level) |>
+  summarise(mean_range = mean(Range.Size))
+```
+:::
+
+**What do you notice about the output?**
+
+**What happened and what should we do?**
+
+::: {.fragment}
+**Check:** NA for every group except scavengers.
+`r sum(is.na(avo$Range.Size))` species have no range size, and one NA makes the
+whole mean NA. The fix: `mean(Range.Size, na.rm = TRUE)`.
+:::
+
+::: {.notes}
+Three minutes. The same na.rm from Lecture 4, now inside summarise(). The
+scavengers come out fine only because none of the 20 is missing a range size.
+:::
+
+## Still grouped {background-color="#f0f4f8" .smaller}
+
+**Remember this, from earlier?**
+
+```{r}
+#| eval: false
+avo_w_family_mass <- avo |>
+  group_by(Family1) |>
+  mutate(fam_mean_mass = mean(Mass))
+```
+
+**Simple question. How many species are in the dataset?**
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_w_family_mass |>
+  summarise(total_species = n())
+```
+:::
+
+**Try it. Is that what you expected?**
+
+::: {.notes}
+Two minutes. They know the answer: it has been 11,009 since Lecture 5. Getting
+243 rows back instead of one number is unmistakably wrong, which is why this is
+the right question to ask first. Let them sit with it: nothing in the line they
+just typed mentions families.
+
+For comparison, run the same thing on avo itself and get one row reading 11009.
+Same verb, same argument, different answer; the only difference is which object
+it was pointed at.
+:::
+
+## group_by() is sticky {background-color="#f0f4f8" .smaller}
+
+Grouping stays attached to the data until you remove it.
+
+**R does tell you:**
+
+::: {.out}
+```{r}
+#| echo: false
+cat(capture.output(print(avo_w_family_mass))[1:2], sep = "\n")
+```
+:::
+
+**The fix:**
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_w_family_mass |>
+  ungroup() |>
+  summarise(total_species = n())
+```
+:::
+
+::: {.notes}
+Three minutes. group_by() doesn't do anything on its own. It attaches a label
+saying "treat this as 243 separate tables from now on", and every verb
+downstream obeys until something removes it. mutate() never removes it, which is
+why the object is still carrying the label many slides later. summarise()
+removes one level, which is why the summarise slide gave one row per family.
+
+Do it live: print avo_w_family_mass, point at the Groups line, then print the
+ungrouped version and show the line is gone. The lesson is bigger than
+ungroup(): read the header R prints for you. Same habit as str() in Lecture 4.
+:::
+
+## The quiet version {background-color="#f0f4f8" .smaller}
+
+Let's calculate the fraction of total mass represented by each species:
+
+::: {.type-it}
+```{r}
+#| eval: false
+avo_frac <- avo_w_family_mass |>
+  mutate(frac = Mass / sum(Mass))
+```
+:::
+
+`r big(nrow(avo_frac))` rows. Right shape. Looks fine.
+
+::: {.out}
+```{r}
+#| echo: false
+avo_frac |> ungroup() |> filter(Family1 == "Struthionidae") |>
+  select(Species1, Mass, frac) |> as.data.frame()
+```
+:::
+
+Half of all bird mass is one ostrich?
+
+::: {.type-it}
+```{r}
+#| eval: false
+sum(avo_frac$frac)
+```
+:::
+
+**What happened?**
+
+::: {.fragment}
+**Check:** `r sum(avo_frac$frac)`, not 1.
+:::
+
+::: {.notes}
+Three minutes, and the important slide of the three. "Still grouped" failed
+loudly, with the wrong number of rows. This one returns exactly the right number
+of rows, with a plausible-looking column, and is completely wrong.
+
+sum(Mass) inside a grouped data frame is the family total, not the dataset
+total. There are two ostrich species with identical masses, so each is half of
+its family. The fractions sum to 1 within every family, so across 243 families
+they sum to 243. With ungroup() first, the ostrich comes out at
+`r sprintf("%.4f", max(avo_frac_fixed$frac))`, and the column sums to 1.
+
+Tie it back: this is the same failure as the y axis trap in Lecture 6. A result
+that is correctly computed, correctly displayed, and answers a different
+question than the one you asked. Nothing errors and nothing warns.
+:::
+
+## Your turn: Grouping {.smaller}
+
+Using `group_by()` and `summarise()`:
+
+1. How many species are in each Habitat?
+2. Which habitat has the heaviest birds on average?
+3. Add the number of species to your answer for 2. Does that change which
+   habitat you would report?
+4. Take `avo_w_family_mass` and find the single heaviest bird in the whole
+   dataset. Watch the row count.
+
+*(Watch out for NAs.)*
+
+::: {.fragment}
+**Check:** forest has the most species (`r big(sum(avo$Habitat %in% "Forest"))`);
+marine birds are heaviest on average (`r big(habitats$mean_mass[1])` g, from
+`r habitats$n[1]` species); question 4 gives
+`r nrow(slice_max(avo_w_family_mass, Mass, n = 1))` rows until you `ungroup()`,
+then the two ostriches.
+:::
+
+::: {.notes}
+Eight minutes. The NA warning: there's an NA habitat group of
+`r habitats$n[is.na(habitats$Habitat)]` species, which ranks third by mean mass.
+
+Question 4 is the ungroup lesson, self-inflicted. The row count is one per
+family plus ties: slice_max() keeps every row tied for the maximum, and plenty
+of small families have species with identical masses. Ungrouped, the two
+ostriches tie at 111,000 g.
+:::
+
+## Slice functions {.smaller}
+
+These return a subset of data. They can be used to see just the first, the last,
+or a random sample; they're useful for examining a subset of data (it speeds up
+analyses), and for subsetting the biggest or smallest values.
+
+| Function | Returns |
+|---|---|
+| `slice_head()` | the first rows |
+| `slice_tail()` | the last rows |
+| `slice_min()` | the rows with the smallest values |
+| `slice_max()` | the rows with the largest values |
+| `slice_sample()` | a random sample of rows |
+
+::: {.notes}
+One minute. All of them take n =, and on grouped data they work within each
+group.
+:::
+
+## Slice functions {background-color="#f0f4f8" .smaller}
+
+To get the largest bird species in each family:
+
+::: {.type-it}
+```{r}
+#| eval: false
+biggest_in_fams <- avo |>
+  group_by(Family1) |>
+  slice_max(Mass, n = 1) |>
+  select(Family1, Species1, Mass)
+```
+:::
+
+**How would we modify this to get the smallest bird in each family?**
+
+**Try it and see if you're right.**
+
+::: {.fragment}
+**Check:** `slice_min(Mass, n = 1)`. Expect more rows than families
+(`r nrow(smallest_in_fams)`): ties are all kept.
+:::
+
+::: {.notes}
+Three minutes. Ties come up again: biggest_in_fams has
+`r nrow(biggest_in_fams)` rows for 243 families. Add with_ties = FALSE to get
+exactly one per family.
+:::
+
+# Wrapping up
+
+## Which tool, when {.smaller}
+
+::: {.tiny-table}
+| You want to | Use |
+|---|---|
+| keep the rows that match a condition | `filter()`, with `&`, <code>&#124;</code>, `%in%` |
+| sort rows | `arrange()`, `desc()` |
+| drop duplicate rows, or list the unique values | `distinct()` |
+| make or change a column | `mutate()` |
+| keep or drop columns | `select()`, with `!` and `:` |
+| rename or reorder columns | `rename()`, `relocate()` |
+| a statistic for every group | `group_by()` then `summarise()` |
+| the biggest, smallest or first rows (per group) | `slice_max()`, `slice_min()`, `slice_head()` |
+| stop working by group | `ungroup()`, and read the `# Groups:` line |
+:::
+
+::: {.notes}
+The slide to photograph.
+:::
+
+## Before next class
+
+Read **R for Data Science, chapter 1**:
+[r4ds.hadley.nz/data-visualize.html](https://r4ds.hadley.nz/data-visualize.html)
+
+Next time: ggplot2
+
+Assignment 1 due Friday, 11:59 pm

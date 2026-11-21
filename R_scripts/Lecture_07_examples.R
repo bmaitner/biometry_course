@@ -51,20 +51,29 @@
 
   # Combining &|
       
-      #Let's only take forest parrots and woodland cockatoos
+      #Let's only take parrots or cockatoos, and only those living in forests
       
-      fp_or_wc <- avo |>
-        filter((Family1 == "Psittacidae" &
-                 Habitat == "Forest")|
-                 (Family1 == "Cacatuidae" &
-                    Habitat == "Woodland"))
+      forest_p_or_c <- avo |>
+        filter((Family1 == "Psittacidae" | Family1 == "Cacatuidae") &
+                 Habitat == "Forest")
       
+      table(forest_p_or_c$Habitat)
       
+      # Without the grouping parentheses, R does & before |, so this reads as
+      # "parrots anywhere, or forest cockatoos". Compare the row counts and the
+      # habitats:
       
-      fp_or_wc2 <- avo[which((avo$Family1 == "Psittacidae" &
-                                     avo$Habitat == "Forest")|
-                                     (avo$Family1 == "Cacatuidae" &
-                                        avo$Habitat == "Woodland")),]
+      no_parens <- avo |>
+        filter(Family1 == "Psittacidae" | Family1 == "Cacatuidae" &
+                 Habitat == "Forest")
+      
+      table(no_parens$Habitat)
+      
+      # The base R version needs the same parentheses
+      
+      forest_p_or_c2 <- avo[which((avo$Family1 == "Psittacidae" |
+                                     avo$Family1 == "Cacatuidae") &
+                                    avo$Habitat == "Forest"),]
       
   # Try limiting the dataset to only
       

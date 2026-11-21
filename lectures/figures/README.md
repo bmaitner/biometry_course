@@ -58,6 +58,7 @@ source and license here whenever a new one is added.**
 | `06_brown_pelican.jpg` | Juvenile brown pelican (*Pelecanus occidentalis*) in flight, Costa Rica, for Pelecanidae, used in Lecture 6 (Comparing groups) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Brown_pelican_(Pelecanus_occidentalis),_Costa_Rica.jpg) | Hobbyfotowiki | CC0 | 2026-11-21 |
 | `06_hamerkop.jpg` | Two hamerkops (*Scopus umbretta*), Lake Baringo, Kenya, for Scopidae, used in Lecture 6 (Comparing groups) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Hamerkop_(Scopus_umbretta),_Kenya.jpg) | Hobbyfotowiki | CC0 | 2026-11-21 |
 | `06_roseate_spoonbill.jpg` | Roseate spoonbill (*Platalea ajaja*), San Blas, Nayarit, Mexico, for the ibises and spoonbills (Threskiornithidae), used in Lecture 6 (Comparing groups) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Roseate_Spoonbill_(Platalea_ajaja)_(8079374345).jpg) | Ron Knight | CC BY 2.0 | 2026-11-21 |
+| `07_genzplyr_logo.png` | Hex logo of the genzplyr package (dplyr with Gen Z slang), used in Lecture 7 | Original Google Slides deck; the logo is `man/figures/logo.png` in [github.com/hadley/genzplyr](https://github.com/hadley/genzplyr) | Hadley Wickham | MIT (the package license) | 2026-11-21 |
 
 The Lecture 1 images were taken from the 2025 Google Slides deck when it was
 converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is
