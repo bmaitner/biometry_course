@@ -530,7 +530,11 @@ boxplot(log10(Mass) ~ Family1, data = pelicans, xlab = "Family1",
         ylab = "log10(Mass)")
 ```
 
-![](figures/06_pelecaniformes.jpg)
+![](figures/06_great_egret.jpg){height="72px" style="margin:0"}
+![](figures/06_shoebill.jpg){height="72px" style="margin:0"}
+![](figures/06_brown_pelican.jpg){height="72px" style="margin:0"}
+![](figures/06_hamerkop.jpg){height="72px" style="margin:0"}
+![](figures/06_roseate_spoonbill.jpg){height="72px" style="margin:0"}
 
 [Photos: Hobbyfotowiki (egret, pelican, hamerkop) and Bildflut (shoebill), CC0;
 Ron Knight (spoonbill), CC BY 2.0. All via Wikimedia Commons.]{.credit}
