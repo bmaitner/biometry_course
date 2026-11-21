@@ -13,7 +13,7 @@ own license.
 | Files | Made by |
 |---|---|
 | `05_*.png` | `R_scripts/Lecture_05_figures.R` |
-| `06_*.png` | `R_scripts/Lecture_06_figures.R` |
+| `06_01_*.png` to `06_06_*.png` | `R_scripts/Lecture_06_figures.R` (the Quarto deck now draws these itself; kept for the script) |
 | `09_*.png` | `R_scripts/Lecture_09_figures.R` |
 
 Regenerate by sourcing the script from the project root, for example
@@ -52,6 +52,8 @@ source and license here whenever a new one is added.**
 | `05_kerkhoff_enquist_2009.png` | Title block of Kerkhoff and Enquist (2009), "Multiplicative by nature", *Journal of Theoretical Biology* 257: 519 to 521, used in Lecture 5 | Original Google Slides deck | Elsevier | Journal copyright; cited on the slide | 2026-11-20 |
 | `05_kiwi.jpg` | Te Tuatahi a nui, a male North Island brown kiwi (*Apteryx mantelli*) on Maungatautari, used in Lecture 5 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TeTuatahianui.jpg) | Maungatautari Ecological Island Trust | Public domain (released by the author) | 2026-11-20 |
 | `05_cassowary.jpg` | Southern cassowary (*Casuarius casuarius*) at Kyiv Zoo, used in Lecture 5 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Casuarius_casuarius_2.jpg) | DoroshenkoE | Public domain (released by the author) | 2026-11-20 |
+| `06_data_sources.png` | Six screenshots of the sources behind the `data/` folders, arranged in one image: Cannicci et al. 2021 (*PNAS*, mangrove invertebrates), Pesant et al. 2015 (*Scientific Data*, Tara Oceans), Keogh 2022 (PANGAEA, Charlie-Gibbs megabenthos), Sauer et al. 2020 (USGS, North American Breeding Bird Survey), NOAA's National Coral Reef Monitoring Program, and Abernathy et al. (Dryad, deer movement), used in Lecture 6 | Original Google Slides deck | the publishers and agencies named | Screenshots of title blocks and landing pages; each shows its own citation | 2026-11-21 |
+| `06_pelecaniformes.jpg` | Five photos in one strip, one per Pelecaniformes family: a great egret, a shoebill, brown pelicans, a hamerkop, and a glossy ibis with a roseate spoonbill, used in Lecture 6 | Original Google Slides deck | **not recorded** | **Unknown: find or replace before the site goes public** | 2026-11-21 |
 
 The Lecture 1 images were taken from the 2025 Google Slides deck when it was
 converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is
