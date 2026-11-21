@@ -531,6 +531,9 @@ boxplot(log10(Mass) ~ Family1, data = pelicans, xlab = "Family1",
 ```
 
 ![](figures/06_pelecaniformes.jpg)
+
+[Photos: Hobbyfotowiki (egret, pelican, hamerkop) and Bildflut (shoebill), CC0;
+Ron Knight (spoonbill), CC BY 2.0. All via Wikimedia Commons.]{.credit}
 :::
 ::::
 
@@ -538,9 +541,10 @@ boxplot(log10(Mass) ~ Family1, data = pelicans, xlab = "Family1",
 Second work pause, about 6 minutes. Calling it "figure 1 of 3" is worth doing:
 it turns an exercise into visible progress on the assignment.
 
-The photos are in boxplot order: a great egret (herons), the shoebill, brown
-pelicans, the hamerkop, and a glossy ibis with a roseate spoonbill. Two of the
-five boxes are single species, which is why they are flat lines.
+The photos are in boxplot order, one per family: a great egret (herons), the
+shoebill, a juvenile brown pelican, two hamerkops, and a roseate spoonbill (ibises
+and spoonbills). Two of the five boxes are single species, the shoebill and the
+hamerkop, which is why they are flat lines.
 
 which() and == are from Lecture 4, and the boxplot is Lecture 5's, applied to a
 slice rather than the whole dataset. Worth one sentence: this is clunky, and
