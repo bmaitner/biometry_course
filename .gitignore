@@ -37,3 +37,7 @@ lectures/README.md
 # delete its intermediate .rmarkdown file and _files folder afterwards.
 supplements/*.rmarkdown
 supplements/*_files/
+
+# Local editor and assistant settings (the slide preview server config).
+# Nothing in the repo needs them to run.
+.claude/
