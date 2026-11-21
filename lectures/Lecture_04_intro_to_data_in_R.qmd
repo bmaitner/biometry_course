@@ -264,8 +264,10 @@ Then try it with the absolute path to the file on your own computer, as
 **Tab completion makes it easier:** type `read.csv("")`, put the cursor between
 the quotes, and press **Tab**.
 
+::: {.fragment}
 **Check:** `avonet` has `r big(nrow(avonet))` rows and `r ncol(avonet)` columns
 (see the Environment pane).
+:::
 
 ::: {.notes}
 Five minutes. Tab completion is the useful habit here: it lists the folders
@@ -288,7 +290,9 @@ identical(avonet, avonet_v3)
 
 Same data, two routes.
 
+::: {.fragment}
 **Check:** `TRUE`
+:::
 
 ::: {.notes}
 Two minutes. Useful for sharing, and for these slides: anyone who could not get
@@ -460,7 +464,9 @@ head(amphibians)
 | `sheet = 1` | an Excel file can hold several sheets; use the first |
 | `na = "DD"` | "DD" (data deficient) is used instead of NA |
 
+::: {.fragment}
 **Check:** 86 species. The first column is `Species`.
+:::
 
 ::: {.notes}
 Three minutes. sheet = 1 is the default, but it is worth showing: that one
@@ -623,7 +629,9 @@ class(TRUE)
 ```
 :::
 
+::: {.fragment}
 **Check:** `"character"`, `"numeric"`, `"integer"`, `"logical"`
+:::
 
 ::: {.notes}
 Two minutes. 1L is the surprise: the L makes it a whole number stored as an
@@ -686,7 +694,9 @@ mean(amniotes$litter_or_clutch_size_n, na.rm = TRUE)
 ```
 :::
 
+::: {.fragment}
 **Check:** `r f2(mean(amniotes$litter_or_clutch_size_n, na.rm = TRUE))`
+:::
 
 We needed metadata to get this right! (It's in the README.)
 
@@ -758,7 +768,9 @@ class(amphibians)
 ```
 :::
 
+::: {.fragment}
 **Check:** `"data.frame"`, then `"tbl_df" "tbl" "data.frame"`
+:::
 
 ::: {.notes}
 One minute. A tibble has three classes because it is a data frame with extra
@@ -778,7 +790,9 @@ test_vector[1]
 ```
 :::
 
+::: {.fragment}
 **Check:** both give `"Optimus Prime"`
+:::
 
 ::: {.notes}
 Two minutes. For a plain vector the two look the same. The difference is in
@@ -802,8 +816,10 @@ names(test_named_vector)
 
 `names()` tells you what names there are.
 
+::: {.fragment}
 **Check:** `[["A"]]` gives just `"Optimus Prime"`; `["A"]` keeps the name `A`
 above it.
+:::
 
 ::: {.notes}
 Two minutes. That is the [ ] versus [[ ]] difference made visible.
@@ -857,8 +873,10 @@ class(avonet[, 1])
 ```
 :::
 
+::: {.fragment}
 **Check:** `avonet[1]` is a `"data.frame"`; `avonet[, 1]` is a `"character"`
 vector.
+:::
 
 ::: {.notes}
 Three minutes. head() keeps all 11,009 names from filling the console. The
@@ -882,7 +900,9 @@ avonet["1", ]
 
 `avonet["1", ]` only works because the first row is **named** `"1"`.
 
+::: {.fragment}
 **Check:** both show *`r avonet$Species1[1]`*
+:::
 
 ::: {.notes}
 One minute. read.csv() names the rows "1", "2", "3" and so on, so row 1 and the
@@ -953,8 +973,10 @@ colnames(avonet)
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(sum(avonet$Trophic.Level == "Carnivore", na.rm = TRUE))`
 carnivores
+:::
 
 ::: {.notes}
 Three minutes. Let them also try summary(avonet), head(avonet), and
@@ -977,7 +999,9 @@ levels(trophic)
 ```
 :::
 
+::: {.fragment}
 **Check:** `"factor"`, with `r nlevels(as.factor(avonet$Trophic.Level))` levels
+:::
 
 ::: {.notes}
 Two minutes. Trophic level is a category, so it belongs as a factor. The levels
@@ -1006,7 +1030,9 @@ nrow(na.omit(avonet))
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(nrow(avonet))`, then `r nrow(na.omit(avonet))`
+:::
 
 It drops a row if **any** column is NA. One reference column is mostly empty,
 so almost every species goes.

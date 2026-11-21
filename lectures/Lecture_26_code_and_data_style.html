@@ -1349,7 +1349,9 @@ display:block!important;
 <span id="cb1-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(avo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 11,009 rows.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. lintr and styler are both on CRAN. The old version of this lecture read AVONET from a URL; the course package has it, so no internet is needed.</p>
 <style type="text/css">
@@ -1744,7 +1746,9 @@ display:block!important;
 <span id="cb16-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># lint(&quot;hawks.R&quot;)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>lint()</code> finds nothing. 249 hawk species, average mass 1,244 g, a summary row for each of 8 habitats.</p>
+</div>
 <aside class="notes">
 <p>Eight minutes, in pairs. The original gets 19 lint notes. One clean version:</p>
 <p>hawks &lt;- avo |&gt; filter(Family1 == “Accipitridae”) mean_hawk_mass &lt;- mean(hawks$Mass, na.rm = TRUE) habitat_summary &lt;- hawks |&gt; group_by(Habitat) |&gt; summarise(mean_mass = mean(Mass), mean_wing = mean(Wing.Length))</p>
@@ -1934,7 +1938,9 @@ display:block!important;
 <span id="cb17-8"><a href aria-hidden="true" tabindex="-1"></a>avo_long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 11,009 rows become 44,036: how many per species, and why?</p>
+</div>
 <aside class="notes">
 <p>Three minutes. Four per species, one for each trait stacked. The three arguments are the whole idea: which columns, where their names go, where their values go.</p>
 <style type="text/css">
@@ -1992,7 +1998,9 @@ display:block!important;
 <span id="cb19-6"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">as.data.frame</span>(avo_wide2), avo_wide)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>TRUE</code>: nothing was lost on the way there and back.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. as.data.frame() because pivot_wider() returns a tibble and avonet is a plain data frame; without it, all.equal() reports the difference in class, not in content.</p>
 <style type="text/css">
@@ -2021,7 +2029,9 @@ display:block!important;
 <span id="cb20-8"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Then try pivot_wider() with only year and count selected. What goes wrong?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 100 rows and 25 columns, with 1,040 empty cells. Back to long: 2,400 rows, or 1,360 with <code>values_drop_na = TRUE</code>.</p>
+</div>
 <p><strong>Then:</strong> which version is easier to read by eye? Which one could <code>glmer()</code> use?</p>
 <aside class="notes">
 <p>Seven minutes, in pairs. The answer:</p>
@@ -2096,7 +2106,9 @@ display:block!important;
 <span id="cb23-8"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Species1, Family1, mass_corrected_delta_beak_length)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <em>Myrtis fanny</em>, a hummingbird (Trochilidae).</p>
+</div>
 <aside class="notes">
 <p>Two minutes. Each comment became one line of code, and the comments stay as documentation. A tiny bird with a long beak wins: Myrtis fanny is the purple-collared woodstar of the Andes.</p>
 <style type="text/css">
@@ -2123,7 +2135,9 @@ display:block!important;
 <span id="cb24-5"><a href aria-hidden="true" tabindex="-1"></a><span class="co">#  n() counts the rows in each group)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> pointiest <strong>Apodidae</strong>, mean HWI 68. Bluntest: <strong>Spheniscidae</strong>, 5. 130 families qualify.</p>
+</div>
 <aside class="notes">
 <p>Ten minutes, in pairs. Do not let them skip the pseudocode; the point is the habit. One version:</p>
 <pre><code># Group the species by family

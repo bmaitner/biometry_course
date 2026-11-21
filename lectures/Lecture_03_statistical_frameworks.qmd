@@ -449,7 +449,9 @@ tadpoles
 - `mean = 2 * frogs` is the **deterministic** model
 - `sd = 0.5` is the **stochastic** model
 
+::: {.fragment}
 **Check:** the first value is `r f2(tadpoles[1])`.
+:::
 
 ::: {.notes}
 Two minutes. set.seed() makes the random numbers repeatable, so everyone gets
@@ -524,8 +526,10 @@ confint(frog_lm)
 
 The real slope is 2. **Which one got closer?** (You just fit two linear models.)
 
+::: {.fragment}
 **Check:** slopes of `r f2(coef(frog_lm)["frogs"])` and
 `r f2(coef(frog_lm_noisy)["frogs"])`.
+:::
 
 ::: {.notes}
 Three minutes. With this seed the noisy fit happens to land closer to 2: one
@@ -583,8 +587,12 @@ sd(slopes_noisy)
 ```
 :::
 
-**What did adding noise do?** **Check:** both means near 2; spreads about
+**What did adding noise do?**
+
+::: {.fragment}
+**Check:** both means near 2; spreads about
 `r f2(sd(slopes_clean))` and `r f2(sd(slopes_noisy))`.
+:::
 
 ::: {.notes}
 Three minutes. replicate() runs the same simulation 1000 times. Each time:
@@ -628,7 +636,9 @@ cor.test(frogs, tadpoles)
 
 **Is that p-value impressive?**
 
+::: {.fragment}
 **Check:** correlation `r sprintf("%.3f", cor(frogs, tadpoles))`; p is tiny.
+:::
 
 ::: {.notes}
 Three minutes. We built the data ourselves with very little noise, so a tiny
@@ -654,8 +664,10 @@ cor(frogs, tadpoles2)
 
 Different data, same truth: the stochastic part of the model at work.
 
+::: {.fragment}
 **Check:** `r sprintf("%.3f", cor(frogs, tadpoles2))`, against
 `r sprintf("%.3f", cor(frogs, tadpoles))` before.
+:::
 
 ::: {.notes}
 Two minutes. Nothing about the frogs changed; the estimate moved anyway. Older

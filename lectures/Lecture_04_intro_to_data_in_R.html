@@ -1479,7 +1479,9 @@ display:block!important;
 </div>
 <p>Then try it with the absolute path to the file on your own computer, as <code>avonet_v2</code>.</p>
 <p><strong>Tab completion makes it easier:</strong> type <code>read.csv(&quot;&quot;)</code>, put the cursor between the quotes, and press <strong>Tab</strong>.</p>
+<div class="fragment">
 <p><strong>Check:</strong> <code>avonet</code> has 11,009 rows and 37 columns (see the Environment pane).</p>
+</div>
 <aside class="notes">
 <p>Five minutes. Tab completion is the useful habit here: it lists the folders from wherever you are, so it shows what R can see, and it avoids typos in long file names. If read.csv() says “cannot open file”, the file is not where the path says, which usually means the working directory is not the project folder.</p>
 <style type="text/css">
@@ -1504,7 +1506,9 @@ display:block!important;
 </div>
 </div>
 <p>Same data, two routes.</p>
+<div class="fragment">
 <p><strong>Check:</strong> <code>TRUE</code></p>
+</div>
 <aside class="notes">
 <p>Two minutes. Useful for sharing, and for these slides: anyone who could not get the download working can use this line, and rename avonet_v3 to avonet.</p>
 <style type="text/css">
@@ -1704,7 +1708,9 @@ display:block!important;
 </tr>
 </tbody>
 </table>
+<div class="fragment">
 <p><strong>Check:</strong> 86 species. The first column is <code>Species</code>.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. sheet = 1 is the default, but it is worth showing: that one spreadsheet can hold several tables is news to some students. This file has three sheets. A shorter “New names” list still prints, because some trait columns share a name; that can be left for now.</p>
 <p>Then the hand-off: how were you supposed to know any of that? You had to open the file and look, or someone had to tell you. That is metadata.</p>
@@ -1975,7 +1981,9 @@ display:block!important;
 <span id="cb14-4"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(<span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>&quot;character&quot;</code>, <code>&quot;numeric&quot;</code>, <code>&quot;integer&quot;</code>, <code>&quot;logical&quot;</code></p>
+</div>
 <aside class="notes">
 <p>Two minutes. 1L is the surprise: the L makes it a whole number stored as an integer. Counts read from a file often come in as integer, and that’s fine.</p>
 <style type="text/css">
@@ -2067,7 +2075,9 @@ display:block!important;
 <span id="cb16-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(amniotes<span class="sc">$</span>litter_or_clutch_size_n, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 3.83</p>
+</div>
 <p>We needed metadata to get this right! (It’s in the README.)</p>
 <aside class="notes">
 <p>Two minutes. na.strings tells read.csv() which values mean “missing”. na.rm = TRUE tells mean() to leave the missing ones out; without it the answer is NA.</p>
@@ -2205,7 +2215,9 @@ display:block!important;
 <span id="cb18-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(amphibians)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>&quot;data.frame&quot;</code>, then <code>&quot;tbl_df&quot; &quot;tbl&quot; &quot;data.frame&quot;</code></p>
+</div>
 <aside class="notes">
 <p>One minute. A tibble has three classes because it is a data frame with extra features: anything that works on a data frame works on it.</p>
 <style type="text/css">
@@ -2230,7 +2242,9 @@ display:block!important;
 <span id="cb19-3"><a href aria-hidden="true" tabindex="-1"></a>test_vector[<span class="dv">1</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> both give <code>&quot;Optimus Prime&quot;</code></p>
+</div>
 <aside class="notes">
 <p>Two minutes. For a plain vector the two look the same. The difference is in what comes back: [ ] returns a smaller version of the same thing (it keeps names, and for a list it returns a list), [[ ]] returns the element itself. The next slide shows it.</p>
 <style type="text/css">
@@ -2257,7 +2271,9 @@ display:block!important;
 </div>
 </div>
 <p><code>names()</code> tells you what names there are.</p>
+<div class="fragment">
 <p><strong>Check:</strong> <code>[[&quot;A&quot;]]</code> gives just <code>&quot;Optimus Prime&quot;</code>; <code>[&quot;A&quot;]</code> keeps the name <code>A</code> above it.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. That is the [ ] versus [[ ]] difference made visible.</p>
 <style type="text/css">
@@ -2345,7 +2361,9 @@ display:block!important;
 <span id="cb22-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(avonet[, <span class="dv">1</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>avonet[1]</code> is a <code>&quot;data.frame&quot;</code>; <code>avonet[, 1]</code> is a <code>&quot;character&quot;</code> vector.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. head() keeps all 11,009 names from filling the console. The classes are the point: avonet[1] is a one-column data frame (a list with one element), avonet[, 1] and avonet$Species1 are the vector itself. A function that wants numbers or characters and gets a one-column data frame instead is a common source of errors.</p>
 <style type="text/css">
@@ -2370,7 +2388,9 @@ display:block!important;
 </div>
 </div>
 <p><code>avonet[&quot;1&quot;, ]</code> only works because the first row is <strong>named</strong> <code>&quot;1&quot;</code>.</p>
+<div class="fragment">
 <p><strong>Check:</strong> both show <em>Accipiter albogularis</em></p>
+</div>
 <aside class="notes">
 <p>One minute. read.csv() names the rows “1”, “2”, “3” and so on, so row 1 and the row named “1” are the same. After sorting or filtering they need not be.</p>
 <style type="text/css">
@@ -2492,7 +2512,9 @@ display:block!important;
 <span id="cb27-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(avonet)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 6,115 carnivores</p>
+</div>
 <aside class="notes">
 <p>Three minutes. Let them also try summary(avonet), head(avonet), and head(rownames(avonet)). summary() on a number column gives the range and quartiles, plus a count of NAs if there are any: another quick check that the missing values were read as missing.</p>
 <style type="text/css">
@@ -2517,7 +2539,9 @@ display:block!important;
 <span id="cb28-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(trophic)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>&quot;factor&quot;</code>, with 4 levels</p>
+</div>
 <aside class="notes">
 <p>Two minutes. Trophic level is a category, so it belongs as a factor. The levels are the categories R found, in alphabetical order unless you say otherwise.</p>
 <style type="text/css">
@@ -2582,7 +2606,9 @@ display:block!important;
 <span id="cb29-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(<span class="fu">na.omit</span>(avonet))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 11,009, then 36</p>
+</div>
 <p>It drops a row if <strong>any</strong> column is NA. One reference column is mostly empty, so almost every species goes.</p>
 <aside class="notes">
 <p>Two minutes. Mass.Refs.Other is NA for 10,294 species. Remove NAs from the columns you are actually using, not from the whole table. This is new in the Quarto version of the deck, and it makes the “check your data” point one more time.</p>

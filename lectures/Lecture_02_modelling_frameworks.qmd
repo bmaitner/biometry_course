@@ -485,7 +485,9 @@ mean(seedlings)
 ```
 :::
 
+::: {.fragment}
 **Check:** 12. Save it with **Ctrl+S** (Cmd+S).
+:::
 
 ::: {.plain}
 The console is a scratchpad for quick checks; the script is the record of your

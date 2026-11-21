@@ -196,8 +196,10 @@ confint(m_occ)
 ```
 :::
 
+::: {.fragment}
 **Check:** $a$ = `r round(a_hat, 2)` and $b$ = `r round(b_hat, 3)`, the decline of
 about 6% a year in the odds of occupancy from Lecture 17.
+:::
 
 ::: {.notes}
 Two minutes. The model they have fitted three times now, written with mle2's
@@ -343,8 +345,10 @@ cov2cor(vcov(m_occ))        # how strongly a and b move together
 | the diagonal | how uncertain each parameter is: its **standard error**, squared |
 | off the diagonal | how the two move **together** |
 
+::: {.fragment}
 **Check:** standard errors `r round(se_occ["a"], 3)` and `r round(se_occ["b"], 4)`,
 and a correlation of `r round(cor_ab, 2)`.
+:::
 
 ::: {.notes}
 Two minutes. vcov() describes the shape of the bottom of the NLL bowl: how wide
@@ -375,8 +379,10 @@ cor(draws)
 `mvrnorm()` draws from a **multivariate normal**: centered on the estimates, with
 the spread and the tilt from `vcov()`.
 
+::: {.fragment}
 **Check:** 1,000 rows, one plausible $(a, b)$ pair in each, and a correlation of
 about `r round(cor(draws)[1, 2], 2)`, the tilt from the picture.
+:::
 
 ::: {.notes}
 Two minutes. MASS comes with every R installation. MASS:: uses one function from
@@ -401,8 +407,10 @@ quantile(occ19, c(0.025, 0.975))     # the middle 95%
 ```
 :::
 
+::: {.fragment}
 **Check:** `r pct1(occ19_ci[1])` to `r pct1(occ19_ci[2])` of routes. Your last
 decimal may differ.
+:::
 
 ::: {.notes}
 Two minutes. The calculation is the formula from the table, written once; R
@@ -456,8 +464,10 @@ The short answer, for later: this interval is about the model's average for
 **Hint:** slide 13 computed occupancy in 2019 for every draw. Do the same for
 1997, then subtract.
 
+::: {.fragment}
 **Check:** a drop of about **`r round(100 * drop_hat)` points**, from
 `r round(100 * drop_ci[1])` to `r round(100 * drop_ci[2])`.
+:::
 
 ::: {.notes}
 Four minutes. Three lines:
@@ -538,8 +548,10 @@ upper <- apply(curves, 2, quantile, 0.975)
 ```
 :::
 
+::: {.fragment}
 **Check:** `dim(curves)` is 1000 by `r length(years)`. `lower[23]` and `upper[23]`
 are 2019's interval from before.
+:::
 
 ::: {.notes}
 Three minutes. Inside the loop, draws[i, "a"] is a single number and years is a
@@ -686,7 +698,9 @@ sum(obs >= pred_lower & obs <= pred_upper)
 ```
 :::
 
+::: {.fragment}
 **Check:** about **`r in_pred` of `r nrow(occ)`** years inside the red lines.
+:::
 
 ::: {.notes}
 Three minutes. The loop is the band's loop with one added line: rbinom()
@@ -801,7 +815,9 @@ draws_nb <- MASS::mvrnorm(1000, mu = coef(m_nb), Sigma = vcov(m_nb))
 ```
 :::
 
+::: {.fragment}
 **Check:** $b$ = `r round(b_nb, 2)`.
+:::
 
 Why `log_mu0` and `log_k`? Draws from a normal can be **negative**. On the log
 scale, every draw is a legal value.
@@ -826,9 +842,11 @@ log(2) / -confint(m_nb)["b", ]        # its interval: transform the ends
 ```
 :::
 
+::: {.fragment}
 **Check:** `r pct(half_hat)` developed, from `r pct1(half_ci[1])` to
 `r pct1(half_ci[2])`. The recipe gives `r pct1(half_recipe[1])` to
 `r pct1(half_recipe[2])`.
+:::
 
 ::: {.plain}
 When a number is calculated from just one parameter, put each end of that parameter's interval through the same calculation: the two answers are the number's interval. With two or more parameters, that runs into the corners problem from slide 8, so use the recipe.
@@ -867,8 +885,10 @@ plot(counts$frac_built, counts$count, col = "grey", ylim = c(0, 40),
 **Hint:** slides 19 and 20 built the occupancy band. Same steps, with the draws
 from slide 29 and `exp(log_mu0 + b * built)` in place of `plogis(a + b * years)`.
 
+::: {.fragment}
 **Check:** at 20% developed (`built[21]`), the average route has
 `r sprintf("%.1f", nb_lower[21])` to `r sprintf("%.1f", nb_upper[21])` bobwhite.
+:::
 
 ::: {.notes}
 Eight minutes. Everything they need is on the occupancy slides; the changes are
@@ -898,9 +918,11 @@ quantile(mu_20, c(0.025, 0.975))          # the average route at 20%
 ```
 :::
 
+::: {.fragment}
 **Check:** the average route, `r sprintf("%.1f", mu_20_ci[1])` to
 `r sprintf("%.1f", mu_20_ci[2])` birds. One route, **`r one_route_ci[1]` to
 `r one_route_ci[2]`**.
+:::
 
 ::: {.notes}
 Five minutes. The missing lines:

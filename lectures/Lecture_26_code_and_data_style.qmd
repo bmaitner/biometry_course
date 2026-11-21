@@ -294,7 +294,9 @@ nrow(avo)
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(nrow(avo))` rows.
+:::
 
 ::: {.notes}
 Two minutes. lintr and styler are both on CRAN. The old version of this
@@ -563,8 +565,10 @@ Hawks|>group_by(Habitat)|>summarise(m=mean(Mass),w=mean(Wing.Length))->HabitatSu
 ```
 :::
 
+::: {.fragment}
 **Check:** `lint()` finds nothing. `r nrow(hawks)` hawk species, average mass
 `r big(mean_hawk_mass)` g, a summary row for each of `r nrow(habitat_summary)` habitats.
+:::
 
 ::: {.notes}
 Eight minutes, in pairs. The original gets `r n_lint_messy` lint notes. One clean version:
@@ -723,8 +727,10 @@ avo_long
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(nrow(avo_wide))` rows become `r big(nrow(avo_long))`: how many
 per species, and why?
+:::
 
 ::: {.notes}
 Three minutes. Four per species, one for each trait stacked. The three
@@ -765,7 +771,9 @@ all.equal(as.data.frame(avo_wide2), avo_wide)
 ```
 :::
 
+::: {.fragment}
 **Check:** `TRUE`: nothing was lost on the way there and back.
+:::
 
 ::: {.notes}
 Two minutes. as.data.frame() because pivot_wider() returns a tibble and avonet
@@ -789,9 +797,11 @@ bw_wide <- bobwhite_counts |>
 ```
 :::
 
+::: {.fragment}
 **Check:** `r nrow(bw_wide)` rows and `r ncol(bw_wide)` columns, with
 `r big(n_empty)` empty cells. Back to long: `r big(nrow(bw_back))` rows, or
 `r big(nrow(bw_back_drop))` with `values_drop_na = TRUE`.
+:::
 
 **Then:** which version is easier to read by eye? Which one could `glmer()` use?
 
@@ -876,7 +886,9 @@ avo |>
 ```
 :::
 
+::: {.fragment}
 **Check:** *`r beak_top$Species1`*, a hummingbird (`r beak_top$Family1`).
+:::
 
 ::: {.notes}
 Two minutes. Each comment became one line of code, and the comments stay as
@@ -900,9 +912,11 @@ at least 10 species?**
 ```
 :::
 
+::: {.fragment}
 **Check:** pointiest **`r pointy$Family1[1]`**, mean HWI
 `r round(pointy$mean_hwi[1])`. Bluntest: **`r tail(pointy$Family1, 1)`**,
 `r round(tail(pointy$mean_hwi, 1))`. `r nrow(pointy)` families qualify.
+:::
 
 ::: {.notes}
 Ten minutes, in pairs. Do not let them skip the pseudocode; the point is the

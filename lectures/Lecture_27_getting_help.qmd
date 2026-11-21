@@ -66,7 +66,7 @@ and scientific coding.
 
 Two things in one class, held together loosely by "what do you do when you
 are stuck". The final project was explained on Thursday (Lecture 26, in
-Lecture_26_final_project); today only takes questions about it.
+Lecture_26_code_and_data_style); today only takes questions about it.
 :::
 
 ## From here on: the final project
@@ -77,8 +77,8 @@ Thursday.
 **Questions about it?**
 
 ::: {.notes}
-Five minutes at most. If someone missed Thursday, the slides are in
-Lecture_26_final_project.
+Five minutes at most. If someone missed Thursday, the slides open
+Lecture_26_code_and_data_style.
 
 Worth saying plainly that the remaining classes are project work, reproducibility
 and code sharing. Mixed models (Lecture 25) were the last new statistical

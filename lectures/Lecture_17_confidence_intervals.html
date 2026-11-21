@@ -1684,7 +1684,9 @@ display:block!important;
 <span id="cb10-14"><a href aria-hidden="true" tabindex="-1"></a>m_occ<span class="sc">@</span>min      <span class="co"># the lowest NLL it found</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> = 2.018, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> = -0.0619, NLL 56.69, as on Thursday.</p>
+</div>
 <aside class="notes">
 <p>Same function as the end of Thursday. The one change is that the data list now has a name, occ_data, because we are about to pass it to mle2 fifteen times.</p>
 <p>m_occ@min: mle2 returns an S4 object, and the at sign pulls out one of its slots. They do not need to know more than that this is the NLL at the best fit. It is the same number as -logLik(m_occ), if they prefer that.</p>

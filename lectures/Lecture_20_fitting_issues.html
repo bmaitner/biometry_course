@@ -1239,7 +1239,9 @@ display:block!important;
 <span id="cb2-11"><a href aria-hidden="true" tabindex="-1"></a>fit_raw<span class="sc">$</span>convergence</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> an NLL of 95.6, with <code>convergence</code> 0. The bottom is at 56.69.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. The function now takes the covariate as a second argument, x, so the same NLL can be fitted to any version of year; optim() passes x = … through to it.</p>
 <p>Let them sit with the result for a moment: the fit reports success, and it is nearly 40 units from the bottom.</p>
@@ -1269,7 +1271,9 @@ display:block!important;
 <span id="cb3-8"><a href aria-hidden="true" tabindex="-1"></a>fit_cen<span class="sc">$</span>par</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 56.69, the true bottom, and a slope <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> of -0.062, the same as Lecture 16’s.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. One new line, and the same function.</p>
 <p>The slope b comes out the same as in Lecture 16, -0.062: centering changes what a means, not what b means. That is the general rule, and it is why centering is free.</p>
@@ -1378,7 +1382,9 @@ display:block!important;
 <span id="cb4-11"><a href aria-hidden="true" tabindex="-1"></a>fit_sc<span class="sc">$</span>par; fit_sc<span class="sc">$</span>value</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 7,076 against 3,177.95. Which way does the range effect point in each?</p>
+</div>
 <div class="plain">
 <p>Choose units that put your covariates roughly between 0.1 and 100. The model is unchanged; only the numbers the optimizer handles get easier.</p>
 </div>
@@ -1509,7 +1515,9 @@ display:block!important;
 <span id="cb6-11"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="fu">exp</span>(fit_log<span class="sc">$</span>par[<span class="dv">1</span>]), fit_log<span class="sc">$</span>par[<span class="dv">2</span>], <span class="fu">exp</span>(fit_log<span class="sc">$</span>par[<span class="dv">3</span>]), <span class="fu">exp</span>(fit_log<span class="sc">$</span>par[<span class="dv">4</span>]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> NLL 31,752.34, a peak of 24.7 species at 16.1 m. No warnings.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. Three exp() calls inside the function, and one line to back-transform the answer: that is the whole fix. The depth of the peak stays on its natural scale: it cannot be negative either, but the fit never comes near the surface, so it needs no protection here. The bounds on the next slide do protect it.</p>
 <p>This is the “fit on a transformed scale, then back-transform” lesson from Lecture 16, used for a different reason: there to keep a probability legal, here to keep three positive parameters positive. Every value the optimizer can try is now legal, so it never meets an NaN.</p>
@@ -1540,7 +1548,9 @@ display:block!important;
 </div>
 </div>
 <p><strong>Why these limits:</strong> each sits just above zero, where the model stops making sense, and far below any value the data would choose. The names are only labels, to remind you which is which; the order is what matters.</p>
+<div class="fragment">
 <p><strong>Check:</strong> NLL 31,752.34, a peak of 24.7 species at 16.1 m. No warnings, and no back-transforming.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. The same function as the unprotected fit, hump_nat, unchanged; the protection is entirely in the call. method = “L-BFGS-B” is the one method that accepts bounds.</p>
 <p>Depth is measured in metres below the surface, so a peak above the water makes no sense, and 0 is a natural limit for it. One nuance: that bound assumes richness really does peak somewhere. If it simply fell with depth, the fit would push the peak against the surface and stop on the bound. Here the peak is at 16 m, far from it, but a fit sitting exactly on a bound always deserves a second look.</p>
@@ -1576,7 +1586,9 @@ display:block!important;
 <span id="cb8-10"><a href aria-hidden="true" tabindex="-1"></a>fit_pen_bfgs<span class="sc">$</span>value; fit_pen_nm<span class="sc">$</span>value</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> BFGS puts the peak at <strong>328 m</strong> again (NLL 31,790.7). Nelder-Mead finds <strong>24.7 species at 16.1 m</strong> (NLL 31,752.35), the same hump as the transformed and bounded fits.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. The if() is exactly the “cliff in the code” from Tuesday’s table. Below zero the NLL jumps from about 31,800 to 10,000,000,000.</p>
 <p>BFGS estimates slopes by nudging each parameter a little. Near the edge, a nudge either stays on the sensible side or falls off the cliff, so the slope it computes is meaningless, and it ends where the unprotected fit did. Nelder-Mead never computes a slope: it only compares values, and to it the cliff is simply a region of very bad points to stay out of.</p>
@@ -1906,7 +1918,9 @@ display:block!important;
 <span id="cb14-8"><a href aria-hidden="true" tabindex="-1"></a>fit_built<span class="sc">$</span>value</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> a threshold of <strong>1.4%</strong> developed, with about <strong>11.8</strong> bobwhite expected on a route below it (NLL 4,571.33, the best possible). Tuesday’s start stopped at a threshold of -0.1: no threshold at all.</p>
+</div>
 <div class="fragment">
 <p>The biology: there is a threshold, but it is <strong>so close to zero</strong> that there is effectively no safe level of development.</p>
 <aside class="notes">

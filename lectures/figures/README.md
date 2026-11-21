@@ -48,6 +48,10 @@ source and license here whenever a new one is added.**
 | `02_r_console.png`, `02_rstudio*.png`, `02_github_*.png` | Screenshots of R, RStudio and GitHub, some with the slide's arrows and labels baked in, used in Lecture 2 | Original Google Slides deck | Brian Maitner | Our own screenshots | 2026-11-18 |
 | `03_flowchart_1.png` to `03_flowchart_9.png`, `03_flowchart_walk.png` | The modeling process flowchart (after Bolker Figure 1.5), in the nine build stages of the original slides, used in Lecture 3 | Original Google Slides deck | Brian Maitner | Our own drawing | 2026-11-18 |
 | `04_amphibians_xlsx.png` | Screenshot of the top of `data/European_amphibians/oo_32985.xlsx` open in Excel, showing the title rows above the real column names, used in Lecture 4 | Original Google Slides deck | Brian Maitner | Our own screenshot; the data are CC0 (Trochet et al. 2014) | 2026-11-18 |
+| `05_rstudio_project_corner.png` | Screenshot of the top right of RStudio showing the open project (biometry_course), used in Lecture 5 | Original Google Slides deck | Brian Maitner | Our own screenshot | 2026-11-20 |
+| `05_kerkhoff_enquist_2009.png` | Title block of Kerkhoff and Enquist (2009), "Multiplicative by nature", *Journal of Theoretical Biology* 257: 519 to 521, used in Lecture 5 | Original Google Slides deck | Elsevier | Journal copyright; cited on the slide | 2026-11-20 |
+| `05_kiwi.jpg` | Te Tuatahi a nui, a male North Island brown kiwi (*Apteryx mantelli*) on Maungatautari, used in Lecture 5 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TeTuatahianui.jpg) | Maungatautari Ecological Island Trust | Public domain (released by the author) | 2026-11-20 |
+| `05_cassowary.jpg` | Southern cassowary (*Casuarius casuarius*) at Kyiv Zoo, used in Lecture 5 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Casuarius_casuarius_2.jpg) | DoroshenkoE | Public domain (released by the author) | 2026-11-20 |
 
 The Lecture 1 images were taken from the 2025 Google Slides deck when it was
 converted to Quarto (2026-11-18), with the crops it used. The job-ads figure is

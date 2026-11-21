@@ -1141,7 +1141,9 @@ display:block!important;
 <span id="cb1-11"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(m_occ)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> = 2.02 and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> = -0.062, the decline of about 6% a year in the odds of occupancy from Lecture 17.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. The model they have fitted three times now, written with mle2’s formula interface from Lecture 18. a is the log odds of occupancy in 1997 (elapsed = 0), b the change in log odds per year.</p>
 <p>confint() gives the profile intervals from Lecture 17. Leave them on screen: the next few slides use them.</p>
@@ -1361,7 +1363,9 @@ display:block!important;
 </tr>
 </tbody>
 </table>
+<div class="fragment">
 <p><strong>Check:</strong> standard errors 0.129 and 0.0093, and a correlation of -0.89.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. vcov() describes the shape of the bottom of the NLL bowl: how wide it is in each direction, and which way it tilts. mle2 works it out from how sharply the NLL curves at the bottom (the Hessian, for anyone who wants the word).</p>
 <p>The standard errors are the ones the plus-or-minus 1.96 SE shortcut from Lecture 17 uses. That is the caveat for today’s recipe: it treats the bowl as a smooth, symmetric bowl, which is the shortcut’s assumption. It is fine when the parameters are on a scale where the bowl is round, which is one more reason to fit on the logit or log scale, as we did here. It is not fine for a rare species on the natural probability scale, Lecture 17’s counterexample.</p>
@@ -1388,7 +1392,9 @@ display:block!important;
 </div>
 </div>
 <p><code>mvrnorm()</code> draws from a <strong>multivariate normal</strong>: centered on the estimates, with the spread and the tilt from <code>vcov()</code>.</p>
+<div class="fragment">
 <p><strong>Check:</strong> 1,000 rows, one plausible <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(a, b)</annotation></semantics></math> pair in each, and a correlation of about -0.89, the tilt from the picture.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. MASS comes with every R installation. MASS:: uses one function from it without loading the whole package, which matters because loading MASS hides dplyr’s select(), a confusing error for anyone using the tidyverse.</p>
 <p>Each row of draws is one blue dot from the corners picture. Point at the correlation: rnorm() twice would have drawn a and b independently, filling the whole box. mvrnorm() keeps the tilt.</p>
@@ -1415,7 +1421,9 @@ display:block!important;
 <span id="cb4-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(occ19, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))     <span class="co"># the middle 95%</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 61.5% to 70.8% of routes. Your last decimal may differ.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. The calculation is the formula from the table, written once; R applies it to all 1,000 rows at once. The histogram is the uncertainty in the answer, and the quantiles cut off 2.5% at each end.</p>
 <p>Compare with the plug-in corners: 50% to 79%. The recipe’s interval is about a third as wide, because it never uses a pair of values the data rule out.</p>
@@ -1487,7 +1495,9 @@ display:block!important;
 </div>
 </div>
 <p><strong>Hint:</strong> slide 13 computed occupancy in 2019 for every draw. Do the same for 1997, then subtract.</p>
+<div class="fragment">
 <p><strong>Check:</strong> a drop of about <strong>22 points</strong>, from 15 to 28.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. Three lines:</p>
 <p>occ97 &lt;- plogis(draws[, “a”]) drop &lt;- occ97 - occ19 quantile(drop, c(0.025, 0.975))</p>
@@ -1602,7 +1612,9 @@ display:block!important;
 <span id="cb6-11"><a href aria-hidden="true" tabindex="-1"></a>upper <span class="ot">&lt;-</span> <span class="fu">apply</span>(curves, <span class="dv">2</span>, quantile, <span class="fl">0.975</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>dim(curves)</code> is 1000 by 23. <code>lower[23]</code> and <code>upper[23]</code> are 2019’s interval from before.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. Inside the loop, draws[i, “a”] is a single number and years is a vector, so each pass computes a whole curve, all 23 years, for one draw.</p>
 <p>apply(curves, 2, quantile, 0.025) reads as: for every column of curves, run quantile(column, 0.025). The 2 means columns; a 1 would mean rows.</p>
@@ -1764,7 +1776,9 @@ display:block!important;
 <span id="cb8-12"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(obs <span class="sc">&gt;=</span> pred_lower <span class="sc">&amp;</span> obs <span class="sc">&lt;=</span> pred_upper)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> about <strong>23 of 23</strong> years inside the red lines.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. The loop is the band’s loop with one added line: rbinom() simulates a survey from each draw’s curve.</p>
 <p>This is Lecture 19’s “simulate from the fit” with one improvement: there, every fake survey used the single best-fit curve; here, each uses a different plausible curve. That is the full prediction interval.</p>
@@ -1895,7 +1909,9 @@ display:block!important;
 <span id="cb9-7"><a href aria-hidden="true" tabindex="-1"></a>draws_nb <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">mvrnorm</span>(<span class="dv">1000</span>, <span class="at">mu =</span> <span class="fu">coef</span>(m_nb), <span class="at">Sigma =</span> <span class="fu">vcov</span>(m_nb))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> = -3.23.</p>
+</div>
 <p>Why <code>log_mu0</code> and <code>log_k</code>? Draws from a normal can be <strong>negative</strong>. On the log scale, every draw is a legal value.</p>
 <aside class="notes">
 <p>Two minutes. The model from Lecture 18’s comparison of distributions. Fitting on the log scale was Lecture 20’s Fix 3, transforming. It matters twice over here: drawing on the natural scale, some draws of k could come out negative, and rnbinom() would fail. On the log scale, exp() of any draw is positive.</p>
@@ -1920,7 +1936,9 @@ display:block!important;
 <span id="cb10-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(<span class="dv">2</span>) <span class="sc">/</span> <span class="sc">-</span><span class="fu">confint</span>(m_nb)[<span class="st">&quot;b&quot;</span>, ]        <span class="co"># its interval: transform the ends</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 21% developed, from 18.3% to 26.1%. The recipe gives 18.3% to 26.1%.</p>
+</div>
 <div class="plain">
 <p>When a number is calculated from just one parameter, put each end of that parameter’s interval through the same calculation: the two answers are the number’s interval. With two or more parameters, that runs into the corners problem from slide 8, so use the recipe.</p>
 </div>
@@ -1958,7 +1976,9 @@ display:block!important;
 </div>
 </div>
 <p><strong>Hint:</strong> slides 19 and 20 built the occupancy band. Same steps, with the draws from slide 29 and <code>exp(log_mu0 + b * built)</code> in place of <code>plogis(a + b * years)</code>.</p>
+<div class="fragment">
 <p><strong>Check:</strong> at 20% developed (<code>built[21]</code>), the average route has 5.8 to 7.0 bobwhite.</p>
+</div>
 <aside class="notes">
 <p>Eight minutes. Everything they need is on the occupancy slides; the changes are the formula, exp(log_mu0 + b * built) instead of plogis(a + b * years), and the names.</p>
 <p>32 of the 1,360 counts are above 40 and fall off the top of the plot; the ylim keeps the band visible.</p>
@@ -1989,7 +2009,9 @@ display:block!important;
 <span id="cb12-7"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># the middle 95% of those counts goes here</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> the average route, 5.8 to 7.0 birds. One route, <strong>0 to 21</strong>.</p>
+</div>
 <aside class="notes">
 <p>Five minutes. The missing lines:</p>
 <p>one_route &lt;- rnbinom(1000, mu = mu_20, size = exp(draws_nb[, “log_k”])) quantile(one_route, c(0.025, 0.975))</p>

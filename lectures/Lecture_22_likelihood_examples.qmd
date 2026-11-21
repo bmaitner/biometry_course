@@ -323,7 +323,9 @@ rov$area <- 50 * rov$fov             # seafloor seen: 50 m long, fov wide
 ```
 :::
 
+::: {.fragment}
 **Check:** `r nrow(rov)` sections, down from `r n_all`.
+:::
 
 ::: {.notes}
 Three minutes. Renaming first is the habit worth modeling: Depth.water..m. is
@@ -355,9 +357,11 @@ tapply(rov$density, rov$substrate, median)
 ```
 :::
 
+::: {.fragment}
 **Check:** `r pct(zero_frac)` of sections have no sponges. The variance is about
 `r round(var(rov$sponges) / mean(rov$sponges))` times the mean. Median density:
 `r f1(med_dens["bedrock"])` per 100 m² on bedrock, `r f1(med_dens["sand"])` on sand.
+:::
 
 . . .
 
@@ -511,9 +515,11 @@ AICtab(m_pois, m_nb, m_zinb)
 ```
 :::
 
+::: {.fragment}
 **Check:** the negative binomial beats the Poisson by
 **`r big(aic_dist["pois"] - aic_dist["nb"])`** AIC units. Zero inflation adds
 nothing: `r f1(aic_dist["zinb"] - aic_dist["nb"])` units **worse**.
+:::
 
 ::: {.notes}
 Four minutes. All three are discrete distributions of the same response, so
@@ -602,8 +608,10 @@ c(m_both@min, m_both_2@min)
 ```
 :::
 
+::: {.fragment}
 **Check:** convergence `r m_both@details$convergence`, and both starts reach an
 NLL of `r format(round(m_both@min, 2), nsmall = 2, big.mark = ",")`.
+:::
 
 ::: {.notes}
 Two minutes. Lecture 19's checklist, items 1 and 2. update() refits a model
@@ -625,9 +633,11 @@ exp(coef(m_both))
 ```
 :::
 
+::: {.fragment}
 **Check:** `m_both` is best, by `r f1(aic_det["sub"] - aic_det["both"])` over
 `m_sub`. Depth alone is no better than nothing
 (`r f1(aic_det["depth"] - aic_det["nb"])` units).
+:::
 
 . . .
 
@@ -673,8 +683,10 @@ cbind(observed = tapply(rov$sponges == 0, rov$substrate, mean),
 ```
 :::
 
+::: {.fragment}
 **Check:** sand, `r pct(obs_zeros["sand"])` observed against
 `r pct(z_lo["sand"])` to `r pct(z_hi["sand"])` simulated.
+:::
 
 ::: {.notes}
 Four minutes. Lecture 19's "simulate from the fit", aimed at one feature of the
@@ -746,8 +758,10 @@ plogis(coef(m_zero)["logit_z"])
 ```
 :::
 
+::: {.fragment}
 **Check:** `m_zero` is better by **`r f1(aic_zero[1] - aic_zero[2])`**. About
 **`r pct(z_hat)`** of sand, gravel and boulder sections are truly empty.
+:::
 
 ::: {.notes}
 Four minutes. sediment * plogis(logit_z) is zero on bedrock and biogenic
@@ -795,8 +809,10 @@ quantile(plogis(draws[, "logit_z"]), c(0.025, 0.975))
 ```
 :::
 
+::: {.fragment}
 **Check:** `r f1(ratio_ci[1])` to `r f1(ratio_ci[2])`; `r f2(depth_ci[1])` to
 `r f2(depth_ci[2])`; `r pct(empty_ci[1])` to `r pct(empty_ci[2])`.
+:::
 
 ::: {.notes}
 Four minutes. Lecture 21's recipe: draw, compute, take the middle 95%. The
@@ -831,8 +847,10 @@ grid$density <- exp(coef(m_zero)[col_d] + coef(m_zero)["b"] * grid$depth_km)
 ```
 :::
 
+::: {.fragment}
 **Check:** bedrock at 1,500 m, `r round(g1500$density)` sponges per 100 m²
 (`r round(g1500$lower)` to `r round(g1500$upper)`).
+:::
 
 ::: {.notes}
 Five minutes for this slide and the next. Why not predict()? On an mle2 fit it
@@ -964,8 +982,12 @@ c_nb <- mle2(corals ~ dnbinom(mu = exp(log_d) * area / 100, size = exp(log_k)),
 ```
 :::
 
-**Before you fit:** predict which model wins. **Check:** `c_both` is best, and
+**Before you fit:** predict which model wins.
+
+::: {.fragment}
+**Check:** `c_both` is best, and
 `c_depth` beats `c_sub` by `r round(aic_c["sub"] - aic_c["depth"])` units.
+:::
 
 ::: {.notes}
 On the shorthand, in case someone asks: Keogh et al. (2022) list 116 cnidarian
@@ -1000,9 +1022,11 @@ set.seed(23)
 ```
 :::
 
+::: {.fragment}
 **Check:** about **`r f2(c_depth_hat)` times** as dense per km deeper
 (`r f2(c_depth_ci[1])` to `r f2(c_depth_ci[2])`): about
 **`r pct(1 - c_depth_hat)` fewer** corals for every km.
+:::
 
 . . .
 

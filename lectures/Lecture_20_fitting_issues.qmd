@@ -269,8 +269,10 @@ fit_raw$convergence
 ```
 :::
 
+::: {.fragment}
 **Check:** an NLL of `r round(fit_raw$value, 1)`, with `convergence` `r fit_raw$convergence`.
 The bottom is at `r round(fit_cen$value, 2)`.
+:::
 
 ::: {.notes}
 Three minutes. The function now takes the covariate as a second argument, x, so
@@ -297,8 +299,10 @@ fit_cen$par
 ```
 :::
 
+::: {.fragment}
 **Check:** `r round(fit_cen$value, 2)`, the true bottom, and a slope $b$ of
 `r round(fit_cen$par[2], 3)`, the same as Lecture 16's.
+:::
 
 ::: {.notes}
 Two minutes. One new line, and the same function.
@@ -402,9 +406,11 @@ fit_sc$par; fit_sc$value
 ```
 :::
 
+::: {.fragment}
 **Check:** `r format(round(fit_mig_nm$value), big.mark = ",")` against
 `r format(round(fit_mig_sc$value, 2), nsmall = 2, big.mark = ",")`. Which way does
 the range effect point in each?
+:::
 
 ::: {.plain}
 Choose units that put your covariates roughly between 0.1 and 100. The model is unchanged; only the numbers the optimizer handles get easier.
@@ -519,8 +525,10 @@ c(exp(fit_log$par[1]), fit_log$par[2], exp(fit_log$par[3]), exp(fit_log$par[4]))
 ```
 :::
 
+::: {.fragment}
 **Check:** NLL `r format(round(h_log$value, 2), nsmall = 2, big.mark = ",")`, a peak
 of `r round(exp(h_log$par[1]), 1)` species at `r round(h_log$par[2], 1)` m. No warnings.
+:::
 
 ::: {.notes}
 Four minutes. Three exp() calls inside the function, and one line to
@@ -556,9 +564,11 @@ fit_bnd$par
 sense, and far below any value the data would choose. The names are only labels,
 to remind you which is which; the order is what matters.
 
+::: {.fragment}
 **Check:** NLL `r format(round(h_bnd$value, 2), nsmall = 2, big.mark = ",")`, a peak
 of `r round(h_bnd$par[1], 1)` species at `r round(h_bnd$par[2], 1)` m. No warnings,
 and no back-transforming.
+:::
 
 ::: {.notes}
 Two minutes. The same function as the unprotected fit, hump_nat, unchanged; the
@@ -607,11 +617,13 @@ fit_pen_bfgs$value; fit_pen_nm$value
 ```
 :::
 
+::: {.fragment}
 **Check:** BFGS puts the peak at **`r round(h_pen_bfgs$par[2])` m** again (NLL
 `r format(round(h_pen_bfgs$value, 1), nsmall = 1, big.mark = ",")`). Nelder-Mead
 finds **`r round(h_pen_nm$par[1], 1)` species at `r round(h_pen_nm$par[2], 1)` m**
 (NLL `r format(round(h_pen_nm$value, 2), nsmall = 2, big.mark = ",")`), the same hump as
 the transformed and bounded fits.
+:::
 
 ::: {.notes}
 Three minutes. The if() is exactly the "cliff in the code" from Tuesday's table.
@@ -858,11 +870,13 @@ fit_built$value
 ```
 :::
 
+::: {.fragment}
 **Check:** a threshold of **`r round(100 * fit_built$par[3], 1)`%** developed, with
 about **`r round(exp(fit_built$par[1]), 1)`** bobwhite expected on a route below it
 (NLL `r format(round(fit_built$value, 2), nsmall = 2, big.mark = ",")`, the best
 possible). Tuesday's start stopped at a threshold of
 `r round(fit_tuesday$par[3], 2)`: no threshold at all.
+:::
 
 . . .
 

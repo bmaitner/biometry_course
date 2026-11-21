@@ -1211,7 +1211,9 @@ display:block!important;
 <span id="cb1-15"><a href aria-hidden="true" tabindex="-1"></a>rov<span class="sc">$</span>area <span class="ot">&lt;-</span> <span class="dv">50</span> <span class="sc">*</span> rov<span class="sc">$</span>fov             <span class="co"># seafloor seen: 50 m long, fov wide</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 729 sections, down from 749.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. Renaming first is the habit worth modeling: Depth.water..m. is what read.csv makes of “Depth water [m]”, and nobody wants to type it forty times.</p>
 <p>The area line is the first modeling decision, and it comes before any model: the camera’s field of view varied from about 2 m to over 18 m wide, so some sections saw nine times as much seafloor as others. More seafloor, more sponges, whatever the substrate. The next slides use area to turn counts into densities.</p>
@@ -1241,7 +1243,9 @@ display:block!important;
 <span id="cb2-7"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(rov<span class="sc">$</span>density, rov<span class="sc">$</span>substrate, median)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 13% of sections have no sponges. The variance is about 206 times the mean. Median density: 41.2 per 100 m² on bedrock, 4.4 on sand.</p>
+</div>
 <div class="fragment">
 <p><strong>Think:</strong> why look at the variance against the mean, and at how many zeros there are, before fitting anything?</p>
 <aside class="notes">
@@ -1413,7 +1417,9 @@ display:block!important;
 <span id="cb3-9"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">AICtab</span>(m_pois, m_nb, m_zinb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> the negative binomial beats the Poisson by <strong>111,088</strong> AIC units. Zero inflation adds nothing: 1.9 units <strong>worse</strong>.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. All three are discrete distributions of the same response, so Lecture 18’s rule says their AICs can be compared.</p>
 <p>m_zinb will print warnings about NaNs. Ask what they mean before explaining: the estimated probability of a structurally empty section is pushed almost to zero, the edge of what is possible, and the standard error cannot be computed there. That is itself the answer: with one density everywhere, the zeros are what the negative binomial already expects.</p>
@@ -1529,7 +1535,9 @@ display:block!important;
 <span id="cb5-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(m_both<span class="sc">@</span>min, m_both_2<span class="sc">@</span>min)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> convergence 0, and both starts reach an NLL of 3,640.15.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. Lecture 19’s checklist, items 1 and 2. update() refits a model with something changed, here the start, which saves retyping the whole call.</p>
 <p>Item 5 of the checklist also holds: each bigger model should never fit worse than the smaller ones inside it. The next slide shows they do not.</p>
@@ -1558,7 +1566,9 @@ display:block!important;
 <span id="cb6-2"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(m_both))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>m_both</code> is best, by 16.5 over <code>m_sub</code>. Depth alone is no better than nothing (0.4 units).</p>
+</div>
 <div class="fragment">
 <table class="caption-top">
 <thead>
@@ -1618,7 +1628,9 @@ display:block!important;
 <span id="cb7-12"><a href aria-hidden="true" tabindex="-1"></a>      <span class="at">upper =</span> <span class="fu">apply</span>(fake_zeros, <span class="dv">1</span>, quantile, <span class="fl">0.975</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> sand, 26% observed against 9% to 20% simulated.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. Lecture 19’s “simulate from the fit”, aimed at one feature of the data: the zeros, split by substrate. predict() on an mle2 fit gives the fitted mean count for every row.</p>
 <p>Why zeros, and why by substrate: step 3 tested zero inflation with one density everywhere, which is a weak test. Now that the model knows about substrate, the question can be asked where it matters.</p>
@@ -1714,7 +1726,9 @@ display:block!important;
 <span id="cb8-12"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">plogis</span>(<span class="fu">coef</span>(m_zero)[<span class="st">&quot;logit_z&quot;</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> <code>m_zero</code> is better by <strong>28.9</strong>. About <strong>13%</strong> of sand, gravel and boulder sections are truly empty.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. sediment * plogis(logit_z) is zero on bedrock and biogenic gravels, so those sections are plain negative binomial, and plogis(logit_z) on sand, gravel and boulders.</p>
 <p>The switch is worth pointing out as a general trick: multiplying any term by a 0/1 variable turns it off for some rows and on for others, without writing two models. It works for any parameter, not just zero inflation. One extra parameter, and m_both is nested inside it (logit_z very negative makes the zero inflation vanish).</p>
@@ -1756,7 +1770,9 @@ display:block!important;
 <span id="cb9-13"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(<span class="fu">plogis</span>(draws[, <span class="st">&quot;logit_z&quot;</span>]), <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 4.4 to 7.6; 1.22 to 1.90; 9% to 18%.</p>
+</div>
 <aside class="notes">
 <p>Four minutes. Lecture 21’s recipe: draw, compute, take the middle 95%. The first number uses two parameters, so it needs the recipe. The other two use one parameter each, so transforming the ends of confint() would also work; the recipe is used for all three here only to keep the code in one pattern.</p>
 <p>colnames(draws) is there so students can see the names to type: mle2 names the substrate parameters log_d.substratebedrock and so on.</p>
@@ -1791,7 +1807,9 @@ display:block!important;
 <span id="cb10-12"><a href aria-hidden="true" tabindex="-1"></a>grid<span class="sc">$</span>density <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(m_zero)[col_d] <span class="sc">+</span> <span class="fu">coef</span>(m_zero)[<span class="st">&quot;b&quot;</span>] <span class="sc">*</span> grid<span class="sc">$</span>depth_km)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> bedrock at 1,500 m, 64 sponges per 100 m² (54 to 76).</p>
+</div>
 <aside class="notes">
 <p>Five minutes for this slide and the next. Why not predict()? On an mle2 fit it returns only the fitted line, with no interval, and on a dzinbinom fit it does not work at all (it needs a function called szinbinom, which does not exist). So the band is Lecture 21’s recipe, which works for any model. Lecture 24 shows the shortcut that glm() has.</p>
 <p>col_d is the only new idea: for each row of the grid it builds the name of that row’s density parameter, log_d.substratebedrock or log_d.substratesand, so draws[i, col_d] picks the right one for every point at once.</p>
@@ -1908,7 +1926,10 @@ display:block!important;
 <span id="cb12-7"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># compare the four with AICtab() here</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-<p><strong>Before you fit:</strong> predict which model wins. <strong>Check:</strong> <code>c_both</code> is best, and <code>c_depth</code> beats <code>c_sub</code> by 87 units.</p>
+<p><strong>Before you fit:</strong> predict which model wins.</p>
+<div class="fragment">
+<p><strong>Check:</strong> <code>c_both</code> is best, and <code>c_depth</code> beats <code>c_sub</code> by 87 units.</p>
+</div>
 <aside class="notes">
 <p>On the shorthand, in case someone asks: Keogh et al. (2022) list 116 cnidarian morphospecies from these dives, of which 26 are black corals (Antipatharia), 37 are Alcyonacea (gorgonians and soft corals), 16 are sea pens (Pennatulacea, which are octocorals), and at least one is a stony coral (Solenosmilia variabilis). The rest are sea anemones, cerianthids and hydroids. That is a count of species, not individuals: the dataset only gives the phylum total, so we cannot say what share of the individuals are corals.</p>
 <p>Ten minutes, in pairs. Ask each pair to write their prediction down first, step 1 again. Then the three missing models are copies of the sponge models with “corals” in place of “sponges”.</p>
@@ -1936,7 +1957,9 @@ display:block!important;
 <span id="cb13-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># how many times as dense for every km deeper, with its interval, goes here</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> about <strong>0.08 times</strong> as dense per km deeper (0.06 to 0.11): about <strong>92% fewer</strong> corals for every km.</p>
+</div>
 <div class="fragment">
 <p>Now say it in biology, in one sentence, with the interval.</p>
 <aside class="notes">

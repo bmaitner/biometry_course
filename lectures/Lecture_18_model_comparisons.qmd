@@ -312,7 +312,9 @@ m_occ@min
 ```
 :::
 
+::: {.fragment}
 **Check:** `r round(m_occ@min, 2)`, as on Tuesday.
+:::
 
 ::: {.notes}
 Everything here is from Tuesday, retyped so that nobody depends on last week's
@@ -532,8 +534,10 @@ anova(m_const, m_occ)                              # the same test, in one line
 ```
 :::
 
+::: {.fragment}
 **Check:** a deviance of `r round(dev_occ, 1)`. R prints the p-value as
 `9.439462e-12`, which means 0.0000000000094: the e-12 moves the decimal point 12 places left.
+:::
 
 ::: {.notes}
 Lecture 16 promised this: the trend model beat the one-number model by 23 units,
@@ -745,7 +749,11 @@ AIC(m_flat)
 $$\text{AIC} = 2 \times \text{NLL} + 2 \times (\text{number of parameters})$$
 
 By hand: `m_flat@min` is the NLL, and `m_flat` has **2** parameters, `mu0` and
-`k`. **Check:** both lines give `r round(AIC(m_flat), 1)`.
+`k`.
+
+::: {.fragment}
+**Check:** both lines give `r round(AIC(m_flat), 1)`.
+:::
 
 ::: {.notes}
 m_year uses an exponential decline, mu0 * exp(r * elapsed), rather than the

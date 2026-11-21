@@ -1687,7 +1687,9 @@ display:block!important;
 <li><code>mean = 2 * frogs</code> is the <strong>deterministic</strong> model</li>
 <li><code>sd = 0.5</code> is the <strong>stochastic</strong> model</li>
 </ul>
+<div class="fragment">
 <p><strong>Check:</strong> the first value is 2.04.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. set.seed() makes the random numbers repeatable, so everyone gets the same tadpoles. rnorm() draws from a normal distribution: one draw for each frog density, centered on twice that density, with a spread of 0.5.</p>
 <p>Those are the two branches of the flowchart, written as one line of code.</p>
@@ -1771,7 +1773,9 @@ display:block!important;
 </div>
 </div>
 <p>The real slope is 2. <strong>Which one got closer?</strong> (You just fit two linear models.)</p>
+<div class="fragment">
 <p><strong>Check:</strong> slopes of 1.84 and 2.01.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. With this seed the noisy fit happens to land closer to 2: one draw is luck. The next slides show what happens over many draws.</p>
 <p>lm() never saw how we made the data. It fits its own model, which has the same two halves: a straight line (deterministic) and normal errors with constant variance (stochastic). Our simulation used the same shapes, which is why it lands near the truth. With real data you never get to check that.</p>
@@ -1824,7 +1828,10 @@ display:block!important;
 <span id="cb13-9"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(slopes_noisy)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-<p><strong>What did adding noise do?</strong> <strong>Check:</strong> both means near 2; spreads about 0.09 and 0.54.</p>
+<p><strong>What did adding noise do?</strong></p>
+<div class="fragment">
+<p><strong>Check:</strong> both means near 2; spreads about 0.09 and 0.54.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. replicate() runs the same simulation 1000 times. Each time: make a new dataset, fit a line, keep the slope ([2] is the second coefficient). Exact numbers will differ a little if anyone ran lines more than once.</p>
 <style type="text/css">
@@ -1868,7 +1875,9 @@ display:block!important;
 </div>
 </div>
 <p><strong>Is that p-value impressive?</strong></p>
+<div class="fragment">
 <p><strong>Check:</strong> correlation 0.987; p is tiny.</p>
+</div>
 <aside class="notes">
 <p>Three minutes. We built the data ourselves with very little noise, so a tiny p-value says more about our simulation than about frogs. Bolker suggests reporting anything this small as p &lt; 0.001.</p>
 <p>Compare Sandin and Pacala from Lecture 2: cor.test() says there is an association. It says nothing about the slope, the units or the mechanism.</p>
@@ -1895,7 +1904,9 @@ display:block!important;
 </div>
 <p><strong>How did this differ? Why?</strong></p>
 <p>Different data, same truth: the stochastic part of the model at work.</p>
+<div class="fragment">
 <p><strong>Check:</strong> 0.990, against 0.987 before.</p>
+</div>
 <aside class="notes">
 <p>Two minutes. Nothing about the frogs changed; the estimate moved anyway. Older versions of this slide called this demographic stochasticity. In this simulation the noise is just rnorm(): it stands for whatever scatters the counts, which could be any of Lecture 2’s three kinds, so “sampling variation” is the honest name.</p>
 <style type="text/css">

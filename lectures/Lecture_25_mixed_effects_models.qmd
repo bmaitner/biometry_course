@@ -498,7 +498,9 @@ length(unique(birds$family))    # families
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(n_birds)` species in `r n_fam` families.
+:::
 
 ::: {.notes}
 Two minutes. The same songbirds as Lectures 23 and 24, with one new column:
@@ -522,8 +524,10 @@ summary(mm_lat)
 
 `(1 | family)`: "an intercept (`1`) that varies by (`|`) family".
 
+::: {.fragment}
 **Check:** the latitude slope drops from `r f3(coef(lm_lat)["lat"])` to
 `r f3(fixef(mm_lat)["lat"])` HWI units per degree.
+:::
 
 ::: {.notes}
 Three minutes. lmer() is lm() with one extra piece in the formula. Everything
@@ -679,9 +683,11 @@ confint(mm_lat_ml)     # profile intervals, as in Lecture 17
 ```
 :::
 
+::: {.fragment}
 **Check:** `mm_lat_ml` wins by `r big(aic_vs_null)` over no latitude and by
 `r big(aic_vs_lm)` over `lm_lat`. Slope `r f3(ci_lat["lat", 1])` to
 `r f3(ci_lat["lat", 2])`.
+:::
 
 ::: {.notes}
 Four minutes. REML (restricted maximum likelihood) corrects the standard
@@ -792,7 +798,9 @@ length(unique(bw$route))
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(n_bw)` counts on `r n_routes` routes.
+:::
 
 ::: {.notes}
 Two minutes. factor(route) is Lecture 23's number trap: route 56 is not "more"
@@ -822,8 +830,10 @@ AICtab(g_nb, mm_pois, mm_nb)
 ```
 :::
 
+::: {.fragment}
 **Check:** `mm_nb` wins, by `r big(daic_bw["g_nb"])` over ignoring routes and by
 `r big(daic_bw["mm_pois"])` over the Poisson.
+:::
 
 ::: {.notes}
 Three minutes. glmer.nb() is lme4's negative binomial version, as glm.nb() is
@@ -853,8 +863,10 @@ exp(coef(g_nb)["decade"] / 10) # Lecture 15's answer, for comparison
 ```
 :::
 
+::: {.fragment}
 **Check:** `r f3(yr_n[1])` a year: **`r decl(yr_n)` fewer birds each year**
 (`r decl_ci(yr_n)`), against `r decl(yr_g)` when routes are ignored.
+:::
 
 ::: {.notes}
 Three minutes. Lecture 24's move: a log link, so exp() turns the coefficient into
@@ -1112,10 +1124,12 @@ g_add <- glm(migratory ~ lat + hwi, family = binomial, data = birds)
 **Before you fit:** with `lmer()`, family made the latitude slope's standard
 error **smaller**. Will these get bigger or smaller?
 
+::: {.fragment}
 **Check:** per unit of HWI, the odds ratio goes from `r f2(or_g["hwi"])` to
 `r f2(or_m["hwi"])`. Both standard errors **grow**: latitude's
 `r f1(se_of(mm_mig, "lat") / se_of(g_add, "lat"))` times, HWI's
 `r f1(se_of(mm_mig, "hwi") / se_of(g_add, "hwi"))` times.
+:::
 
 ::: {.notes}
 Ten to fifteen minutes, in pairs. The answer:

@@ -1261,7 +1261,9 @@ display:block!important;
 <span id="cb2-16"><a href aria-hidden="true" tabindex="-1"></a>m_occ<span class="sc">@</span>min</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 56.69, as on Tuesday.</p>
+</div>
 <aside class="notes">
 <p>Everything here is from Tuesday, retyped so that nobody depends on last week’s session still being open.</p>
 <p>Anyone whose package install did not finish uses the two read.csv lines from the previous slide’s notes instead of the two dataset lines.</p>
@@ -1526,7 +1528,9 @@ display:block!important;
 <span id="cb4-13"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(m_const, m_occ)                              <span class="co"># the same test, in one line</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> a deviance of 46.4. R prints the p-value as <code>9.439462e-12</code>, which means 0.0000000000094: the e-12 moves the decimal point 12 places left.</p>
+</div>
 <aside class="notes">
 <p>Lecture 16 promised this: the trend model beat the one-number model by 23 units, twice that is 46, and against a threshold of 3.84 it is not close.</p>
 <p>pchisq with lower.tail = FALSE gives the probability of a deviance at least this large if the smaller model were true. That is a p-value in the usual sense.</p>
@@ -1759,7 +1763,10 @@ display:block!important;
 </div>
 </div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">AIC</mtext><mo>=</mo><mn>2</mn><mo>×</mo><mtext mathvariant="normal">NLL</mtext><mo>+</mo><mn>2</mn><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">number of parameters</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{AIC} = 2 \times \text{NLL} + 2 \times (\text{number of parameters})</annotation></semantics></math></p>
-<p>By hand: <code>m_flat@min</code> is the NLL, and <code>m_flat</code> has <strong>2</strong> parameters, <code>mu0</code> and <code>k</code>. <strong>Check:</strong> both lines give 9257.5.</p>
+<p>By hand: <code>m_flat@min</code> is the NLL, and <code>m_flat</code> has <strong>2</strong> parameters, <code>mu0</code> and <code>k</code>.</p>
+<div class="fragment">
+<p><strong>Check:</strong> both lines give 9257.5.</p>
+</div>
 <aside class="notes">
 <p>m_year uses an exponential decline, mu0 * exp(r * elapsed), rather than the (1 - decline)^year of Lectures 15 and 16. They are the same curve written two ways: r is log(1 - decline). Mention it only if someone notices.</p>
 <p>The by-hand line is there so that AIC is arithmetic they have done, not a number R produced. Two parameters, so the penalty is 4.</p>

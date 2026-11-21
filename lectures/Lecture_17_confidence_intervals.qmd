@@ -832,8 +832,10 @@ m_occ@min      # the lowest NLL it found
 ```
 :::
 
+::: {.fragment}
 **Check:** $a$ = `r f3(a_hat)`, $b$ = `r round(b_hat, 4)`, NLL
 `r round(m_occ@min, 2)`, as on Thursday.
+:::
 
 ::: {.notes}
 Same function as the end of Thursday. The one change is that the data list now

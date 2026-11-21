@@ -1171,7 +1171,9 @@ display:block!important;
 <span id="cb1-12"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">occ_nll</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="sc">-</span><span class="fl">0.05</span>))    <span class="co"># one guess: how good is it?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> about 59.8. The best possible, from Lecture 16, is 56.69.</p>
+</div>
 <aside class="notes">
 <p>The same model as Lectures 16 to 18, written as a function of one vector p, which is the form optim() expects: p[1] is a, the log odds of occupancy in 1997, and p[2] is b, the yearly change.</p>
 <p>Calling it by hand once makes the point that an NLL function is just a scoring rule: give it a guess, it returns how bad the guess is. Every method today is a different strategy for choosing the next guess.</p>
@@ -1232,7 +1234,9 @@ display:block!important;
 <span id="cb2-14"><a href aria-hidden="true" tabindex="-1"></a>grid[<span class="fu">which.min</span>(grid<span class="sc">$</span>nll), ]                  <span class="co"># the best grid point</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> best <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> = 2.02, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> = -0.062, against 2.018 and -0.0619 from <code>optim()</code>.</p>
+</div>
 <aside class="notes">
 <p>Two or three minutes. It takes a few seconds to run, which is part of the lesson; let them wait.</p>
 <p>expand.grid() is the new function: it builds every combination of the values it is given, one row each. system.time() is the other: elapsed is the number to read.</p>
@@ -1263,12 +1267,12 @@ display:block!important;
 <tr class="odd">
 <td>brute force, 2 parameters</td>
 <td>40,401</td>
-<td>4.5 seconds</td>
+<td>5.3 seconds</td>
 </tr>
 <tr class="even">
 <td><code>optim()</code>, 2 parameters</td>
 <td>75</td>
-<td>4.9 thousandths of a second</td>
+<td>2 thousandths of a second</td>
 </tr>
 </tbody>
 </table>
@@ -1286,17 +1290,17 @@ display:block!important;
 <tr class="odd">
 <td>2</td>
 <td>10 thousand</td>
-<td>1.1 seconds</td>
+<td>1.3 seconds</td>
 </tr>
 <tr class="even">
 <td>4</td>
 <td>100 million</td>
-<td>3.1 hours</td>
+<td>3.6 hours</td>
 </tr>
 <tr class="odd">
 <td><strong>6</strong></td>
 <td><strong>1 trillion</strong></td>
-<td><strong>3.5 years</strong></td>
+<td><strong>4.1 years</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1932,7 +1936,9 @@ display:block!important;
 <span id="cb8-12"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(occ<span class="sc">$</span>year, upper, <span class="at">lty =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<div class="fragment">
 <p><strong>Check:</strong> 23 of 23 real years fall inside the band.</p>
+</div>
 <aside class="notes">
 <p>Lecture 13’s simulation idea, pointed at a fitted model. Each fake dataset is what the fitted logistic curve plus binomial scatter would produce. If the real points sat outside the band, the model would be missing something: a trend it does not have, or more scatter than the binomial allows.</p>
 <p>Here all of them sit inside: the model reproduces the data it was fitted to, which is what a good fit should do. About 1 point in 20 outside would also be fine; most outside would not.</p>

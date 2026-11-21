@@ -375,7 +375,9 @@ birds <- na.omit(birds)
 ```
 :::
 
+::: {.fragment}
 **Check:** `r big(nrow(birds))` species, down from `r big(n_all)`.
+:::
 
 ::: {.notes}
 Two minutes. abs() on the latitude because the question is about distance
@@ -438,8 +440,10 @@ c(logLik(m_lat), logLik(lm_lat))
 ```
 :::
 
+::: {.fragment}
 **Check:** both give intercept `r f2(coef(lm_lat)[1])`, slope `r f3(coef(lm_lat)[2])`,
 and log-likelihood `r big(logLik(lm_lat))`.
+:::
 
 ::: {.plain}
 lm() is maximum likelihood with a normal distribution; it just gets there by a faster route.
@@ -486,9 +490,11 @@ sigma(lm_lat)         # the fitted sd of the scatter: s in the mle2 version
 ```
 :::
 
+::: {.fragment}
 **Check:** HWI rises by `r f3(ci_lat[2, 1])` to `r f3(ci_lat[2, 2])` per degree
 of latitude. $R^2$ is `r f2(r2_lat)`: latitude explains `r pct(r2_lat)` of the
 variation.
+:::
 
 ::: {.notes}
 Three minutes. confint() works on lm() fits exactly as on mle2() fits; for
@@ -524,8 +530,10 @@ AIC(lm_num, lm_mig)
 ```
 :::
 
+::: {.fragment}
 **Check:** `lm_num` has one slope, `r f2(coef(lm_num)[2])` per code. `lm_mig` is
 better by `r f1(aic_trap)` AIC units.
+:::
 
 ::: {.notes}
 Four minutes. Bolker's warning, made real. Codes that look like numbers get
@@ -582,8 +590,10 @@ coef(lm_add)
 ```
 :::
 
+::: {.fragment}
 **Check:** `lm_add` is best; separate slopes (`lm_int`) are
 `r f1(aic_all["int"] - aic_all["add"])` units worse.
+:::
 
 ::: {.notes}
 Three minutes. AICtab() works on lm() fits, because they have a
@@ -675,7 +685,9 @@ plot(lm_add, which = 2, sub.caption = "", caption = "", pch = 16, cex = 0.4, id.
 plot(lm_add, which = 1, sub.caption = "", caption = "", pch = 16, cex = 0.4, id.n = 0)
 ```
 
+::: {.fragment}
 **Check:** the points bend up at the right of the Q-Q plot: a long upper tail.
+:::
 
 ::: {.notes}
 Three minutes. Residual: each species' HWI minus what the model predicts for
@@ -711,8 +723,10 @@ predict(lm_add, newdata = new_bird, interval = "prediction")   # one new species
 ```
 :::
 
+::: {.fragment}
 **Check:** confidence `r f1(p_conf[, "lwr"])` to `r f1(p_conf[, "upr"])`;
 prediction `r f1(p_pred[, "lwr"])` to `r f1(p_pred[, "upr"])`.
+:::
 
 Lecture 21's recipe gives the same: `r f1(recipe_conf[1])` to
 `r f1(recipe_conf[2])`, and `r f1(recipe_pred[1])` to `r f1(recipe_pred[2])`.
@@ -758,8 +772,10 @@ ggplot(grid, aes(x = lat)) +
 ```
 :::
 
+::: {.fragment}
 **Check:** `grid` has `r nrow(grid)` rows (71 latitudes × 3 groups) and the
 columns `fit`, `lwr`, `upr`, `pred_lwr`, `pred_upr`.
+:::
 
 ::: {.notes}
 Four minutes. The same two predict() lines as the last slide, but for 213
@@ -912,10 +928,14 @@ lm_hab_num <- lm(hwi ~ lat + migration + habitat_code, data = birds)
 ```
 :::
 
-**Before you fit:** predict which wins. **Check:** `lm_hab_fac` is best, by
+**Before you fit:** predict which wins.
+
+::: {.fragment}
+**Check:** `lm_hab_fac` is best, by
 `r f1(aic_h["num"] - aic_h["fac"])` over `lm_hab_num`; open-country songbirds have
 wings `r f1(ci_open[1])` to `r f1(ci_open[2])` points more pointed than forest
 birds.
+:::
 
 ::: {.notes}
 Ten minutes, in pairs. The trap again, on purpose: habitat_code is 1, 2, 3,
