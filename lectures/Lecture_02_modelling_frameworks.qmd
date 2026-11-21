@@ -161,7 +161,7 @@ the rest of the semester.
 
 # Choosing a model
 
-## Scope and approach: what is the model for? {.smaller}
+## Scope and approach:<br>what is the model for? {.smaller}
 
 **Before the table:** what model choices did the reading mention?
 
