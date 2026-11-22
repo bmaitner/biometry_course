@@ -137,8 +137,9 @@ From midterm feedback, Fall 2025:
   same pass.
 
   Progress: Lectures 01 to 04 were rebuilt in Quarto on 2026-11-18, 05 on
-  2026-11-20, and 06 to 08, 11 and 28 on 2026-11-21, with US spelling and no em-dashes (the
-  Lecture 02 file name is unchanged).
+  2026-11-20, and 06 to 08, 11, 28 and 29 on 2026-11-21 (the last of the Google
+  Slides decks), with US spelling and no em-dashes (the Lecture 02 file name is
+  unchanged).
 
   Where they are, as of September 2026:
 
