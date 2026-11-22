@@ -137,7 +137,7 @@ From midterm feedback, Fall 2025:
   same pass.
 
   Progress: Lectures 01 to 04 were rebuilt in Quarto on 2026-11-18, 05 on
-  2026-11-20, and 06 to 08 on 2026-11-21, with US spelling and no em-dashes (the
+  2026-11-20, and 06 to 08 and 11 on 2026-11-21, with US spelling and no em-dashes (the
   Lecture 02 file name is unchanged).
 
   Where they are, as of September 2026:
@@ -631,9 +631,10 @@ costs one slide and turns the block from an exercise into progress. A slide for
 this is drafted in the change list.
 
 **The `var(x) == sd(x)^2` check on the Lecture 11 activity slide failed on the
-Macs in the room** and passed elsewhere. It is floating point: `var()` and
-`sd()` reach the answer by different routes, and whether the last digits agree
-depends on the machine and the math library R was built against. Confirmed on
+Macs in the room** and passed elsewhere. It is floating point: `sd()` is
+`sqrt(var())`, so `sd(x)^2` rounds twice on the way back to the variance, and
+whether the last digit survives depends on the machine and the math library R
+was built against. Confirmed on
 Brian's Windows machine, where the difference is exactly 0 for AVONET mass.
 
 A slide explaining this is drafted in the Lecture 11 change list: `0.1 + 0.2 ==
