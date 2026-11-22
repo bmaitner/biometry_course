@@ -1,0 +1,556 @@
+---
+title: "Open science"
+subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 29"
+author: "Dr. Brian Maitner"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    embed-resources: true
+    code-line-numbers: false
+    fig-width: 7
+    fig-height: 4.0
+    fig-align: center
+    include-in-header:
+      text: |
+        <style>
+        .type-it { border-left: 6px solid #2a7ab0; padding-left: 0.4em; }
+        .type-it::before, .type-badge {
+          content: "Type and run"; display: inline-block;
+          background: #2a7ab0; color: white; font-weight: bold;
+          font-size: 0.5em; line-height: 1.4; padding: 0 0.6em;
+          border-radius: 4px; vertical-align: middle;
+        }
+        .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        .credit { font-size: 0.5em; font-style: italic; color: #555555; }
+        .small-table table { font-size: 0.8em; }
+        .tiny-table table { font-size: 0.7em; }
+        .out pre code { font-size: 1em; }
+        .callout-box { background: #ffffff; border: 2px solid #555555;
+                       box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+                       padding: 0.4em 0.8em; transform: rotate(-4deg);
+                       font-size: 0.9em; width: 70%; }
+        </style>
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Today's agenda {.smaller}
+
+1. Final presentation reminder
+2. Code and data sharing
+3. Coding time in class (optional)
+
+::: {.notes}
+Reading: Nosek et al. (2015) Science, on transparency and openness standards,
+and Maitner et al. (2024) Ecology and Evolution, on code sharing. The last
+regular class meeting.
+
+The lecture is mostly argument, not technique: why share data, code and methods,
+and the practical how. Many slides build on click; each click adds one piece.
+:::
+
+## Last call: course evaluations {.smaller}
+
+**The online course evaluation closes tomorrow,** Friday, December 4. The link
+is in your USF email and on Canvas.
+
+**If you haven't done it yet, today is a good day.** Your comments shape how
+this course runs next year.
+
+::: {.notes}
+Thirty seconds. Last of three reminders. Consider giving the first ten minutes of
+the coding time at the end of class to complete it.
+:::
+
+## The story so far {.smaller}
+
+**Lecture 27:** what to do when code breaks, and asking for help with a reprex.
+
+**Lecture 28:** making a whole project run on someone else's computer.
+
+**Today:** why share your data, code and methods at all, and how.
+
+::: {.notes}
+Thirty seconds. Last time was how to make a project shareable; today is why it's
+worth the effort.
+:::
+
+## Final presentations {.smaller}
+
+**During the scheduled final exam block** (December 5 to 10). The day and time
+are on Canvas.
+
+**Add your slides to the shared Google Slides file beforehand.**
+
+**Practice your timing** to make sure you're under 5 minutes.
+
+::: {.notes}
+Two minutes. Put the confirmed day and time on this slide once the Academic
+Scheduling Team has assigned the exam slot (the syllabus still says TBD). The
+Google Slides link is on Canvas.
+:::
+
+# Open science
+
+## What is Open Science? {.smaller}
+
+Open Science: "transparent and accessible knowledge that is shared and
+developed through collaborative networks"
+
+::: {.r-stack}
+![](figures/29_hex_plain.png){width="95%"}
+
+![](figures/29_hex_collab.png){.fragment width="95%"}
+
+![](figures/29_hex_three.png){.fragment width="95%"}
+:::
+
+[Gallagher et al. (2020) *Nature Ecology & Evolution*]{.credit}
+
+::: {.notes}
+Three minutes. Six principles around a center. Click once: the center is
+collaboration and inclusion, which is what the six are for. Click again: today
+focuses on three of them, open data, open methods and open source, because they
+are the ones most in your control, and they're free.
+
+Open access (publishing so anyone can read the paper) usually costs money;
+open peer review and open resources are mostly up to journals and institutions.
+:::
+
+# Open data
+
+![](figures/29_icon_data.png){.nostretch width="110"}
+
+## What are open data? {.smaller}
+
+**Available and accessible:** the data must be ***available as a whole*** and at
+no more than a reasonable reproduction cost, preferably by downloading over the
+internet. The data must also be available in a ***convenient and modifiable
+form***.
+
+**Reusable and redistributable:** the data must be provided under terms that
+***permit re-use and redistribution***, including the intermixing with other
+datasets.
+
+**Universal participation:** ***everyone must be able to use***, re-use and
+redistribute. There should be no discrimination against fields of endeavor or
+against persons or groups.
+
+[opendatahandbook.org]{.credit}
+
+::: {.notes}
+Two minutes. The three conditions, from the Open Data Handbook. A dataset
+"available on request" fails the first one; a dataset with a no-commercial-use
+license fails the third.
+:::
+
+## Global questions need global participation {.smaller}
+
+:::: {.columns}
+::: {.column width="58%"}
+![](figures/29_loiseau_2020_map.png)
+:::
+
+::: {.column width="42%"}
+![](figures/29_diaz_2016_spectrum.png)
+
+Global spectrum of plant form and function
+:::
+::::
+
+[Loiseau et al. (2020) *Nature Communications*; Díaz et al. (2016) *Nature*]{.credit}
+
+::: {.notes}
+Two minutes. Neither of these could exist without thousands of people's data:
+the map combines bird records from across the world, and the plant spectrum
+combines traits measured on tens of thousands of species by hundreds of
+researchers. You can't ask global questions without help.
+:::
+
+## Open data enhance reproducibility {.smaller}
+
+![](figures/29_baker_2016_survey.png){width="38%"}
+
+[Baker (2016) *Nature*]{.credit}
+
+::: {.notes}
+Two minutes. A survey of 1,576 researchers: over half thought there was a
+significant reproducibility crisis. You can't check a result without the data
+behind it.
+:::
+
+## Ethical responsibilities {.smaller}
+
+**Publicly funded data are public property.**
+
+**Transparency is a key part of science.**
+
+**Open data increase inclusion.**
+
+**Open data save money!**
+
+[Piwowar et al. (2011) *Nature*]{.credit}
+
+::: {.notes}
+Two minutes. Inclusion: researchers at institutions without the money to
+collect data globally can still answer global questions with shared data.
+Saving money: data collected once and reused many times.
+:::
+
+## Open data improve citations<br>and publications {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+![](figures/29_piwowar_2007_citations.png){width="80%"}
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+![](figures/29_scientific_data_paper.png)
+:::
+:::
+::::
+
+[Piwowar et al. (2007) *PLOS ONE*]{.credit}
+
+::: {.notes}
+Two minutes. Studies that shared their data were cited more than those that
+didn't. Click: and a dataset can be a publication in its own right. Data
+journals such as Scientific Data publish papers that describe a dataset.
+:::
+
+## How to share data {.smaller}
+
+**Range of options**
+
+::: {.r-stack}
+![](figures/29_repo_zenodo.png){.fragment width="70%"}
+
+![](figures/29_repo_figshare.png){.fragment width="70%"}
+
+![](figures/29_repo_dryad.png){.fragment width="70%"}
+
+![](figures/29_repo_osf.png){.fragment width="70%"}
+
+![](figures/29_repo_github.png){.fragment width="70%"}
+
+::: {.fragment .callout-box}
+**Best option:** **L**ots **O**f **C**opies **K**eep **S**tuff **S**afe (**LOCKSS**).
+Reduces the risk of loss, and increases the likelihood people find it (and cite
+it).
+:::
+:::
+
+[Keller et al. (2022) *Methods in Ecology and Evolution*]{.credit}
+
+::: {.notes}
+Three minutes. One click per repository: Zenodo, Figshare, Dryad, OSF, GitHub.
+Different repositories have different pros and cons (file size, number of
+files, cost), but for most datasets you can find one that works. Then the
+punchline: more than one. LOCKSS is a long-standing digital preservation
+principle (and a Stanford Libraries program of the same name): no single copy
+is safe, many independent copies are.
+:::
+
+## What is Open Science? {.smaller}
+
+::: {.r-stack}
+![](figures/29_hex_data.png){width="95%"}
+
+![](figures/29_hex_source.png){.fragment width="95%"}
+:::
+
+[Gallagher et al. (2020) *Nature Ecology & Evolution*]{.credit}
+
+::: {.notes}
+One minute. Hopefully that's convinced you there's value in data sharing. Click:
+but data aren't useful unless we do something with them. That's where open
+source comes in.
+:::
+
+# Open source
+
+![](figures/29_icon_source.png){.nostretch width="110"}
+
+## What is open source? {.smaller}
+
+**Free redistribution:** the license shall not restrict any party from selling
+or giving away the software as a component of an aggregate software
+distribution containing programs from several different sources. The license
+***shall not require a royalty or other fee*** for such sale.
+
+**No discrimination against persons or groups:** the license must not
+discriminate against any person or group of persons.
+
+**No discrimination against fields of endeavor:** the license must not restrict
+anyone from making use of the program in a specific field of endeavor. For
+example, it may not restrict the program from being used in a business, or from
+being used for genetic research.
+
+::: {.fragment}
+**In short: code that is free to use, both in terms of costs and restrictions.**
+:::
+
+[opensource.org/osd]{.credit}
+
+::: {.notes}
+Two minutes. Three of the ten criteria in the Open Source Definition. Read the
+last line after the click: it's the version to remember.
+:::
+
+## Reproducibility and transparency {.smaller}
+
+![](figures/29_peng_2011_spectrum.png)
+
+[Peng (2011) *Science*]{.credit}
+
+::: {.notes}
+Two minutes. Stress that having code is better than nothing, but the further
+right you are, the more confidence others can have in the result. Lecture 28's
+five D's are how you move right.
+:::
+
+## Open source reduces wasted efforts {.smaller}
+
+::: {.r-stack}
+![](figures/29_wasted_1.png){width="100%"}
+
+![](figures/29_wasted_2.png){.fragment width="100%"}
+
+![](figures/29_wasted_3.png){.fragment width="100%"}
+
+![](figures/29_wasted_4.png){.fragment width="100%"}
+
+![](figures/29_wasted_5.png){.fragment width="100%"}
+:::
+
+[Photos via Wikimedia Commons: stoat, Justin Philbois (CC0); macaw, Jebulon (CC0);
+black spiny-tailed iguana, Ken Thomas (public domain).]{.credit}
+
+::: {.notes}
+Four minutes, one click per step. A project combining two datasets: about a
+week to integrate them, two weeks to clean, four for analyses, two for figures.
+Publishing the code takes about ten minutes. Then the next people working on
+other species (the macaw, the iguana) can start from your code instead of
+from scratch.
+
+The punchline is "I saved people months of work, and got a few good
+citations". Or maybe it's the other way: maybe someone saved ME months of work,
+and all it cost me was a citation.
+:::
+
+## Open source reduces barriers {.smaller}
+
+::: {.r-stack}
+![](figures/29_barriers_1.png){width="100%"}
+
+![](figures/29_barriers_2.png){.fragment width="100%"}
+
+![](figures/29_barriers_3.png){.fragment width="100%"}
+:::
+
+::: {.notes}
+Two minutes. Commercial software prices: ArcGIS Pro, MATLAB, JMP, with prices
+as they were when the screenshots were taken. Click: R, Python, QGIS and Julia
+cost $0, so anyone can use them, anywhere, including after you leave a
+university that pays for the licenses.
+:::
+
+## Code sharing increases citations {.smaller}
+
+![](figures/29_maitner_2024_citations.jpg){width="70%"}
+
+[Maitner et al. (2024) *Ecology and Evolution*]{.credit}
+
+::: {.notes}
+Two minutes. This week's reading. Papers that share their code and data are
+cited more over time than closed ones. More open means more citations, which
+means more impact.
+:::
+
+## What is Open Science? {.smaller}
+
+::: {.r-stack}
+![](figures/29_hex_source.png){width="95%"}
+
+![](figures/29_hex_methods.png){.fragment width="95%"}
+:::
+
+[Gallagher et al. (2020) *Nature Ecology & Evolution*]{.credit}
+
+::: {.notes}
+Thirty seconds. On to the third: open methods.
+:::
+
+# Open methods
+
+![](figures/29_icon_methods.png){.nostretch width="110"}
+
+## What are open methods? {.smaller}
+
+Making the methods underlying research open and freely accessible.
+
+**Examples:** laboratory protocols, data collection protocols, metadata
+standards, materials, reagents, and code (which overlaps with open source).
+
+::: {.notes}
+One minute.
+:::
+
+## Open methods increase transparency {.smaller}
+
+![](figures/29_baker_2016_survey.png){width="38%"}
+
+[Baker (2016) *Nature*]{.credit}
+
+::: {.notes}
+One minute. The same survey as before: reproducing a result needs the methods as
+much as the data.
+:::
+
+## Shared methods increase confidence {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+![](figures/29_handbook_plant_traits.png)
+:::
+
+::: {.column width="50%"}
+![](figures/29_handbook_climex.png)
+:::
+::::
+
+[Pérez-Harguindeguy et al. (2013) *Australian Journal of Botany*; Halbritter et
+al. (2020) *Methods in Ecology and Evolution*]{.credit}
+
+::: {.notes}
+Two minutes. Handbooks of standard protocols: if everyone measures leaf area the
+same way, you can trust a comparison between two studies.
+:::
+
+## Shared methods increase compatibility {.smaller}
+
+**Data integration is a major time sink.**
+
+**Using shared metadata standards and methods** increases interoperability.
+
+![](figures/29_trait_data_standard.png){width="65%"}
+
+[Schneider et al. (2019) *Methods in Ecology and Evolution*]{.credit}
+
+::: {.notes}
+Two minutes. Integration was the first week on the wasted-efforts slide. A
+shared standard for column names and units turns that week into an afternoon.
+:::
+
+## Open methods increase data value {.smaller}
+
+::: {.r-stack}
+![](figures/29_value_1.png){width="48%"}
+
+![](figures/29_value_2.png){.fragment width="48%"}
+
+![](figures/29_value_3.png){.fragment width="48%"}
+
+![](figures/29_value_4.png){.fragment width="48%"}
+
+![](figures/29_value_5.png){.fragment width="48%"}
+
+![](figures/29_value_6.png){.fragment width="48%"}
+
+![](figures/29_value_7.png){.fragment width="48%"}
+
+![](figures/29_value_8.png){.fragment width="48%"}
+
+![](figures/29_value_9.png){.fragment width="48%"}
+:::
+
+[PwC, *Putting a value on data*:
+pwc.co.uk/data-analytics/documents/putting-value-on-data.pdf]{.credit}
+
+::: {.notes}
+Four minutes. Eight things that make data valuable. First click: open science
+gives up exclusivity. Each later click circles a driver that open methods
+improve: accuracy, completeness, consistency, usage restrictions,
+interoperability, liabilities and risk, and timeliness. Seven of eight go up.
+
+Arguably, shared workflows and code also speed things up when it matters, for
+example in the response to the Australian bushfires.
+:::
+
+## Methods papers are highly cited {.smaller}
+
+:::: {.columns}
+::: {.column width="42%"}
+![](figures/29_van_noorden_2014_top_papers.png){width="62%"}
+:::
+
+::: {.column width="58%"}
+::: {.fragment}
+![](figures/29_maitner_2024_citations.jpg)
+
+(as are open access papers, so presumably open methods will be especially
+successful?)
+:::
+:::
+::::
+
+[Van Noorden et al. (2014) *Nature*]{.credit}
+
+::: {.notes}
+Two minutes. Most of the 100 most-cited papers of all time describe methods
+(lab techniques, software, statistical approaches), not discoveries. Click: the
+citation curve from earlier, for comparison.
+:::
+
+## What is Open Science? {.smaller}
+
+::: {.r-stack}
+![](figures/29_hex_methods.png){width="95%"}
+
+![](figures/29_hex_collab.png){.fragment width="95%"}
+:::
+
+[Gallagher et al. (2020) *Nature Ecology & Evolution*]{.credit}
+
+::: {.notes}
+One minute. Back to the center: open data, source and methods all serve
+collaboration and inclusion.
+:::
+
+# Wrapping up
+
+## Which tool, when {.smaller}
+
+::: {.small-table}
+| You want to | Do this |
+|---|---|
+| keep your data safe and findable | deposit it in a repository, in more than one place |
+| get credit for a dataset | a DOI from the repository, or a data paper |
+| share code others can run | GitHub, archived on Zenodo, with the five D's from Lecture 28 |
+| analysis software anyone can use | open source: R, Python, QGIS, Julia |
+| results others can compare with yours | shared protocols and metadata standards |
+| more citations | share your data, code and methods |
+:::
+
+::: {.notes}
+The slide to photograph.
+:::
+
+## Remainder of class
+
+Coding time in class (optional).
+
+**Before the final:** prepare your presentations.
+
+::: {.notes}
+The rest of class is project time. Circulate: this is the last chance to catch
+problems with someone's final project code in person.
+:::
