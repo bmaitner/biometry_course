@@ -33,7 +33,7 @@ format:
         .callout-box { background: #ffffff; border: 2px solid #555555;
                        box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
                        padding: 0.4em 0.8em; transform: rotate(-4deg);
-                       font-size: 0.9em; width: 70%; }
+                       font-size: 0.9em; width: 80%; }
         </style>
 execute:
   echo: true
@@ -54,6 +54,10 @@ regular class meeting.
 
 The lecture is mostly argument, not technique: why share data, code and methods,
 and the practical how. Many slides build on click; each click adds one piece.
+
+Four short activities (about 12 minutes): "would you share it?" at the start,
+coming back at the end; "is it open?" on four course datasets; "which are open
+source?"; and predictions before each click of the data-value wheel.
 :::
 
 ## Last call: course evaluations {.smaller}
@@ -95,6 +99,19 @@ are on Canvas.
 Two minutes. Put the confirmed day and time on this slide once the Academic
 Scheduling Team has assigned the exam slot (the syllabus still says TBD). The
 Google Slides link is on Canvas.
+:::
+
+## Your turn: would you share it? {background-color="#f0f4f8" .smaller}
+
+**Your final project: would you share its data and code publicly?**
+
+**If not, what would stop you?**
+
+::: {.notes}
+Three minutes. Write the reasons on the board and leave them up: the last slide
+comes back to them. Expect some of: my code is messy; someone will scoop me; the
+data are sensitive (endangered species locations, private land, people); they're
+not my data; I don't know how. All reasonable, and most get an answer today.
 :::
 
 # Open science
@@ -149,6 +166,37 @@ against persons or groups.
 Two minutes. The three conditions, from the Open Data Handbook. A dataset
 "available on request" fails the first one; a dataset with a no-commercial-use
 license fails the third.
+:::
+
+## Your turn: is it open? {background-color="#f0f4f8" .smaller}
+
+Pick one of these folders in the course repository's `data/`, and read its
+README: `Avonet`, `Mangroves`, `Reef_fish` or `Beetle_competition`.
+
+**Where are the data archived? Under what license? Could you reuse them in a
+published paper?**
+
+::: {.fragment}
+::: {.small-table}
+| Dataset | Archived | License | Open? |
+|---|---|---|---|
+| Avonet | figshare | CC BY 4.0 | yes |
+| Reef_fish | NOAA, with a DOI | CC0 | yes |
+| Mangroves | a university repository, with a DOI | CC BY-NC 4.0 | not by this definition: no commercial use |
+| Beetle_competition | only on GitHub | CC BY 4.0 | open, but not archived: one copy, no DOI |
+:::
+:::
+
+::: {.notes}
+Five minutes in pairs, one dataset each, then fill in the table together.
+
+Mangroves is the interesting one: freely downloadable, but the NC (non-commercial)
+clause fails "no discrimination against fields of endeavor". You could still use
+it in a paper, but not in, say, a consultancy report.
+
+Beetle_competition is the instructor's own unpublished data: openly licensed,
+but sitting in one place with no DOI. That's the setup for the LOCKSS point in a
+few slides.
 :::
 
 ## Global questions need global participation {.smaller}
@@ -242,9 +290,9 @@ journals such as Scientific Data publish papers that describe a dataset.
 ![](figures/29_repo_github.png){.fragment width="70%"}
 
 ::: {.fragment .callout-box}
-**Best option:** **L**ots **O**f **C**opies **K**eep **S**tuff **S**afe (**LOCKSS**).
-Reduces the risk of loss, and increases the likelihood people find it (and cite
-it).
+**Best option:** **L**ots **O**f **C**opies **K**eep **S**tuff **S**afe (**LOCKSS**)
+
+Less risk of loss, and more chance people find it (and cite it).
 :::
 :::
 
@@ -305,6 +353,31 @@ Two minutes. Three of the ten criteria in the Open Source Definition. Read the
 last line after the click: it's the version to remember.
 :::
 
+## Your turn: which are open source? {background-color="#f0f4f8" .smaller}
+
+R &nbsp;·&nbsp; RStudio Desktop &nbsp;·&nbsp; Python &nbsp;·&nbsp; QGIS
+&nbsp;·&nbsp; Excel &nbsp;·&nbsp; ArcGIS &nbsp;·&nbsp; MATLAB &nbsp;·&nbsp; JMP
+&nbsp;·&nbsp; Google Earth
+
+::: {.fragment}
+| | |
+|---|---|
+| **Open source** | R, RStudio Desktop, Python, QGIS |
+| **Paid and closed** | Excel, ArcGIS, MATLAB, JMP |
+| **Free, but not open source** | Google Earth |
+:::
+
+::: {.fragment}
+Free to use is not the same as open: with closed software you can't read,
+change or redistribute the code.
+:::
+
+::: {.notes}
+Two minutes, answered aloud. Google Earth is the one that catches people: it
+costs nothing, but it's proprietary. RStudio Desktop is open source (AGPL); some
+of Posit's server products are commercial.
+:::
+
 ## Reproducibility and transparency {.smaller}
 
 ![](figures/29_peng_2011_spectrum.png)
@@ -354,11 +427,13 @@ and all it cost me was a citation.
 ![](figures/29_barriers_2.png){.fragment width="100%"}
 
 ![](figures/29_barriers_3.png){.fragment width="100%"}
+
+![](figures/29_barriers_4.png){.fragment width="100%"}
 :::
 
 ::: {.notes}
-Two minutes. Commercial software prices: ArcGIS Pro, MATLAB, JMP, with prices
-as they were when the screenshots were taken. Click: R, Python, QGIS and Julia
+Two minutes. Commercial software prices, one click each: ArcGIS Pro, MATLAB,
+JMP, as they were when the screenshots were taken. Last click: R, Python, QGIS and Julia
 cost $0, so anyone can use them, anywhere, including after you leave a
 university that pays for the licenses.
 :::
@@ -452,6 +527,8 @@ shared standard for column names and units turns that week into an afternoon.
 
 ## Open methods increase data value {.smaller}
 
+**Before each click:** which of these would open methods make better?
+
 ::: {.r-stack}
 ![](figures/29_value_1.png){width="48%"}
 
@@ -476,10 +553,10 @@ shared standard for column names and units turns that week into an afternoon.
 pwc.co.uk/data-analytics/documents/putting-value-on-data.pdf]{.credit}
 
 ::: {.notes}
-Four minutes. Eight things that make data valuable. First click: open science
-gives up exclusivity. Each later click circles a driver that open methods
-improve: accuracy, completeness, consistency, usage restrictions,
-interoperability, liabilities and risk, and timeliness. Seven of eight go up.
+Four minutes. Eight things that make data valuable. Ask for a prediction
+before each click. First click: open science gives up exclusivity. Each later
+click circles a driver that open methods improve, in order around the wheel: timeliness, accuracy, completeness,
+consistency, usage restrictions, interoperability, and liabilities and risk. Seven of eight go up.
 
 Arguably, shared workflows and code also speed things up when it matters, for
 example in the response to the Australian bushfires.
@@ -526,6 +603,28 @@ collaboration and inclusion.
 :::
 
 # Wrapping up
+
+## Back to your list {.smaller}
+
+**Which of your reasons not to share did today answer?**
+
+::: {.fragment}
+::: {.small-table}
+| Worry | From today |
+|---|---|
+| my code is messy | messy shared code beats none (Peng's spectrum) |
+| someone will scoop me | a DOI makes it citable, and repositories can embargo data until your paper is out |
+| the data are sensitive | share what you can: metadata, or coarsened locations; some data shouldn't be fully open |
+| they're not my data | ask the owner; you can still share your code |
+| I don't know how | Zenodo, Dryad, OSF or Figshare for data; GitHub plus Zenodo for code |
+:::
+:::
+
+::: {.notes}
+Three minutes. Go back to the list on the board from the start of class and
+cross off what today answered. Whatever is left is worth a real conversation;
+sensitive data in particular is a good reason, not an excuse.
+:::
 
 ## Which tool, when {.smaller}
 
