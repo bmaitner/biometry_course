@@ -23,6 +23,14 @@ format:
           border-radius: 4px; vertical-align: middle;
         }
         .type-badge { font-size: 0.7em; }
+        .plain { background: #fff6dc; border-left: 6px solid #d9a400;
+                 padding: 0.25em 0.6em; margin-top: 0.5em; }
+        .plain::before { content: "In plain words"; display: block;
+                         font-weight: bold; font-size: 0.7em; color: #8a6a00; }
+        .credit { font-size: 0.5em; font-style: italic; color: #555555; }
+        .small-table table { font-size: 0.8em; }
+        .tiny-table table { font-size: 0.7em; }
+        .out pre code { font-size: 1em; }
         </style>
 execute:
   echo: true
@@ -51,9 +59,9 @@ nb_fit <- optim(par = c(mu0 = 12, b = -3, size = 1.4),
 
 ## Today's agenda {.smaller}
 
-- Final project: questions from Thursday
-- Debugging: what to do when your code breaks
-- Where to go for help, from people and from machines
+1. Final project: questions from Thursday
+2. Debugging: what to do when your code breaks
+3. Where to go for help, from people and from machines
 
 . . .
 
@@ -67,6 +75,20 @@ and scientific coding.
 Two things in one class, held together loosely by "what do you do when you
 are stuck". The final project was explained on Thursday (Lecture 26, in
 Lecture_26_code_and_data_style); today only takes questions about it.
+:::
+
+## The story so far {.smaller}
+
+**Lecture 25:** mixed models, the last new statistics of the course.
+
+**Lecture 26:** writing code and data that other people can read.
+
+**Today:** what to do when the code breaks, and who to ask.
+
+::: {.notes}
+Thirty seconds. From here the course is about the final project and the habits
+that make it work: style last time, debugging and help today, reproducibility
+next time.
 :::
 
 ## From here on: the final project
@@ -85,7 +107,7 @@ and code sharing. Mixed models (Lecture 25) were the last new statistical
 material.
 :::
 
-## Debugging {.center}
+# Debugging
 
 Something you have all been doing already.
 
@@ -134,11 +156,13 @@ pleased someone cared enough to report a bug well.
 
 When the error is not obvious, check these before anything else:
 
-- **Commas, quotes and parentheses.** Especially nested ones
-- **Variable names.** `adult_svl` and `adult_svl_cm` are different columns
-- **`NA`s**, which propagate silently through means and sums
-- **Class.** A number read in as a factor behaves nothing like a number
-- **Rows against columns.** `traits[4, ]` and `traits[, 4]` are very different
+| Suspect | What to look for |
+|---|---|
+| **Commas, quotes and parentheses** | especially nested ones |
+| **Variable names** | `adult_svl` and `adult_svl_cm` are different columns |
+| **`NA`s** | they propagate silently through means and sums |
+| **Class** | a number read in as a factor behaves nothing like a number |
+| **Rows against columns** | `traits[4, ]` and `traits[, 4]` are very different |
 
 ::: {.notes}
 That last one catches people constantly and the error message never says
@@ -214,12 +238,13 @@ wrong.
 Debugging is harder inside `for()`, `while()` and `apply()`, because the thing
 that breaks is on iteration 4,417 and you cannot see it.
 
-Techniques:
+**`message()` inside the loop,** to print where you are.
 
-- `message()` inside the loop, to print where you are
-- Set `i` by hand and run the **body** line by line
-- Re-run **only the iterations that failed**
-- Have the loop record what it did, not just what it produced
+**Set `i` by hand** and run the body line by line.
+
+**Re-run only the iterations that failed.**
+
+**Have the loop record what it did,** not just what it produced.
 
 ::: {.notes}
 The deepest habit to transmit: a loop that writes down what it is doing is
@@ -253,6 +278,11 @@ annual_fecundity
 ```
 :::
 
+::: {.fragment}
+**Check:** the `&` should be `|`. As written, a species is skipped only when
+both values are missing, so the ones missing just one value come out as `NA`.
+:::
+
 ::: {.notes}
 Two bugs, and neither raises an error.
 
@@ -266,13 +296,15 @@ at 20 rows to keep it quick.
 Ask what the output would look like if you only ever checked that it ran.
 :::
 
-## Asking a person {.center}
+# Asking a person
 
 ## Search well {.smaller}
 
-- Include **"R"** and the **package name**
-- Paste the **error message**, but strip out your own object names
-- If that fails, search a **description** of the goal rather than the error
+**Include "R" and the package name.**
+
+**Paste the error message,** but strip out your own object names.
+
+**If that fails, search a description** of the goal rather than the error.
 
 . . .
 
@@ -306,7 +338,12 @@ reprex({
 ```
 :::
 
-Run it and read the output.
+Run it and read the output. Then make a version without the error.
+
+::: {.fragment}
+**Check:** it fails with `could not find function "ggplot"`. The fix is to put
+`library(tidyverse)` inside the `reprex({ })`.
+:::
 
 ::: {.notes}
 It runs in a clean session, which is the whole point: it will fail on the
@@ -318,10 +355,13 @@ they have forgotten about.
 
 ## What makes an example reproducible {.smaller}
 
-- It includes the `library()` calls
-- It includes the **data**, or a few rows of it, or a link
-- It is as **small** as possible while still breaking
-- It is self-contained: no objects from your session
+**It includes the `library()` calls.**
+
+**It includes the data,** or a few rows of it, or a link.
+
+**It is as small as possible** while still breaking.
+
+**It is self-contained:** no objects from your session.
 
 . . .
 
@@ -337,10 +377,13 @@ the minimum is itself a diagnostic.
 
 When you post a question or open an issue:
 
-- **Be very nice.** You are asking a stranger to work for free
-- Supply a reprex
-- **Assume it is your error**, because it usually is
-- Say what you already tried
+**Be very nice.** You are asking a stranger to work for free.
+
+**Supply a reprex.**
+
+**Assume it is your error,** because it usually is.
+
+**Say what you already tried.**
 
 . . .
 
@@ -351,7 +394,7 @@ to a forum. That is where the person who can fix it reads.
 "Assume it is your error" is both good manners and good odds.
 :::
 
-## AI and coding {.center}
+# AI and coding
 
 ## The landscape in 2026 {.smaller}
 
@@ -373,14 +416,61 @@ Review is the safest: it only ever suggests. Agents are the most dangerous for a
 beginner, because code enters the project without passing through your eyes.
 :::
 
+## Which tool? (as of fall 2026) {.smaller}
+
+::: {.tiny-table}
+| Option | Runs code on your computer? | Cost to a student | Good for |
+|---|---|---|---|
+| **Search summaries:** Google AI Overviews | no | free | very common questions |
+| **Chat in a browser:** Claude, ChatGPT, Gemini | no | free tiers; paid plans about $20/month | explaining errors, quick questions |
+| **Microsoft Copilot Chat**, signed in with your USF account | no | free through USF | the same, on a university account |
+| **In your editor:** GitHub Copilot in VS Code or Positron (autocomplete only in RStudio) | no: it suggests, you run it | free for verified students | boilerplate while you write |
+| **Agents:** Claude Code, OpenAI Codex, Google Antigravity CLI, Copilot agent mode | **yes**: it edits files and runs code | Copilot's is free for students; Codex is limited on ChatGPT's free plan; Claude Code needs Claude Pro ($20/month) | multi-step work, if you can review it |
+:::
+
+Prices and free tiers change every few months: check before you pay.
+
+::: {.notes}
+Checked on the vendors' own pages on 2026-11-21:
+
+Claude: Free $0 (no Claude Code), Pro $20/month ($17 billed annually, includes
+Claude Code), Max $100, Ultra $200. No individual student discount; Anthropic
+sells an education plan to universities.
+
+GitHub Copilot: Copilot Free (limited completions and credits); Copilot Student
+free for verified students, with automatic model selection only (students can't
+pick the model) and no third-party agents; verified teachers may get Copilot Pro
+free. Copilot Pro is otherwise $10/month.
+
+ChatGPT: Free, Go, Plus and Pro plans; Codex is "Limited" on Free and Go. The
+official page didn't show prices when checked; third-party listings give Go at
+$8 and Plus at $20 a month.
+
+Google: Gemini CLI was replaced by Antigravity CLI on June 18, 2026. Check
+Google's current limits before recommending it.
+
+USF: Microsoft Copilot Chat is available to all students, faculty and staff
+(USF IT update, April 15, 2026). The university's tool list page was down when
+checked, so I couldn't confirm what data protections apply; worth asking USF IT
+before telling students it's safe for unpublished data.
+
+RStudio's Copilot integration is autocomplete only, and has to be switched on in
+Global Options.
+:::
+
 ## What it is genuinely good at {.smaller}
 
-- **Explaining an error message** you do not recognize
-- **Translating between dialects**: base R to tidyverse and back
-- **Boilerplate** you have written fifty times: themes, file loops, axis labels
-- **Regular expressions**, which nobody enjoys
-- Finding the **name of a function** you half-remember
-- A first draft of **comments and documentation**
+**Explaining an error message** you do not recognize.
+
+**Translating between dialects:** base R to tidyverse and back.
+
+**Boilerplate** you have written fifty times: themes, file loops, axis labels.
+
+**Regular expressions,** which nobody enjoys.
+
+**Finding the name of a function** you half-remember.
+
+**A first draft of comments and documentation.**
 
 ::: {.notes}
 Notice what these have in common: in every case you can tell immediately whether
@@ -389,11 +479,14 @@ the answer is right, because you know what you wanted.
 
 ## What it is bad at {.smaller}
 
-- **Your data.** It has never seen it and will assume it is tidy and complete
-- **Statistical judgment.** It will pick a model that matches the words in your
-  question, not the structure of your data
-- **Recent changes.** Packages move; training data has a cutoff
-- **Saying "I don't know."** It will produce something either way
+**Your data.** It has never seen it and will assume it is tidy and complete.
+
+**Statistical judgment.** It will pick a model that matches the words in your
+question, not the structure of your data.
+
+**Recent changes.** Packages move; training data has a cutoff.
+
+**Saying "I don't know."** It will produce something either way.
 
 . . .
 
@@ -561,10 +654,11 @@ years learning what wrong code looks like.
 
 From the syllabus, and it has not changed:
 
-- **Code**: AI is allowed, on assignments, the midterm and the final project
-- **Writing**: the text in your Part 1 and your final write-up is **yours**.
-  No AI, no plagiarism
-- **Any use must be cited**
+| | |
+|---|---|
+| **Code** | AI is allowed, on assignments, the midterm and the final project |
+| **Writing** | the text in your Part 1 and your final write-up is **yours**: no AI, no plagiarism |
+| **Either** | any use must be cited |
 
 . . .
 
@@ -609,9 +703,10 @@ that is exactly where bugs live.
 
 ## Two things not to paste {.smaller}
 
-- **Unpublished data** that is not yours to share, including a collaborator's or
-  a lab's. A chat window is a third party
-- **Anything under an agreement**: permits, embargoed data, human subjects data
+**Unpublished data** that is not yours to share, including a collaborator's or
+a lab's. A chat window is a third party.
+
+**Anything under an agreement:** permits, embargoed data, human subjects data.
 
 . . .
 
@@ -633,9 +728,11 @@ If you use an AI tool, ask it for an analysis you already know the answer to.
 
 Suggestions, all from this course:
 
-- "Fit a model of bobwhite counts against year"
-- "Test whether reef fish richness differs with depth"
-- "Is this distribution overdispersed?"
+"Fit a model of bobwhite counts against year"
+
+"Test whether reef fish richness differs with depth"
+
+"Is this distribution overdispersed?"
 
 . . .
 
@@ -652,18 +749,25 @@ Some will get a perfectly good answer, which is worth saying out loud. The goal
 is calibration, not a demonstration that it always fails.
 :::
 
-## Take-away {.smaller}
+# Wrapping up
 
-1. **Read the error**, then run it line by line, then search it
-2. **Code that runs is not code that works**
-3. A **reprex** is how you ask a human, and it often answers itself
-4. AI is good at things you can **check at a glance**, and unreliable at
-   things that need to know your data
-5. **Cite what you use**, including the tools
+## Which tool, when {.smaller}
+
+::: {.small-table}
+| When | Do this |
+|---|---|
+| your code errors | read the error, then run it line by line, then search it |
+| your code runs | check the answer anyway: code that runs is not code that works |
+| a loop breaks | `message()`, set `i` by hand, re-run the failures |
+| you need a human | search first, then ask with a **reprex** |
+| it's a package bug | open an issue on the package's GitHub |
+| AI helps | trust it for things you can check at a glance, not things that need your data |
+| you used AI or a package | **cite it** |
+:::
 
 ::: {.notes}
-Point 2 is the one connecting the debugging half to the AI half, and it is worth
-saying it is the same lesson twice.
+The slide to photograph. The second row is the one connecting the debugging
+half to the AI half, and it is worth saying it is the same lesson twice.
 :::
 
 ## Before next class
