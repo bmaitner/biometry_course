@@ -1,797 +1,274 @@
-# Course notes and planned improvements
+# Course notes
 
-Running list of things to change in the course. Migrated here from GitHub issues
-on the previous repository (`bmaitner/Statistical_ecology_course`), which is no
-longer maintained. All of these came out of teaching the course in Fall 2025.
+What to change before the next offering, and what teaching the course in Fall
+2026 showed. Finished work is recorded in `CHANGELOG.md`; the full history of
+these notes is in git.
 
-Original issues, for reference:
-
-- [#1 Consider splitting into 2 or 3 courses?](https://github.com/bmaitner/Statistical_ecology_course/issues/1) — opened 2025-09-10
-- [#2 Midterm feedback 2025](https://github.com/bmaitner/Statistical_ecology_course/issues/2) — opened 2025-10-14
-- [#3 General notes](https://github.com/bmaitner/Statistical_ecology_course/issues/3) — opened 2025-12-13
+The list started as GitHub issues on the previous repository
+(`bmaitner/Statistical_ecology_course`, Fall 2025):
+[#1 Consider splitting into 2 or 3 courses?](https://github.com/bmaitner/Statistical_ecology_course/issues/1),
+[#2 Midterm feedback 2025](https://github.com/bmaitner/Statistical_ecology_course/issues/2),
+[#3 General notes](https://github.com/bmaitner/Statistical_ecology_course/issues/3).
 
 ---
+
+# Before the next offering
 
 ## Course structure
 
 ### Consider splitting into 2 or 3 courses
 
-This course might be more effective if split into multiple courses. For example:
+1. **Intro to R:** using the command line, finding files, loading data, plotting
+   data, data wrangling, etc.
+2. **Stats in R:** essentially the *Ecological Models and Data in R* book.
+3. **Advanced R:** building packages, using docker, etc. Things that aren't
+   covered in 1 or 2.
 
-1. **Intro to R** — using the command line, finding files, loading data, plotting data, data wrangling, etc.
-2. **Stats in R** — essentially the *Ecological Models and Data in R* book
-3. **Advanced R** — building packages, using docker, etc. Essentially things that aren't covered in 1 or 2.
+The optional supplements (below) are a cheap test of demand for the third.
 
 ### Move the assignment and the data search earlier, and add at-home problems
 
-Proposed after teaching Lecture 6 in Fall 2026. The problem it solves: students
-arrive at the in-class exercises without enough independent R practice, so the
-exercises run slowly, so the work block gets squeezed, so they get even less
-practice. Adding more in-class time does not break that loop because there is no
-more time to add.
+Proposed after teaching Lecture 6 in Fall 2026. Students arrive at the in-class
+exercises without enough independent R practice, so the exercises run slowly, so
+the work block gets squeezed, so they get even less practice. More in-class time
+can't break that loop because there is none to add.
 
-The proposal is to shift practice out of class:
+1. **Introduce Assignment 1 at Lecture 4** rather than Lecture 6, making
+   "think about data of interest" a real deadline.
+2. **Move the data go-around to Lecture 4 too.** In Lecture 5 it left one class
+   day to find data for students who needed help; Lecture 4 gives a week.
+3. **A short problem set after each lecture from 4 on**, on the student's own
+   dataset. The content exists already, as the "Your turn" prompts from Lectures
+   5 and 6:
+   - after Lecture 4: read the data in, report its class, list the variables and
+     their classes, find and fix one formatting problem;
+   - after Lecture 5: a histogram raw and logged, a scatterplot, a boxplot, a
+     barplot;
+   - after Lecture 6: a correlation matrix, a pairs plot, two groups side by side
+     with fixed axes, labeled and saved.
 
-1. **Introduce Assignment 1 earlier**, at Lecture 4 rather than Lecture 6.
-   Lecture 4's reading row already says "think about data of interest", so the
-   nudge exists; this makes it a real deadline instead of a suggestion.
-2. **Move the data go-around earlier too**, to Lecture 4. In Fall 2026 it was in
-   Lecture 5, which left one class day to find datasets for the students who
-   needed help. Lecture 4 gives a full week.
-3. **Add a short problem set after each lecture from 4 onward**, worked on the
-   student's own dataset rather than on AVONET.
+That list is Assignment 1 in three weekly pieces, which may be the better
+structure outright: problems surface while there's time to fix them, and class
+time becomes troubleshooting rather than first attempts. The cost is more
+grading events and Canvas setup; the problem sets could be participation-graded
+or self-checked, with Assignment 1 unchanged.
 
-The third is the substantive change. The natural content already exists: it is
-the "Your turn" prompts from the Lecture 5 and 6 decks, moved out of class.
-Roughly:
+Keep two things: the go-around still has to produce Brian's dataset-hunting
+list with lead time, and some guided work stays in class (Lecture 6's work
+pauses were the part that worked).
 
-- After Lecture 4: read your dataset in, report its class, list the variables and
-  their classes, find and fix one formatting problem.
-- After Lecture 5: a histogram raw and logged, a scatterplot, a boxplot, a
-  barplot, all on your own data.
-- After Lecture 6: a correlation matrix, a pairs plot, two groups side by side
-  with fixed axes, labeled and saved.
+### Move the R supplement out of class
 
-Worth noticing what that list is: it is Assignment 1, broken into three weekly
-pieces. That may be the better structure outright. Smaller and more frequent
-means problems surface while there is still time to fix them, students cannot
-leave the whole thing to the last night, and the in-class time turns into
-troubleshooting what they already attempted rather than first attempts.
+Brian's proposal after teaching Lecture 10. Working through the book's R
+supplement (e.g., 3.6) in the room is the most substitutable part of the period:
+students can follow it alone, and the room goes quiet while everyone works at a
+different pace. Candidates for the recovered time, roughly in order of how well
+they use having Brian in the room:
 
-The cost is more grading events, though not more work per event, and Canvas
-setup for three submissions instead of one. If that is too much, the problem sets
-could be participation-graded or self-checked, with Assignment 1 unchanged as the
-graded deliverable.
+- the same shape-finding work on students' own datasets;
+- the at-home problem sets above, done in class with help available;
+- choosing between two defensible shapes, argued out loud;
+- starting the next chapter, to relieve schedule pressure later.
 
-Two things to keep if this happens:
+First, students need to be able to get through the supplement alone: list the
+sections on the syllabus reading rows rather than on the slides, and find some
+way to tell who did it.
 
-- **The go-around still has to produce Brian's dataset-hunting list.** Whatever
-  lecture it lands in, he needs lead time before the assignment to find data for
-  students who do not have any.
-- **Keep some guided work in class.** Lecture 6's four work pauses were the part
-  that worked; the point is to have students arrive already having tried, not to
-  remove the trying from the room.
+### Introduce Assignment 2 in Lecture 11
 
-Related: this overlaps with "Add additional examples to course R scripts" below,
-and with the "Intro to R" strand of the course-splitting idea above. See also
-"Move the R supplement out of class", from Lecture 10, which is the same trade
-applied to the book's R supplements.
+The work block at the end of Lecture 11 (load a focal dataset, run the day's
+functions on it) is Part 2 of Assignment 2 under another name, so one slide turns
+it from an exercise into progress. Drafted for Fall 2026 and not used (update the
+dates); it goes just before "Remainder of class":
 
-### Add an optional track that goes beyond the course
+> **Assignment 2: Distributions**
+>
+> Out Thursday, due Thursday Oct 8
+>
+> Part 1: 12 kinds of data. For each, say whether it is discrete or continuous,
+> then name a distribution and why. (Table 4.1 and section 4.5)
+>
+> Part 2: your own dataset, at least 3 numeric variables. Histogram, discrete or
+> continuous, mean and median, and an argument for a distribution.
+>
+> The rest of today is the start of Part 2.
 
-Proposed 2026-10-16. Students who want more than the course covers currently
-have nowhere to go, and some of them clearly want it. The idea is a set of
-optional, self-contained modules, each paired with a worked example and
-something runnable they can adapt.
+Say that Part 1 needs the next reading and Part 2 doesn't, and show the shape of
+a two-step answer (discrete or continuous first, then the distribution).
 
-Candidate topics, from the first pass:
+### Lecture 7 is too long
 
-- **Visualization beyond the basics.** Color palettes, and the ggplot extensions
-  worth knowing: `ggridges`, `ggbump`, `patchwork`, `gt` for tables.
-- **Visualizing model predictions.** Already listed under "Content gaps" below,
-  and the single most requested thing after a model is fitted.
-- **Competition and other dynamic models.** Fitting the models the ecology
-  students actually want to fit, which the book does not reach.
-- **Geospatial analysis.** `sf`, rasters, making a map that is not embarrassing.
-- **Package development.** `devtools`, documentation, tests, a repository that
-  someone else can install from.
-- **Finding data, and pulling it with APIs.** The step that blocks final
-  projects, and the one the course currently waves at.
+It ran out of time at slide 27 of 34 in Fall 2026, pushing six slides into
+Lecture 8. Options, not yet decided: consolidate the filter block (seven
+slides), move the ungroup block and grouping exercise to at-home practice (see
+above), or shorten the opening quiz. The deck's agenda notes name the "& and |"
+pair as the first cut.
 
-**Why this matters beyond being nice to have:** it is a cheap experiment on the
-course-splitting idea above. The "Advanced R" course in that proposal is a large
-commitment made on a guess about demand. An optional track costs one module at a
-time, and whichever modules get used become its syllabus. If none get used, that
-is an answer too, and it cost a weekend rather than a semester.
+### Optional supplements
 
-These are **not** material to deliver in class. They are decks a student can work
-through alone, during the course or long after it, and they double as the first
-drafts of lectures for a possible "Biometry II".
-
-**Proposed implementation is in `supplements/README.md`**, written 2026-10-16.
-The short version: build them as revealjs decks in the course template, so they
-can walk into a future schedule, and render a scrolling reading version from the
-same source for people working alone. The rule that makes a supplement different
-from a lecture is that it has to work with nobody in the room, so the reasoning
-that normally lives in speaker notes has to be visible. Sort the topics by
-whether they help a student this semester or anchor weeks of a future course:
-figures and data wrangling are the former, geospatial, dynamic models and package
-development are the latter.
+Proposed 2026-10-16; plan and build order in `supplements/README.md`.
+Self-contained decks for students who want more, that work with nobody in the
+room, and double as first drafts of a possible "Biometry II". At the
+mid-semester check-in students wanted all of them; ranked interest: geospatial,
+writing an R package, getting messy data into shape, reproducible pipelines.
+New requests: phylogenetics and genetics. Other candidates: visualization beyond
+the basics (palettes, `ggridges`, `ggbump`, `patchwork`, `gt`), visualizing model
+predictions, competition and other dynamic models, finding data and pulling it
+with APIs.
 
 ## Course materials
 
-From midterm feedback, Fall 2025:
-
-- [ ] Add additional examples to course R scripts. Add more documentation, comments, and links to book or slides.
-- [ ] Include additional R coding resources
-- [ ] Link assignments explicitly to Pages/Chapters in the text book or to specific lectures/slides.
-- [ ] Strip the em-dashes out of the course materials. They are in the syllabus
-  (7), `data/short_links.md` (3), the Lecture 3 to 5 slide decks, and this file.
-  Deliberately left alone during Fall 2026 because the materials had already gone
-  out to students; fix them before the next offering. Restructure the sentences
-  rather than swapping in a hyphen.
-
-- [ ] Switch the course materials to US spelling. The course is taught in the US,
-  and some materials use British forms. Left alone during Fall 2026 for the same
-  reason as the em-dashes: they had already gone out to students. Fix both in the
-  same pass.
-
-  Progress: Lectures 01 to 04 were rebuilt in Quarto on 2026-11-18, 05 on
-  2026-11-20, and 06 to 08, 11, 28 and 29 on 2026-11-21 (the last of the Google
-  Slides decks), with US spelling and no em-dashes (the Lecture 02 file name is
-  unchanged).
-
-  Where they are, as of September 2026:
-
-  - **Decks:** "modelling" in Lectures 02 (3, plus "modelled"), 03 (12), 18 (4),
-    22, 23 and 26; "analyse" and "optimisation" in Lecture 03; "labelled" in
-    Lecture 06. Counts are from the PDF exports in `lectures/`.
-  - **Syllabus:** the Lecture 2 row, "Frameworks for modelling".
-  - **Quiz and assignments:** `Quiz_L03_2026_Chapter1.md` question 3, and the opening
-    paragraphs of `Assignment_3.md` and `Assignment_4.md`. Re-render after editing.
-  - **Scripts:** the section header "lecture 18 modelling fir data" in
-    `R_scripts/Chapter_6_examples.R`.
-  - **File name:** `Lecture_02_modelling_frameworks`. Renaming it means updating
-    the Drive deck title too, and any links to it.
-
-  Do not change code. `summarise()` is a dplyr function and `colour =` is a valid
-  ggplot argument, so every `summarise` in the scripts and decks, and the `colour`
-  arguments in `Chapter_5_examples.R` and `Chapter_6_examples.R`, stay as they
-  are. "Analyses" as a plural noun is standard US English and is not on this list.
+- [ ] **Remaining em-dashes:** `syllabus/syllabus.md` (7) and
+  `data/short_links.md` (3). Restructure the sentences rather than swapping in a
+  hyphen. The decks are clean.
+- [ ] **Remaining British spelling:** Lectures 14, 25 and 26; the syllabus (the
+  Lecture 2 row, "Frameworks for modelling"); `Quiz_L03_2026_Chapter1.md`
+  question 3; the section header "lecture 18 modelling fir data" in
+  `R_scripts/Chapter_6_examples.R`. Re-render after editing. Don't change code:
+  `summarise()` and `colour =` are valid function and argument names. The file
+  name `Lecture_02_modelling_frameworks` is unchanged on purpose (renaming it
+  breaks links).
+- [ ] **Swap Bolker's own data and examples in the slides.** Students meet them
+  in the reading, so reusing them in class repeats rather than reinforces (Brian,
+  2026-11-18). Known spots: Lecture 2's Sandin and Pacala (2005) opener; Lecture
+  3's Duncan and Duncan (2000) seed predation data in "One dataset, three
+  answers", "Likelihood and Bayes, drawn" and "Same data, same conclusion"
+  (compute the new numbers at render time); Lecture 4's long and wide tables.
+  Keep his frameworks and figures (Table 1.1, the Figure 1.5 flowchart). Check
+  later decks as they're revised.
+- [ ] **Say why, not just what.** After Lecture 9 the reasons were thinner than
+  the mechanics. Lines to add, in Lecture 9 and the chapter 3 material: why name
+  a curve at all (parameters let you compare how fast, how big, where the peak
+  is); why separate phenomenological and mechanistic forms (the form decides the
+  questions you can ask); why a failing curve is useful (how it fails says what
+  to try next); why sum of squares (it makes "better fit" a number). Bolker 3.1
+  makes most of these. Reasons that live only in speaker notes get said only if
+  remembered.
+- [ ] **More visuals in Lecture 2**, which is still mostly text and screenshots.
+  Generate figures in R rather than reusing the book's.
+- [ ] **Add the `ungroup()` examples** from the Lecture 7 deck ("Still grouped",
+  "group_by() is sticky", "The quiet version") to `R_scripts/Lecture_07_examples.R`.
+- [ ] **More examples in the course R scripts**, with comments and links to the
+  book or slides (Fall 2025 midterm feedback).
+- [ ] **Additional R coding resources** (Fall 2025 midterm feedback).
+- [ ] **Link assignments explicitly** to book chapters and to specific lectures
+  (Fall 2025 midterm feedback). Lecture 6's "You already have the tools" slide
+  does this for Assignment 1.
 
 ## Content gaps
 
-- [ ] Add in more content about model interpretation
-- [ ] Add in more content about visualizing model predictions for complicated models
-  - Partly covered from Fall 2026: Lecture 22 (Step 8) draws an mle2 model with a
-    factor and a continuous predictor in ggplot, with Lecture 21's recipe for the
-    band on a grid. bbmle's `predict()` gives no intervals, and fails outright on
-    `dzinbinom` fits (no `szinbinom`), so the recipe is the general route.
-    Lecture 23 draws an `lm()` fit the quick way (`predict(interval = ...)` on an
-    `expand.grid()` grid, two `geom_ribbon()` layers, `facet_wrap()`) and uses the
-    figure as a model check: share of species inside the prediction band, and
-    which side the misses fall on. Lecture 24 (Fall 2026) draws a `glm()` fit:
-    `predict(type = "link", se.fit = TRUE)` on a grid, `plogis()` on the fit and
-    both ends, two ribbons for two HWI values. Still missing: interactions or more
-    than two predictors.
-- [x] **When rebuilding Lectures 23 and 24: the built-in interval tools, as
-  shortcuts for Lecture 21.** Lecture 21 (Fall 2026) built confidence bands and
-  prediction intervals by hand: draw parameter sets with `MASS::mvrnorm()` from
-  `coef()` and `vcov()`, compute, take the middle 95%, and simulate the scatter
-  for a prediction interval. Its closing slide promises that `lm()` and `glm()`
-  have shortcuts in Lectures 23 and 24. The 2025 `lm()` slides were left out of
-  Lecture 21 on purpose, because `lm()` and `glm()` are not introduced until 23.
-  The old Lecture 24 deck has only three slides on `predict()` (about 23 to 25),
-  for `lm()` only. To cover:
-  - `predict(fit, interval = "confidence")` and `interval = "prediction"` for
-    `lm()`, checked against Lecture 21's recipe on the same model, the way
-    Lecture 20 checked a hand-written NLL against `glm.nb()`.
-  - `predict()` on a `glm()` has **no** `interval` argument and silently ignores
-    one. The band comes from `se.fit = TRUE` on the link scale, then
-    back-transforming the ends (Lecture 17's back-transformed endpoints). There is
-    no built-in prediction interval for a GLM; the recipe's simulation is how.
-  - `confint()` on `lm()` and `glm()` fits, the same as on `mle2()`.
-  - The grey ribbon from `geom_smooth()` (seen in Lecture 8) is a **confidence**
-    band, not a prediction band.
-  - **Done in Lecture 23 (Fall 2026):** the `lm()` items above (`predict()` with
-    both intervals, checked against the recipe; `confint()`; the `geom_smooth()`
-    ribbon, in the notes). **Done in Lecture 24 (Fall 2026):** the `glm()`
-    items: the silent `interval =` trap (and its logit-scale answer), the band
-    from `se.fit = TRUE` on the link scale checked against Lecture 21's recipe on
-    the same bobwhite occupancy model, and the recipe named as the only route to
-    a GLM prediction interval.
-- [x] **Show that `lm()` and `glm()` are also maximizing a likelihood**, by fitting
-  one model both ways and comparing estimates and `logLik()`. **`lm()` done in
-  Lecture 23** (identical estimates and `logLik()` to `mle2()` on the
-  hand-wing index regression); **`glm()` done in Lecture 24** (Lecture 16's
-  bobwhite occupancy model, `mle2()` and `glm()`, same estimates and `logLik()`).
-  Raised while
-  planning Lecture 19 and deferred until those functions are introduced
-  (Lectures 23 and 24). Lecture 20's challenge already does this once, with
-  `glm.nb()`.
+- [ ] **Model interpretation.**
+- [ ] **Visualizing predictions from more complicated models.** Lectures 21 to 24
+  cover one continuous predictor plus a factor (mle2 fits via Lecture 21's
+  simulation recipe; `lm()` with `predict(interval = )`; `glm()` with
+  `se.fit = TRUE` on the link scale). Still missing: interactions, and more than
+  two predictors.
 
 ## Logistics
 
-- [ ] Split submission in Canvas for multi-part assignments. E.g., one for code and one for a Word document.
+- [ ] **Split Canvas submissions** for multi-part assignments, e.g. one for code
+  and one for a Word document.
 
 ## Infrastructure
 
-- [ ] **Cut a release and mint a Zenodo DOI for this repository, at the end of
-  the semester.** Deferred deliberately on 2026-10-19: better to archive a
-  finished semester than a half-taught one.
+- [ ] **Cut a release and mint a Zenodo DOI for this repository at the end of
+  the semester.** The DOI badge in `README.md` (10.5281/zenodo.17923198) archives
+  the predecessor repository's v1.2025 release, not this one; `biometry_course`
+  has no releases yet. Enable the Zenodo GitHub integration **first**, then
+  publish the tag: Zenodo only archives releases made after it starts watching.
+  Relabeling the badge in the meantime was considered and declined (2026-10-19).
+- [ ] **Put the course on a github.io site.** Now unblocked: every lecture
+  renders to self-contained HTML. Mostly a matter of turning on GitHub Pages and
+  adding an index page linking the decks, syllabus, assignments and data
+  READMEs. Decide at the same time: whether the rendered HTML stays in the
+  repository (about 4 to 10 MB per deck) or is built on push; whether the site
+  replaces or supplements Canvas links (start it at the beginning of an
+  offering, not mid-semester); and whether to use Quarto's
+  `project: type: website`, probably the least work. PDF was looked at and
+  dropped (2026-10-12): Quarto can reach PDF only through LaTeX, which loses the
+  badges and backgrounds. Before the site goes public, check the figures README
+  for images used under journal copyright.
+- [ ] **Set the repository homepage** once the site exists.
+- [ ] **Record Quarto in `renv.lock`**, and run `renv::restore()` once on the
+  teaching machine. Until then, rendering needs
+  `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE`, because the project library is empty.
+- [ ] **Consider moving `data/Deer_movement/MD_dataset.RDS` out of the
+  repository.** At 92 MB it is more than half the clone, and every student clones
+  it in Lecture 5, on classroom wifi, at the same time. It could live behind a
+  download link in its README.
 
-  The problem it fixes: the DOI badge in `README.md`,
-  `10.5281/zenodo.17923198`, archives **`bmaitner/Statistical_ecology_course`**,
-  the predecessor repository, at its v1.2025 release. It does not archive this
-  repository, and `biometry_course` has no releases at all. Anyone citing the
-  course from that badge cites a December 2025 snapshot that predates lectures
-  9, 10, 12 to 16 and 26, the figures supplement, `data/class_examples`, and the
-  automated checks.
+## Conventions to keep
 
-  Order matters when you do it: enable the Zenodo GitHub integration **first**,
-  then publish the tag. Zenodo only archives releases published after it starts
-  watching, so a release cut before the switch is flipped is invisible to it.
-
-  Until then, the badge in the README points at the predecessor's archive.
-  Relabeling it in the meantime was considered and **declined** on 2026-10-19:
-  low stakes, and the real DOI in December resolves it anyway. No need to raise
-  it again before then.
-
-- [ ] **Set the repository homepage** once the github.io site exists. The
-  description was filled in on 2026-10-19; homepage was left empty rather than
-  pointed at the predecessor's DOI.
-
-- [ ] **Put the course on a github.io site**, once enough lectures exist as
-  HTML. The Quarto decks are self-contained HTML already, so publishing is
-  mostly a matter of turning on GitHub Pages for this repository and adding an
-  index page that links the decks, the syllabus, the assignments and the data
-  READMEs.
-
-  Not yet: as of 2026-10-12 six of the lectures are Quarto (9, 10, 12, 13, 14,
-  15, plus two solution decks) and the rest are still Google Slides exported to
-  pptx and pdf. A site that covers a third of the semester is worse than no site,
-  because students cannot tell which link is current.
-
-  Worth deciding at the same time:
-
-  - Whether the rendered deck HTML stays in the repository, about 4 MB each, or
-    whether Pages builds them from the `.qmd` on push. Building on push keeps the
-    repository small but needs the data files to be reachable at build time.
-  - Whether the site replaces Canvas links or supplements them. Students have
-    been sent Google Slides links all semester, so mid-semester switching would
-    be confusing. Starting the site at the beginning of the next offering avoids
-    that.
-  - Quarto has a `project: type: website` mode that would handle the index,
-    navigation and rendering in one go, which is probably less work than
-    assembling a site by hand.
-
-  Related: the PDF question was looked at on 2026-10-12 and dropped. Quarto can
-  only reach PDF for these decks through LaTeX, which loses the "Type and run"
-  badges and the exercise backgrounds, and the browser route is not something
-  Quarto or R can do on its own. HTML is the format.
-
-- [x] **The midterm is Markdown now**, converted on 2026-10-06, with
-  `midterm/render_midterm.R` producing the `.docx` and `.html` the same way the
-  assignments and quizzes work. The `.html` is gitignored, the `.docx` is kept
-  because students download it.
-
-  **Named by year.** `Midterm_2025` is the Fall 2025 version, kept so future
-  classes have a past midterm to practice on, and so parts of it can be reused.
-  Its wording is unchanged, but its links were repointed from
-  `Statistical_ecology_course` to `biometry_course` so it stays usable.
-  `Midterm_2026` is the Fall 2026 version. Add `Midterm_2027` next year rather
-  than editing this year's.
-
-  These were `Midterm_a` and `Midterm_b` until 2026-10-23, when students said
-  the letters were confusing: nothing said which was which. Everything in
-  `midterm/` now carries the year, data files included (`midterm_2026_2a.RDS`
-  and so on), renamed after the 2026 midterms were graded so that no submitted
-  script broke before it was checked. `midterm/README.md` lists what belongs to
-  which year.
-
-- [ ] **Convert the slides to Markdown, so the decks are fully reproducible.**
-  Quarto's `revealjs` format is the obvious target: plain-text source, code
-  chunks that actually execute, HTML for teaching and PDF for the repo from one
-  file. It also dogfoods what the course teaches — hard to argue for
-  reproducibility in Lecture 28 while the lectures themselves are binary blobs
-  edited in a browser.
-
-  What it would fix:
-
-  - **Slides can't drift from the scripts.** Code on the slides would run at
-    render time. The `%>%` → `|>` change in Fall 2026 had to be made twice, by
-    hand, in two places, and the decks were missed for weeks.
-  - **No more stale exports.** Right now the `.pptx`/`.pdf` in `lectures/` are
-    downloads that go out of date silently. A `.qmd` renders to both.
-  - **Figures get generated, not pasted.** The Holling curve, distribution plots,
-    and so on would come from code, which also sidesteps reusing copyrighted
-    figures.
-  - **Real diffs.** Slide changes would show up in `git log` as readable text
-    instead of a changed binary.
-
-  What it would cost:
-
-  - The visual polish of Google Slides — layouts, icons, image placement. Reveal
-    themes can get close, but not for free.
-  - No more editing from any browser, and no collaborative editing.
-  - A one-time conversion of 26 decks. Speaker notes do survive (Quarto revealjs
-    supports them), so that work isn't lost.
-  - Quarto isn't in `renv.lock` yet.
-
-  **Piloted in Lecture 9 (Fall 2026).** Lecture 9 turned out to be the right
-  first candidate rather than 07 or 08: it was being built from scratch, so
-  there was no conversion cost at all. `lectures/Lecture_09_deterministic_functions.qmd`
-  renders to a self-contained revealjs deck with Quarto 1.9.37, which is already
-  installed. Speaker notes live in `::: {.notes}` blocks and open with the `s`
-  key. Every figure and every printed result is computed at render time, so the
-  separate `Lecture_09_figures.R` became optional.
-
-  If the pilot holds up in class, the rest can follow a deck at a time, and
-  Lectures 07 and 08 remain the best conversion candidates because they are
-  almost entirely code.
-
-  Two things to sort out before converting more:
-
-  - **`quarto` and `revealjs` are not in `renv.lock`.** Quarto's revealjs does
-    not need the R package, but the lockfile should record the dependency.
-  - **Rendering needs `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE` on this machine**,
-    because the project renv library is not restored, so Quarto finds an empty
-    library and reports knitr and rmarkdown missing. Running `renv::restore()`
-    once would fix it properly.
-
-  This also serves the "add more examples, link slides to scripts" item above —
-  with Quarto, a deck and its example script could share source rather than being
-  maintained in parallel.
+- **Midterms are named by year** (`Midterm_2025`, `Midterm_2026`, data files
+  included). Add `Midterm_2027` next year rather than editing this year's.
+  `midterm/README.md` lists what belongs to which year.
+- **Run `Rscript R_scripts/ci_checks.R` before teaching from a changed deck.** It
+  replays every "Type and run" block in slide order in a fresh session, the
+  failure that broke Lecture 13 in class.
 
 ---
 
-## Noticed while teaching, Fall 2026
-
-**Lecture 2 timing was right.** The expanded deck — roughly double the Fall 2025
-version, adding the Sandin & Pacala opener, Table 1.1 in three groups, the
-Holling curve activity, and the variability block — filled the session without
-running over or short. No need to trim or pad it next time.
-
-**Lecture 3 timing was right too, and the restructure worked.** Fall 2025 ran
-about 25 minutes of lecture and then sent students to work through §1.7 on their
-own, which wasn't very useful. Fall 2026 replaced that with alternating blocks —
-three frameworks, code, the modeling process, code, wrap — and filled the
-session. Keep the alternating structure; it is what the later lectures already
-do well.
-
-Two things that made it work and are worth preserving:
-
-- The frogs/tadpoles session doubles as a walk through Figure 1.5. Students build
-  a deterministic and a stochastic part by hand, then fit and test them.
-- The confidence-interval demo. With `set.seed(101)` the 95% interval for the
-  slope is (1.69, 1.98) and misses the true value of 2. Simulating 1000 datasets
-  shows 95% coverage, so the miss is the lesson rather than a mistake.
-
-- [ ] **Swap Bolker's own data and examples for new ones in the lecture slides.**
-  Brian's note, 2026-11-18: students should already have met Bolker's examples
-  in the reading, so reusing them in class repeats rather than reinforces.
-  Fresh examples that make the same point test whether they understood the idea,
-  not just the example. Known spots:
-
-  - Lecture 2: the Sandin and Pacala (2005) opener, Bolker's chapter 1 example.
-  - Lecture 3: the Duncan and Duncan (2000) seed predation data in "One dataset,
-    three answers", "Likelihood and Bayes, drawn" and "Same data, same
-    conclusion" (all three need new numbers, ideally computed at render time).
-  - Lecture 4: the long and wide format tables use the same seed predation
-    data (stations, dates, `psd` and `uva`).
-
-  Keep Bolker's frameworks and figures, such as Table 1.1 and the Figure 1.5
-  flowchart; it is his datasets and worked examples that should change. Check
-  the later decks for the same thing as each one comes up for revision.
-
-**Lecture 4 timing was good, but has less slack than 2 and 3.** The expanded deck
-(plain text, metadata, long/wide, the readxl block, and the −999 demo) fit the
-session. The margin is thinner though: it depends on debugging going quickly, and
-a larger class or a slower room could push it over. If it needs trimming, the
-long/wide pair is the most cuttable — it previews Lecture 26 (code and data style) rather than covering
-assigned reading.
-
-**Lecture 5 ran tight but held.** The rebuilt deck (the git block, the moved-up
-data go-around, and the 14-slide exploratory graphics block) got through all of
-its content, but left only 10 to 15 minutes for students to start on 2.6 rather
-than the 25 that was planned. So the front of the lecture runs about 10 to 15
-minutes longer than estimated.
-
-Nothing to cut: the content was worth the time and the session did not overrun.
-The thing to change is the expectation, not the deck. 2.6 is effectively a
-Lecture 6 activity, so plan it that way rather than treating it as carry-over,
-and drop the "(if needed)" from the Lecture 6 agenda.
-
-If a future offering does need the room, the cut list in the Lecture 5 draft
-still holds: the overplotting slide first, then the boxplot and barplot slides,
-demonstrated live from the script instead.
-
-**Lecture 6 ran tight, and the work time lost again.** The rebuilt deck (the four
-assignment-support slides, the moved-up data-source block, and the ten-slide
-guided block on students' own data) fit, but left only a few minutes for 2.6.
-That is the second lecture running where the planned work block got squeezed to
-almost nothing: Lecture 5 planned 25 minutes and got 10 to 15, Lecture 6 planned
-10 and got less.
-
-The pattern is now clear enough to act on. The front of every rebuilt deck runs
-10 to 15 minutes longer than estimated, and the in-class work is always what
-absorbs it, because it sits at the end. See "Move the assignment and the data
-search earlier" under Course structure for the fix Brian proposed.
-
-**Lecture 7 ran out of time at slide 27 of 34.** Class ended on "What went
-wrong?", the NA-in-summarise slide. Brian showed the closing slide (the R4DS
-chapter 1 reading and the Assignment 1 reminder) and told the class Lecture 8
-would pick up at slide 28 before moving on to ggplot2. So Lecture 8 starts with
-six carried-over slides: the three-slide ungroup block, the grouping Your turn,
-and both slice-function slides. That makes three lectures in a row where the deck
-outran the class.
-
-Knock-on effects:
-
-- Lecture 8 was already the longest deck of the semester (41 slides), and now has
-  those six slides in front of it.
-- Quiz 4 had a question on ungroup(). The quiz is given before the carried-over
-  slides, so that question was dropped, which also shortens the quiz.
-
-Options for next offering, not yet decided: cut or consolidate examples in the
-filter block (seven slides), move the ungroup block and grouping exercise into
-at-home practice (see the at-home problems proposal under Course structure), or
-shorten the opening quiz.
-
-**Lecture 8 worked well**, even with the six carried-over slides from Lecture 7
-in front of the ggplot2 deck. No slides were cut. The candidate cuts that had
-been lined up in case it ran long (the three categorical by categorical slides,
-the geom_line pair, and "Soooo many more options") stay in for now.
-
-**Lecture 9 timing was good**, the first deck of the semester to fit comfortably.
-Two things are worth keeping from it.
-
-**Partial code on the exercise slides worked.** Every "Your turn" gave students a
-worked example plus a skeleton with the body left blank, rather than the full
-answer or a blank script. The technical name is scaffolding, and the specific
-version here, a worked example next to a problem with pieces removed, is a
-completion problem. The point is that the removed piece is the thing being
-learned and everything else is handed over, so nobody spends the pause stuck on
-syntax they already know. Use this pattern for the remaining rebuilt decks.
-
-Related and also worth keeping: the decks label which code blocks students should
-type and run, with a badge, so the rest is understood to be for watching. Added
-after slide 20 of Lecture 9 asked students to use a function the slides had never
-told them to type.
-
-- [ ] **Say why more often, not just what.** Brian's note after teaching Lecture
-  9: the slides move quickly from one function to the next, and Bolker's text is
-  clearer than the slides about the motivation. Students followed the mechanics
-  but the reasons were thinner than they should have been.
-
-  Places to add a line, in Lecture 9 and in the chapter 3 material generally:
-
-  - Why bother naming a curve at all, rather than staying with the scatterplot:
-    parameters let you say how fast, how big, and where the peak is, and compare
-    those numbers across sites or species.
-  - Why the phenomenological and mechanistic forms of one curve are worth
-    separating: the form you choose decides which questions you can ask.
-  - Why a curve that fails is useful: how it fails tells you what to try next,
-    which is the spine of the whole lecture and is currently implicit.
-  - Why sum of squares at all, before any theory: it makes "better fit" a number
-    instead of an opinion.
-
-  Bolker 3.1 makes most of these directly. Some are already in the speaker notes,
-  which means they get said only if Brian remembers to say them; the ones that
-  matter should be on the slides.
-
-**Lecture 24 backup activity, if it runs short (2026-11-12).** Lecture 23
-finished about 20 minutes early, so Lecture 24 may too. If it does: Brian gives
-the biology of a study out loud, and the class says what to fit:
-
-- which model: `lm()`, `glm()` and its family, `glm.nb()`, or `nls()`
-- which link, if any
-- which covariates, and which interactions
-
-It is the closing "Which tool, when" table run backwards, and it is practice for
-Assignment 4, which asks for exactly these choices and the reasons for them.
-It is in the deck as two optional slides after "Which tool, when" ("Your call:
-which model?"), six studies with the answers revealed one click at a time, so
-it can be skipped without editing anything. Record here whether it was used and
-how it went. If it works, consider making it
-a standing slide next year.
-
-**Lecture 18 ran a bit long (2026-10-22).** The deck had grown to 46 slides
-through same-day additions, on top of a quiz, the Assignment 3 introduction and
-an in-class package install. Trimmed afterwards to 41 by cutting slides that
-repeated others: a "what today gives you" map that duplicated the agenda and the
-closing "which tool, when" table; a "where we are" table next to "the story so
-far"; a one-line "setting the bar" transition; the words version of "nested
-models", kept in symbols only; and "what you can now do", which the closing
-table already covers. "The story so far" went from six lines to three.
-
-Two calibrations for the lectures after it:
-
-- **Recaps lighter than in Lecture 18.** The check-in asked for recaps, but one
-  short "story so far" (three lines) plus the closing "which tool, when" table
-  is enough. Keep the "In plain words" boxes to the central ideas, not every
-  slide that mentions a statistic.
-- **Quizzes faster.** Quiz 8 had five questions including a short calculation;
-  aim for four, each answerable in a line, with at most one that needs any
-  arithmetic.
-
-**Mid-semester check-in, Lecture 17 (2026-10-20).** Asked out loud rather than
-on cards, which has worked before. Two results:
-
-1. **The coding is going well; the statistics need simplifying, with recaps
-   throughout.** Read alongside the Lecture 15 note below: the scaffolded code is
-   working, so the bottleneck has moved to the statistical ideas. Response,
-   starting with Lecture 18:
-
-   - A **"the story so far"** slide near the start of each statistics lecture:
-     the chain of ideas to date, one plain sentence each, ending on what today
-     adds to it.
-   - An **"In plain words"** box on every slide that introduces a statistical
-     idea: one sentence, no symbols, saying what it means and what to do with it.
-   - A **"which tool, when"** summary at the end, so the lecture closes on how
-     the new tool sits next to the old ones rather than on the last technique.
-
-   Lectures 15 to 17 (likelihood, complex functions, confidence intervals) are the
-   ones to retrofit first when they are next revised; they carry the most new
-   statistics per slide.
-
-2. **Optional supplements: they want all of them.** Ranked interest, highest
-   first: geospatial (D), writing an R package (F), getting messy data into
-   shape (B), reproducible pipelines (G), then "actually all of them". Two new
-   requests: a **phylogenetics** module and a **genetics** module. The plan and
-   build order in `supplements/README.md` are updated to match.
-
-**Lecture 15 went well, and the redacted exercises are why.** Brian's report
-after teaching it: the blanked-out activities kept students busy, held their
-interest, and visibly excited them when they worked it out.
-
-What "redacted" means here, because the detail matters. The exercises do not
-leave a word missing from an otherwise complete line. They give the structure,
-the data and the comments, and replace the substantive lines with a prompt:
-
-```r
-trend_nll <- function(mu0, decline, size){
-  mu <- mu0 * (1 - decline)^year
-  # your negative log-likelihood goes here
-  # (hint: you wrote one for these counts a few slides ago)
-}
-```
-
-So the student has to retrieve something they wrote twenty minutes ago rather
-than pattern-match a gap. Retrieval is what makes it feel like solving rather
-than transcribing, and it is what produced the reaction. Use this form for
-in-class activities from here on, in preference to `____` blanks.
-
-The other half of it is that the answer is checkable: the decline comes out at
-2.9% a year against the 3% assumed in Lecture 14, so students know immediately
-whether they got it. Pair a redacted exercise with a number they can recognize
-as right.
-
-**Lecture 14's reef exercise was not finished, and that was fine.** Students
-found the open-ended version hard, and Brian judged the struggle productive: the
-deck hands them the five decisions and a skeleton with blanks, but no function
-names. Keep that balance rather than filling it in.
-
-Two changes after teaching it. The setup block now drops the 8 surveys out of
-8560 that recorded no fish, because `log(0)` is `-Inf` and it stopped people
-before they reached any statistics, which is a data-cleaning trap rather than the
-skill being practised. And an "If something breaks" slide lists the three
-symptoms to expect, including handing `rlnorm()` a raw mean instead of a log
-mean, without giving the fixes.
-
-There is now a separate student-facing solutions deck,
-`Lecture_14_reef_exercise_solutions.qmd`, to post after class, plus a gitignored
-`R_scripts/Lecture_14_reef_solution.R`. Worth repeating for other open-ended
-exercises: the solution deck removes the "did I get it right" anxiety without
-removing the struggle.
-
-**Lecture 13 got through all of its material**, in spite of the data-loading
-problem below, and the timing looks about right for the period once the setup
-slide is in. That ends the run of short lectures: 30, 40 and 50 minutes early for
-Lectures 10, 11 and 12, then a full period here. The difference is the worked
-examples on real data, which is worth remembering as the thing to add when a deck
-runs short.
-
-**Lecture 13's slides did not work in class: the data were never loaded.** The
-deck told students to run `mean(cardinals)` and to simulate from `frogs`, but
-nothing had told them to load either one. The deck itself rendered correctly,
-because its hidden setup chunk loads the data for the figures, so the fault was
-invisible from the rendered slides and only appeared in the room.
-
-Fixed by adding a "Get set up" slide at the head of the worked-examples section
-in Lectures 12 and 13, loading the BBS counts and the tadpole data, with a
-`length(cardinals)` check that should print 71. Lecture 12 had the same latent
-fault in the block added after it was taught, and would have failed the same way.
-
-**The general rule, now checked automatically:** every object used in a labeled
-"Type and run" block must be created by an earlier "Type and run" block.
-`R_scripts/check_deck_student_code.R` extracts those blocks from a deck in slide
-order and runs them in sequence, exactly as a student typing along would, and
-reports the first one that fails. Run `check_all_decks()` before teaching from a
-rebuilt deck. It labels the two legitimate failures, fill-in-the-blank exercises
-and "use your own data" placeholders, so anything else it reports is a real bug.
-
-**Lecture 12 finished about 50 minutes early**, on the rebuilt Quarto deck, and
-that is three short lectures in a row with the gap growing each time: 30, 40,
-then 50 minutes. The fix applied here was ten slides of worked examples on real
-data from the course repository, which is the thing the decks were thinnest on.
-Worth treating as the default remedy rather than adding more explanation: the
-material was understood, there was just not enough practice attached to it.
-
-**Lecture 11 finished about 40 minutes early**, the second short lecture in a
-row and the larger of the two. The deck is 22 slides after the check-in was cut.
-The recommended additions in the Lecture 11 change list take it to 30, and even
-then it is unlikely to fill the period, which supports the supplement proposal
-above rather than arguing against it: there is room in these classes for work
-that currently happens at home, or for the at-home practice to happen here.
-
-Worth introducing Assignment 2 in this lecture rather than the next one. The
-work block at the end of Lecture 11, loading a focal dataset and running today's
-functions on it, is Part 2 of the assignment under another name, so naming it
-costs one slide and turns the block from an exercise into progress. A slide for
-this is drafted in the change list.
-
-**The `var(x) == sd(x)^2` check on the Lecture 11 activity slide failed on the
-Macs in the room** and passed elsewhere. It is floating point: `sd()` is
-`sqrt(var())`, so `sd(x)^2` rounds twice on the way back to the variance, and
-whether the last digit survives depends on the machine and the math library R
-was built against. Confirmed on
-Brian's Windows machine, where the difference is exactly 0 for AVONET mass.
-
-A slide explaining this is drafted in the Lecture 11 change list: `0.1 + 0.2 ==
-0.3` is FALSE everywhere, `all.equal()` is the fix, and `==` stays fine for
-whole numbers and text. Two points worth keeping for future offerings: demo it
-with `0.1 + 0.2` rather than the variance, because the variance version passes
-on Windows, and the students hit the bug before being told about it, which is
-the best possible setup for the explanation.
-
-**Lecture 10 finished about 30 minutes early**, not counting the time set aside
-for the R supplement. That is the first deck with slack in it rather than
-overrun, and it came right after two overruns and one deck that fit, so the
-rebuilt decks are now landing short. Useful calibration: a 32-slide Quarto deck
-with four work pauses runs about an hour.
-
-- [ ] **Move the R supplement out of class and put something else in that time.**
-  Brian's proposal after teaching Lecture 10. **Not for Fall 2026.** Students have
-  already been told how the class periods work, and the syllabus reading rows have
-  gone out, so draft this before the next offering rather than mid-semester. Working through 3.6 in the room is
-  the most substitutable thing in the period: it is a tutorial students can follow
-  on their own, and it is the part where the room goes quiet and everyone works at
-  a different pace.
-
-  What to put in the recovered time is the open question. Candidates, roughly in
-  order of how well they use having Brian in the room:
-
-  - The same shape-finding work on the students' own datasets, which is where
-    they will actually have to choose a function, and where the reasons are
-    harder than on a textbook dataset.
-  - The at-home problem sets proposed under Course structure, done in class
-    instead, so the troubleshooting happens with help available.
-  - More examples of choosing between two defensible shapes, argued out loud.
-    That is the skill the lecture is really teaching and it got the least time.
-  - Starting the next chapter's material, which would buy back some of the
-    schedule pressure later in the semester.
-
-  What has to be true first: students can get through the supplement alone. The
-  chapter scripts and the labeled type-along code on the slides are most of that,
-  but the supplement sections should be listed explicitly on the reading row in
-  the syllabus rather than assigned from the slides, and it is worth some way to
-  tell who actually did it before class builds on it.
-
-  Related: this is the same move as the at-home problems proposal under Course
-  structure, applied to the supplement rather than to the exercises.
-
-- [ ] **The slides need more visuals — they're text-heavy and a bit dull.**
-  Noticed across the rebuilt Lectures 2 and 3, where most of the new material is
-  prose and code with very few figures.
-
-  Generate figures in R rather than reusing the book's. It sidesteps the
-  copyright question on a public repo, and the code becomes teaching material in
-  its own right. Candidates that are cheap to make:
-
-  - **Likelihood curve** for the seed predation data — `dbinom(51, 941, p)`
-    across a range of `p`, with the maximum marked at 0.054. Would make the
-    likelihood slide concrete instead of abstract.
-  - **Posterior density** for the same data, for the Bayesian slide.
-  - **Frogs vs tadpoles**, clean and noisy side by side. The script already draws
-    these; they just aren't on the slides.
-  - **Histogram of slope estimates**, clean vs noisy, with the true value marked.
-    Already in `Chapter_1_examples.R`.
-  - **Coverage** — a sample of confidence intervals as horizontal lines, with the
-    ones that miss the true value picked out in a different color.
-
-  Worth noting that the Markdown/Quarto conversion below makes this much cheaper:
-  figures would be generated at render time from the code already in the chapter
-  scripts, rather than pasted in as images that then go stale.
-
-  **Lecture 3 done 2026-11-18** in its Quarto rebuild: all five figures above,
-  drawn at render time (the likelihood and posterior side by side, frogs clean
-  and noisy, the slope histograms, and 50 intervals with the misses in orange).
-  Lecture 2 is still mostly text plus screenshots.
-
-- [ ] **Consider moving `data/Deer_movement/MD_dataset.RDS` out of the repo.**
-  At 92 MB it is more than half the 167 MB clone. Students now clone the repo in
-  Lecture 5, so every one of them pays for it, on classroom wifi, simultaneously.
-  The dataset library is deliberate and worth keeping, but this one file could
-  live behind a download link in its README like the Bolker seed data does.
-
-- [x] **Lecture 2 should make "write code in a script, not the console" explicit.**
-  Lecture 2 is where students first open RStudio, and by week four some are still
-  typing code straight into the console. The exported Lecture 2 deck never
-  mentions the console, the source pane, or creating a new R script, so this is a
-  gap rather than a point that was made and missed.
-
-  It matters more than it looks, because nearly everything later depends on it:
-
-  - Console code is gone when the session ends, so there is nothing to rerun,
-    fix, or hand in. Assignment 1 grades reproducibility and documentation at
-    20% each, and neither is possible without a script.
-  - Every "Your turn" pause from Lecture 5 onward assumes students are building up
-    a file they can edit and rerun. Typos cost far more class time when the fix
-    means retyping a whole block in the console.
-  - Comments, section headers (`Ctrl/Cmd + Shift + R`) and the outline pane, all
-    introduced in Lecture 6, only exist in the editor.
-
-  One or two slides would cover it: the four RStudio panes with the source pane
-  labeled, File > New File > R Script, and running a line or selection with
-  `Ctrl/Cmd + Enter`. Framing to use: the console is a scratchpad for quick
-  checks like `str()` or `?mean`, and the script is the record of your work.
-  Worth repeating briefly in Lecture 4, when they first load real data.
-
-  **Done 2026-11-18** in the Quarto rebuild of Lecture 2: a "Write code in a
-  script, not the console" slide after the RStudio panes, with a first
-  type-and-run block. The Lecture 4 reminder is still to do.
-
-  **Lecture 4 reminder done 2026-11-18** in its Quarto rebuild: a "Work in a
-  script" slide just before the first file is read.
-
-- [x] **Lecture 2 mislabels the Holling type II parameters. Show both forms.**
-  The deck writes f(x) = ax/(b + x) and says "Here, a and b are attack rate and
-  handling time". In that form a is the asymptote and b is the half-saturation
-  constant (Bolker ch. 3). Attack rate and handling time are the parameters of the
-  other way of writing the same curve, the Holling type II functional response
-  f(x) = alpha x / (1 + alpha h x). They match when a = 1/h and b = 1/(alpha h),
-  so the maximum is set by handling time and the attack rate is the initial slope
-  a/b.
-
-  Fixed in `R_scripts/Chapter_1_examples.R` in Fall 2026; the deck was left as is
-  because it had already been taught. Lecture 9 now shows both forms side by side
-  ("One curve, two ways to write it") and reconciles them in the speaker notes.
-
-  For next year, put both forms in Lecture 2 itself. It is the best available
-  example of the mechanistic versus phenomenological distinction that Lecture 2
-  introduces: the curve is identical, and only the reason for using it decides
-  which parameters you write down.
-
-  **Done 2026-11-18:** Lecture 2 now has "One curve, two ways to write it", the
-  same pair as Lecture 9, with the mislabeling corrected.
-
-- [x] **Lecture 2's GitHub authentication slides are out of date.** Found this
-  while teaching the lecture: in current versions of RStudio, clicking "push"
-  handles authentication for you — it opens a browser sign-in rather than failing
-  and demanding a Personal Access Token. The three slides covering this
-  ("Cloning worked. Pushing won't", "Get a token", "Store your token") describe a
-  workflow students no longer have to do by hand.
-
-  Two things to weigh before cutting them outright:
-
-  - Did it work for everyone, or just most of the room? RStudio bundles Git
-    Credential Manager on Windows and Mac; Linux users may still need the manual
-    flow.
-  - It's still worth students knowing a token exists and that it should never go
-    in a script — that point could survive on a single slide even if the
-    step-by-step goes.
-
-  **Done 2026-11-18:** the three slides became "Send a change back" (commit,
-  push, browser sign-in on the first push) and "If push asks for a password
-  instead" (the token steps as a fallback, with the never-in-a-script warning).
-
----
-
-## Related work already in progress
-
-Not a substitute for the items above, but worth knowing about when picking them up:
-
-- **Data wrangling moved earlier (Fall 2026).** Tidyverse and ggplot2 moved from lectures 23/25 to lectures 07/08, so students get `filter`/`group_by`/`summarise` in week 4 rather than November. This was prompted by students struggling to rearrange data, and it partly overlaps with the "Intro to R" strand in the course-splitting idea above. See `syllabus/syllabus.md`.
-- **Slide updates pending.** A checklist of deck-level changes for Fall 2026 is kept locally in `lectures/README.md` (not published). Some of it touches the "link assignments to chapters/slides" item.
-- **Bolker chapter 3 materials.** Lectures 09 and 10 have no deck and there is no `Chapter_3_examples.R`; those slots were previously self-study. Building them is a chance to act on the "additional examples and documentation" item.
+# Teaching notes, Fall 2026
+
+## What worked, and should carry forward
+
+- **Redacted exercises (Lecture 15).** Give the structure, the data and the
+  comments, and replace the substantive lines with a prompt ("your negative
+  log-likelihood goes here; hint: you wrote one a few slides ago"), rather than
+  `____` gaps. Retrieval made it feel like solving, and students were visibly
+  excited when it worked. Pair each one with a checkable answer (the decline came
+  out at 2.9% against the 3% assumed in Lecture 14).
+- **Scaffolded code (Lecture 9).** A worked example next to a skeleton with the
+  body removed, so nobody spends the pause stuck on syntax they already know.
+- **Labeled type-along code.** The "Type and run" badge, added after a Lecture 9
+  slide asked students to use a function they'd never been told to type.
+- **Worked examples on real data are the fix for a short deck.** Lectures 10, 11
+  and 12 finished 30, 40 and 50 minutes early; adding ten slides of worked
+  examples on course data (Lecture 12) fixed it, and Lecture 13 then filled the
+  period. Add practice before adding explanation.
+- **Open-ended exercises can stay unfinished.** Lecture 14's reef exercise was
+  hard and students didn't finish it; the struggle was productive. A solutions
+  deck posted after class removes the "did I get it right" anxiety without
+  removing the struggle.
+- **Alternating blocks (Lecture 3).** Lecture and code in turns filled the
+  session; a lecture followed by self-study (Fall 2025) didn't.
+- **Demonstrations that fail on purpose.** Lecture 3's 95% interval that misses
+  the true slope (with 95% coverage over 1000 simulations), and Lecture 11's
+  `var(x) == sd(x)^2` coming back FALSE on the Macs before the floating-point
+  slide explains it (demo with `0.1 + 0.2`, which fails on every machine).
+
+## Mid-semester check-in (Lecture 17, 2026-10-20)
+
+Asked out loud rather than on cards. The coding was going well; the statistics
+needed simplifying, with recaps throughout. That produced the "story so far",
+"In plain words" and "which tool, when" slides, then calibrated after Lecture 18
+ran long: three-line recaps, plain-words boxes only on central ideas, quizzes of
+about four quick questions.
+
+## Timing, lecture by lecture
+
+| Lecture | Fall 2026 |
+|---|---|
+| 2 | Right. The expanded deck filled the session. |
+| 3 | Right, with the alternating structure. |
+| 4 | Fit, with less slack than 2 and 3. If it needs trimming, cut the long/wide pair (it previews Lecture 26). |
+| 5 | Tight: the front ran 10 to 15 minutes long, leaving 10 to 15 for 2.6 instead of 25. Treat 2.6 as a Lecture 6 activity. Cut list in the deck's agenda notes. |
+| 6 | Tight; the work time lost again. |
+| 7 | Ran out at slide 27 of 34 (see "Lecture 7 is too long"). |
+| 8 | Worked, even with six slides carried over. Its candidate cuts (categorical by categorical, the `geom_line()` pair, "Soooo many more options") stayed in. |
+| 9 | The first deck to fit comfortably. |
+| 10 | About 30 minutes early, not counting the R supplement. A 32-slide deck with four work pauses runs about an hour. |
+| 11 | About 40 minutes early, before the frog practice block was added. |
+| 12 | About 50 minutes early; fixed with worked examples. |
+| 13 | Full period, once its setup slide was in. |
+| 18 | A bit long at 46 slides plus a quiz, an assignment introduction and a package install; trimmed to 41 afterwards. |
+| 23 | About 20 minutes early. |
+
+Across Lectures 5 to 7 the front of each rebuilt deck ran 10 to 15 minutes over
+estimate, and the in-class work at the end absorbed it every time.
+
+## Still to record
+
+- **Lecture 24's backup activity** ("Your call: which model?", two optional
+  slides after "Which tool, when"): whether it was used and how it went. If it
+  worked, make it a standing slide.
