@@ -41,3 +41,7 @@ supplements/*_files/
 # Local editor and assistant settings (the slide preview server config).
 # Nothing in the repo needs them to run.
 .claude/
+
+# knitr's default figure folder, left behind when a deck is knit outside
+# Quarto. Quarto embeds the figures in the HTML, so nothing uses these.
+lectures/figure/
