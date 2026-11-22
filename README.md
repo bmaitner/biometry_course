@@ -6,7 +6,7 @@ This repo contains materials related to a statistical ecology course I'm teachin
 
 Several scripts load data over the network, some of them through `tinyurl.com` short links. Those links and what they point to are documented in [data/short_links.md](data/short_links.md).
 
-Planned changes to the course are tracked in [course_notes.md](course_notes.md).
+Planned changes to the course are tracked in [course_notes.md](course_notes.md), and changes already made are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Useful Links
 
