@@ -77,6 +77,28 @@ are stuck". The final project was explained on Thursday (Lecture 26, in
 Lecture_26_code_and_data_style); today only takes questions about it.
 :::
 
+## Course evaluations are open {.smaller}
+
+**Check your USF email and Canvas** for a link to the online course evaluation
+(eXplorance Blue). You'll get an invitation and up to two reminders, which stop
+once you've finished.
+
+**You have 14 days:** it's open through the last day of classes, Friday,
+December 4, and closes before finals.
+
+**Why it matters:** your feedback changes the course. The "story so far" slides
+and the "In plain words" boxes in this semester's lectures came from what you
+told me at the mid-semester check-in.
+
+::: {.notes}
+One minute. The first of three reminders (Lectures 27, 28 and 29): repeated
+reminders and a reason to bother are what raise response rates. The specific
+example of a change they caused is the part that works best, so say it.
+
+Giving a few minutes of class time to complete it helps too, if there's room at
+the end.
+:::
+
 ## The story so far {.smaller}
 
 **Lecture 25:** mixed models, the last new statistics of the course.

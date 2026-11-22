@@ -62,6 +62,19 @@ audit, and predict-then-knit. If time runs short, the README and roxygen ones
 can be shortened to a question asked aloud; keep the audit.
 :::
 
+## Reminder: course evaluations {.smaller}
+
+**The online course evaluation is open** until the last day of classes, Friday,
+December 4. The link is in your USF email and on Canvas.
+
+**Your comments shape how this course runs next year,** the same way the
+mid-semester check-in shaped this one.
+
+::: {.notes}
+Thirty seconds. Second of three reminders. If there's time at the end of class,
+offer the last ten minutes to complete it.
+:::
+
 ## The story so far {.smaller}
 
 **Lecture 26:** code and data that other people can read.
