@@ -1682,6 +1682,66 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="the-reading-three-years-on" class="slide level2 smaller">
+<h2>The reading, three years on</h2>
+<p>From Merow et al.: what did ChatGPT <strong>fail</strong> at in 2023?</p>
+<div class="fragment">
+<div class="tiny-table">
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>In 2023 (ChatGPT)</th>
+<th>In 2026</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Long or complex scripts</td>
+<td>current models usually manage them, in pieces you can check</td>
+</tr>
+<tr class="even">
+<td>Code to download data: packages and APIs had changed since its 2021 training data</td>
+<td>models that search the web can read the current documentation</td>
+</tr>
+<tr class="odd">
+<td>Translating its function into MATLAB or Python</td>
+<td>usually works for short scripts</td>
+</tr>
+<tr class="even">
+<td>Invented function names and arguments</td>
+<td>much rarer, and the code errors right away when it happens</td>
+</tr>
+<tr class="odd">
+<td>Fixing its own code: “less efficient than human debugging”</td>
+<td>agents run the code, read the error and try again, as the paper predicted</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The authors expected this: “limitations will probably decrease over time.”</p>
+<p><strong>What hasn’t changed:</strong> it has never seen your data, and, in the paper’s words, working code is not necessarily code that does what you intended.</p>
+</div>
+<aside class="notes">
+<p>Three minutes. Ask the question first and take two or three answers before the click: it checks the reading.</p>
+<p>The point isn’t “the paper was wrong”. The authors focused on strengths because they expected the limitations to shrink, and they did. The lesson is how fast this moves: any list of what AI can’t do, including the next slide’s, has a short shelf life.</p>
+<p>Good place for your own experience with current models.</p>
+<p>The last line is the one that lasts, and it’s the authors’ own caution. It leads into “the failure that matters here” a few slides on.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="what-it-is-genuinely-good-at" class="slide level2 smaller">
 <h2>What it is genuinely good at</h2>
 <p><strong>Explaining an error message</strong> you do not recognize.</p>
@@ -1900,8 +1960,7 @@ display:block!important;
 <p><strong>Right now, in this course, you are mostly in the second group.</strong> That is deliberate, and it is temporary.</p>
 <aside class="notes">
 <p>This is the honest version of the advice and it respects them.</p>
-<p>The test to give them: could you have written this yourself, and can you explain every line? If no to either, you have borrowed something you cannot maintain.</p>
-<p>Say explicitly that this is not a permanent prohibition. Experienced people use these tools heavily and review the output, which they can do because they spent years learning what wrong code looks like.</p>
+<p>Say explicitly that this is not a permanent prohibition. Experienced people use these tools heavily and review the output, which they can do because they spent years learning what wrong code looks like. The next slide is the test for whether you can.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1914,6 +1973,35 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </div>
+</section>
+<section id="can-you-defend-it" class="slide level2 smaller">
+<h2>Can you defend it?</h2>
+<p><strong>Review all code you didn’t write yourself:</strong> from AI, from Stack Overflow, from a labmate.</p>
+<p><strong>If you can’t explain it, you can’t justify it</strong> in a methods section, or to a reviewer.</p>
+<p>If AI suggests something you don’t understand, you can:</p>
+<ol type="1">
+<li>learn enough to check that it makes sense,</li>
+<li>ask someone who does understand it, or</li>
+<li>use a simpler method that you understand and that still suits your data.</li>
+</ol>
+<div class="plain">
+<p>A simpler method you can defend beats a fancier one you can’t.</p>
+</div>
+<aside class="notes">
+<p>Two minutes. The rule isn’t special to AI: it’s how borrowed code has always had to work in science. Framing it that way makes it a habit, not a suspicion of one tool.</p>
+<p>Option 2 is legitimate research practice: advisors, statisticians and collaborators exist for exactly this.</p>
+<p>The caveat on option 3 matters, and the worked example shows why: the lm() on the bobwhite counts was simple and familiar, and it predicted negative quail. Simpler only helps if it still suits the data.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
 </section>
 <section id="what-the-course-allows" class="slide level2 smaller">
 <h2>What the course allows</h2>
