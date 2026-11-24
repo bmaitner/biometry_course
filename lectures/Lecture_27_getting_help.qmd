@@ -809,6 +809,37 @@ genuinely debated, and neither is settled. Worth naming rather than pretending
 it is only a productivity question.
 :::
 
+## Documentation helps AI too {.smaller}
+
+It has never seen your data, so it guesses. **Your documentation replaces the
+guesses:**
+
+| You wrote | It no longer has to guess |
+|---|---|
+| a **README**: what the project is for, where the data came from | the question you're asking, so the model fits the question |
+| a **data README**: what each column is, units, what `NA` means | that `count` is birds per route, and `NA` means "not surveyed" |
+| **"why" comments** (Thursday) | decisions already made: which rows you dropped, why negative binomial |
+| **clear names and sections** (Thursday) | what `bobwhite_fit` holds, where the cleaning happens |
+
+Agents read the files in your project folder. With a chat tool, **paste the
+README instead of the data**: it describes your data without sharing it.
+
+**Next class:** what goes in a README, and how to document a function.
+
+::: {.notes}
+Two minutes. It's the same documentation that helps a labmate or you in six
+months; this is one more reader.
+
+It echoes the reading: Merow et al. found answers improved with more specific
+instructions, and a README is specific instructions you write once.
+
+The paste-the-README line connects to the previous slide: it's the safe way to
+give a chat tool context about data you can't share.
+
+Lecture 28 covers READMEs and roxygen comments, so this is a preview, not the
+lesson.
+:::
+
 ## Your turn: break something {background-color="#f0f4f8" .smaller}
 
 If you use an AI tool, ask it for an analysis you already know the answer to.
