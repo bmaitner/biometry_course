@@ -1,0 +1,93 @@
+---
+title: "Biometry"
+subtitle: "PCB 6455 / BSC 4933"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| include: false
+# Deck front matter, read once. Each deck is listed only if its rendered HTML
+# is committed next to it, since that file is what the site serves. A deck can
+# set `site-title:` in its front matter to be listed under a different name
+# from its title slide (Lecture 1's title slide just says "Biometry").
+deck_title <- function(f) {
+  fm <- rmarkdown::yaml_front_matter(f)
+  if (!is.null(fm[["site-title"]])) fm[["site-title"]] else fm$title
+}
+
+deck_info <- function(dir, pattern) {
+  qmd <- list.files(file.path("..", dir), pattern = pattern, full.names = TRUE)
+  qmd <- qmd[file.exists(sub("\\.qmd$", ".html", qmd))]
+  data.frame(
+    base  = sub("\\.qmd$", "", basename(qmd)),
+    title = vapply(qmd, deck_title, ""),
+    row.names = NULL
+  )
+}
+
+lectures <- deck_info("lectures", "^Lecture_\\d+_.*\\.qmd$")
+lectures$num <- as.integer(sub("^Lecture_(\\d+)_.*", "\\1", lectures$base))
+lectures$solutions <- grepl("solution", lectures$base)
+
+supplements <- deck_info("supplements", "^\\d+_.*\\.qmd$")
+```
+
+Slides and supporting material for Biometry at the University of South Florida,
+taught by Dr. Brian Maitner. The course follows Ben Bolker's *Ecological Models
+and Data in R* (Princeton University Press, 2008).
+
+Every deck opens in the browser and works offline once loaded. Use the arrow
+keys to move through the slides and `F` for full screen.
+
+## Lectures
+
+```{r}
+#| output: asis
+link <- function(text, href) sprintf("[%s](%s)", text, href)
+
+rows <- vapply(sort(unique(lectures$num)), function(n) {
+  these <- lectures[lectures$num == n, ]
+  main  <- these[!these$solutions, ]
+  sols  <- these[these$solutions, ]
+  sprintf("| %d | %s | %s |", n,
+          paste(link(main$title, paste0("lectures/", main$base, ".html")),
+                collapse = "<br>"),
+          paste(link(rep("Solutions", nrow(sols)),
+                     paste0("lectures/", sols$base, ".html")),
+                collapse = "<br>"))
+}, "")
+
+cat("| # | Lecture | Exercise solutions |",
+    "|--:|:--------|:-------------------|",
+    rows, sep = "\n")
+```
+
+## Supplements
+
+Optional material beyond the course, written to work without a lecturer in the
+room. Each one comes as a page to read and as slides.
+
+```{r}
+#| output: asis
+rows <- sprintf("| %s | %s | %s |",
+                supplements$title,
+                link("Read", paste0("supplements/", supplements$base, ".html")),
+                link("Slides", paste0("supplements/", supplements$base,
+                                      "-slides.html")))
+
+cat("| Supplement | | |",
+    "|:-----------|:--|:--|",
+    rows, sep = "\n")
+```
+
+## Course materials
+
+The [syllabus](https://github.com/bmaitner/biometry_course/blob/main/syllabus/syllabus.md),
+[assignments](https://github.com/bmaitner/biometry_course/tree/main/assignments)
+and [course datasets](https://github.com/bmaitner/biometry_course/tree/main/data)
+live in the [course repository](https://github.com/bmaitner/biometry_course).
+Each dataset folder has a README recording where the data came from and how it
+is licensed.

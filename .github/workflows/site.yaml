@@ -1,0 +1,73 @@
+# Build the course website and publish it to GitHub Pages.
+#
+# The site is the small Quarto project in site/: an index page built from the
+# decks' front matter, plus the committed deck HTML copied in as it is. The
+# decks are NOT re-rendered here. What gets published is exactly what was
+# checked and committed; render.yaml is the job that tests rendering.
+#
+# One-time setup before this can deploy: in the repository's Settings > Pages,
+# set Source to "GitHub Actions". Until then the deploy job fails.
+
+name: site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lectures/*.html"
+      - "lectures/*.qmd"
+      - "supplements/*.html"
+      - "supplements/*.qmd"
+      - "site/**"
+      - ".github/workflows/site.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push replaces a queued one, but a deploy that
+# has started is allowed to finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      # index.qmd only reads deck front matter, so this is all it needs.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::knitr
+            any::rmarkdown
+
+      - name: Build the site
+        run: quarto render site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

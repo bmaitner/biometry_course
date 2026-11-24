@@ -1,5 +1,6 @@
 ---
 title: "Biometry"
+site-title: "Course introduction"
 subtitle: "PCB 6455 / BSC 4933: Biometry &nbsp;&nbsp;|&nbsp;&nbsp; Lecture 1"
 author: "Dr. Brian Maitner"
 format:

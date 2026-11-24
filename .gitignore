@@ -45,3 +45,8 @@ supplements/*_files/
 # knitr's default figure folder, left behind when a deck is knit outside
 # Quarto. Quarto embeds the figures in the HTML, so nothing uses these.
 lectures/figure/
+
+# The course website build (quarto render site). The published copy is built by
+# .github/workflows/site.yaml; nothing in site/_site needs committing.
+site/_site/
+site/.quarto/

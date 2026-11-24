@@ -1,0 +1,48 @@
+# The course website, published to GitHub Pages by .github/workflows/site.yaml.
+#
+# This project lives in site/ rather than at the repository root on purpose: a
+# _quarto.yml at the root would turn the whole repository into one Quarto
+# project and change what `quarto render lectures/<deck>.qmd` does (output
+# location, shared settings), which the decks, the checker and render.yaml all
+# rely on staying as it is.
+#
+# The decks themselves are not rendered here. They are already committed as
+# self-contained HTML; copy_decks.R copies them into the built site, and
+# index.qmd builds the list of links from their front matter.
+#
+# Build and preview locally, from the repository root:
+#   quarto preview site
+
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+  post-render: copy_decks.R
+
+website:
+  title: "Biometry"
+  site-url: https://bmaitner.github.io/biometry_course/
+  repo-url: https://github.com/bmaitner/biometry_course
+  navbar:
+    left:
+      - text: Lectures
+        href: index.qmd#lectures
+      - text: Supplements
+        href: index.qmd#supplements
+      - text: Syllabus
+        href: https://github.com/bmaitner/biometry_course/blob/main/syllabus/syllabus.md
+    right:
+      - icon: github
+        href: https://github.com/bmaitner/biometry_course
+        aria-label: Source on GitHub
+  page-footer:
+    center: >
+      Code is MIT licensed and course content is CC BY, except material that is
+      not ours to license; see
+      [Licensing and reuse](https://github.com/bmaitner/biometry_course#licensing-and-reuse).
+
+format:
+  html:
+    theme: cosmo
+    toc: true
