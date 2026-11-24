@@ -9,30 +9,9 @@ execute:
 
 ```{r}
 #| include: false
-# Deck front matter, read once. Each deck is listed only if its rendered HTML
-# is committed next to it, since that file is what the site serves. A deck can
-# set `site-title:` in its front matter to be listed under a different name
-# from its title slide (Lecture 1's title slide just says "Biometry").
-deck_title <- function(f) {
-  fm <- rmarkdown::yaml_front_matter(f)
-  if (!is.null(fm[["site-title"]])) fm[["site-title"]] else fm$title
-}
-
-deck_info <- function(dir, pattern) {
-  qmd <- list.files(file.path("..", dir), pattern = pattern, full.names = TRUE)
-  qmd <- qmd[file.exists(sub("\\.qmd$", ".html", qmd))]
-  data.frame(
-    base  = sub("\\.qmd$", "", basename(qmd)),
-    title = vapply(qmd, deck_title, ""),
-    row.names = NULL
-  )
-}
-
-lectures <- deck_info("lectures", "^Lecture_\\d+_.*\\.qmd$")
-lectures$num <- as.integer(sub("^Lecture_(\\d+)_.*", "\\1", lectures$base))
-lectures$solutions <- grepl("solution", lectures$base)
-
-supplements <- deck_info("supplements", "^\\d+_.*\\.qmd$")
+source("_decks.R")
+lectures <- lecture_info()
+supplements <- supplement_info()
 ```
 
 Slides and supporting material for Biometry at the University of South Florida,
