@@ -2,6 +2,8 @@
 
 This repo contains materials related to a statistical ecology course I'm teaching. The course is based on Ben Bolker's Ecological Models and Data in R textbook (ISBN: 978-0691125220), and so the organization and topics covered are largely taken from that source. Code here is licensed under an MIT license and content I've written is CC-BY, but some material isn't mine to license — see [Licensing and reuse](#licensing-and-reuse) below.
 
+**The lecture slides are online at <https://bmaitner.github.io/biometry_course/>**, along with the exercise solutions and supplements. The site is rebuilt from this repository whenever a deck changes.
+
 [![DOI](https://zenodo.org/badge/1038173254.svg)](https://doi.org/10.5281/zenodo.17923198)
 
 Several scripts load data over the network, some of them through `tinyurl.com` short links. Those links and what they point to are documented in [data/short_links.md](data/short_links.md).

@@ -177,17 +177,11 @@ with APIs.
   has no releases yet. Enable the Zenodo GitHub integration **first**, then
   publish the tag: Zenodo only archives releases made after it starts watching.
   Relabeling the badge in the meantime was considered and declined (2026-10-19).
-- [ ] **Put the course on a github.io site.** Now unblocked: every lecture
-  renders to self-contained HTML. Mostly a matter of turning on GitHub Pages and
-  adding an index page linking the decks, syllabus, assignments and data
-  READMEs. Decide at the same time: whether the rendered HTML stays in the
-  repository (about 4 to 10 MB per deck) or is built on push; whether the site
-  replaces or supplements Canvas links (start it at the beginning of an
-  offering, not mid-semester); and whether to use Quarto's
-  `project: type: website`, probably the least work. PDF was looked at and
-  dropped (2026-10-12): Quarto can reach PDF only through LaTeX, which loses the
-  badges and backgrounds. Before the site goes public, check the figures README
-  for images used under journal copyright.
+- [ ] **Decide whether the course site replaces or supplements the Canvas
+  links**, at the start of the next offering rather than mid-semester. The site
+  (<https://bmaitner.github.io/biometry_course/>) went up 2026-11-24; see
+  `CHANGELOG.md`. Its syllabus, assignments and data links still point at
+  GitHub; the syllabus could become a page on the site.
 - [ ] **Set the repository homepage** once the site exists.
 - [ ] **Record Quarto in `renv.lock`**, and run `renv::restore()` once on the
   teaching machine. Until then, rendering needs

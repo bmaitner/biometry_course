@@ -8,6 +8,17 @@ the next offering are in `course_notes.md`.
 
 ### November 2026
 
+- **2026-11-24.** The course website went up at
+  <https://bmaitner.github.io/biometry_course/>, linked from the README. It is
+  a small Quarto site in `site/`, deployed by `.github/workflows/site.yaml`: a
+  home page listing every lecture, its exercise solutions and the supplements,
+  built from the decks' front matter, plus the committed deck HTML copied in
+  unchanged (not re-rendered). On the site each deck gains a previous / all
+  lectures / next bar, and slide changes no longer fill the browser history.
+  Lecture 1 is listed as "Course introduction" through a new `site-title:`
+  front matter field. The rendered HTML stays in the repository. Images used
+  under copyright stay in; their sources and grounds for use are recorded in
+  `lectures/figures/README.md`.
 - **2026-11-22.** Lecture 29 (open science) rebuilt in Quarto, the last of the
   Google Slides decks: every lecture now renders from a `.qmd`. Its click-through
   builds became fragment stacks, its undocumented photos were replaced with
