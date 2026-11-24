@@ -27,6 +27,15 @@ permissions:
   pages: write
   id-token: write
 
+# Keep renv out of it. Without this, setup-r-dependencies runs from the
+# repository root, where .Rprofile starts renv, and so installs packages into
+# renv/library. The site's post-render script (copy_decks.R) runs from site/,
+# where renv never starts, and could not find them: "there is no package called
+# 'rmarkdown'" (2026-11-24). With renv off, every step uses the same library.
+# Local renders need the same setting until Quarto is recorded in renv.lock.
+env:
+  RENV_CONFIG_AUTOLOADER_ENABLED: "false"
+
 # One deploy at a time; a newer push replaces a queued one, but a deploy that
 # has started is allowed to finish.
 concurrency:
